@@ -1,4 +1,4 @@
-DROP DATABASE gymdb;
+DROP DATABASE IF EXISTS gymdb;
 
 -- Creazione del database
 CREATE DATABASE IF NOT EXISTS gymdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

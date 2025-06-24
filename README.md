@@ -1,3 +1,1 @@
 # gymmanager
-
-Ciao.

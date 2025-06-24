@@ -5,7 +5,6 @@ error_reporting(E_ALL);
 
 require_once 'config.php';
 
-// Redirect in base allo stato di autenticazione
 if (isLoggedIn()) {
     header('Location: dashboard.php');
     exit();

@@ -1,19 +1,20 @@
 <?php
-// login.php
 require_once 'config.php';
+
+if (isset($_SESSION['userID']) && isset($_SESSION['role'])) {
+    header('Location: dashboard.php');
+    exit();
+}
 
 $error = '';
 
-// Se il form è stato inviato
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Pulizia dati ricevuti
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
     if ($email === '' || $password === '') {
         $error = "Compila tutti i campi.";
     } else {
-        // Query preparata per sicurezza SQL injection
         $stmt = $conn->prepare("SELECT userID, password, role, userName FROM USER WHERE email = ?");
         $stmt->bind_param('s', $email);
         $stmt->execute();
@@ -22,14 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result && $result->num_rows === 1) {
             $user = $result->fetch_assoc();
 
-            // Supponiamo che la password in DB sia hashed con password_hash
-            if ($password == $user['password']) {
-                // Login OK: memorizza dati sessione
+            if ($password === $user['password']) {
                 $_SESSION['userID'] = $user['userID'];
                 $_SESSION['userName'] = $user['userName'];
                 $_SESSION['role'] = $user['role'];
 
-                // Reindirizza alla home o pagina protetta
                 header('Location: dashboard.php');
                 exit();
             } else {
