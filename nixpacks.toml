@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["php82", "nginx"]
+
+[phases.build]
+cmds = ["echo 'Building PHP application'"]
+
+[start]
+cmd = "php -S 0.0.0.0:$PORT"
