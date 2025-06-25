@@ -47,7 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Palestra - Login</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="login.css" />
 </head>
 <body class="bg-light">
     <div class="container-fluid vh-100 d-flex align-items-center justify-content-center">
