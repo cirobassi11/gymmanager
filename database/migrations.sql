@@ -27,7 +27,7 @@ CREATE TABLE EQUIPMENT (
     description TEXT,
     state ENUM('available', 'maintenance', 'broken') DEFAULT 'available',
     administratorID INT,
-    FOREIGN KEY (administratorID) REFERENCES USER(userID)
+    FOREIGN KEY (administratorID) REFERENCES USER(userID) ON DELETE SET NULL
 );
 
 CREATE TABLE COURSE (
@@ -53,7 +53,7 @@ CREATE TABLE MAINTENANCE (
     maintenanceCost DECIMAL(10,2),
     description TEXT,
     status ENUM('scheduled', 'in_progress', 'completed') DEFAULT 'scheduled',
-    FOREIGN KEY (equipmentID) REFERENCES EQUIPMENT(equipmentID)
+    FOREIGN KEY (equipmentID) REFERENCES EQUIPMENT(equipmentID) ON DELETE CASCADE
 );
 
 CREATE TABLE AVAILABILITY_DAY (
@@ -62,7 +62,7 @@ CREATE TABLE AVAILABILITY_DAY (
     dayOfWeek ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') NOT NULL,
     startTime TIME NOT NULL,
     finishTime TIME NOT NULL,
-    FOREIGN KEY (trainerID) REFERENCES USER(userID),
+    FOREIGN KEY (trainerID) REFERENCES USER(userID) ON DELETE CASCADE,
     UNIQUE KEY unique_trainer_day_time (trainerID, dayOfWeek, startTime)
 );
 
@@ -73,8 +73,8 @@ CREATE TABLE TRAINING_SCHEDULE (
     creationDate DATE DEFAULT (CURRENT_DATE),
     customerID INT NOT NULL,
     trainerID INT NOT NULL,
-    FOREIGN KEY (customerID) REFERENCES USER(userID),
-    FOREIGN KEY (trainerID) REFERENCES USER(userID)
+    FOREIGN KEY (customerID) REFERENCES USER(userID) ON DELETE CASCADE,
+    FOREIGN KEY (trainerID) REFERENCES USER(userID) ON DELETE CASCADE
 );
 
 CREATE TABLE TRAINING_DAY (
@@ -83,7 +83,7 @@ CREATE TABLE TRAINING_DAY (
     description TEXT,
     trainingScheduleID INT NOT NULL,
     dayOrder INT NOT NULL,
-    FOREIGN KEY (trainingScheduleID) REFERENCES TRAINING_SCHEDULE(trainingScheduleID)
+    FOREIGN KEY (trainingScheduleID) REFERENCES TRAINING_SCHEDULE(trainingScheduleID) ON DELETE CASCADE
 );
 
 CREATE TABLE EXERCISE_DETAIL (
@@ -95,8 +95,8 @@ CREATE TABLE EXERCISE_DETAIL (
     trainingDayID INT NOT NULL,
     exerciseID INT NOT NULL,
     orderInWorkout INT NOT NULL,
-    FOREIGN KEY (trainingDayID) REFERENCES TRAINING_DAY(trainingDayID),
-    FOREIGN KEY (exerciseID) REFERENCES EXERCISE(exerciseID)
+    FOREIGN KEY (trainingDayID) REFERENCES TRAINING_DAY(trainingDayID) ON DELETE CASCADE,
+    FOREIGN KEY (exerciseID) REFERENCES EXERCISE(exerciseID) ON DELETE CASCADE
 );
 
 CREATE TABLE MEMBERSHIP (
@@ -124,9 +124,9 @@ CREATE TABLE SUBSCRIPTION (
     promotionID INT,
     membershipID INT NOT NULL,
     isActive BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (customerID) REFERENCES USER(userID),
-    FOREIGN KEY (promotionID) REFERENCES PROMOTION(promotionID),
-    FOREIGN KEY (membershipID) REFERENCES MEMBERSHIP(membershipID)
+    FOREIGN KEY (customerID) REFERENCES USER(userID) ON DELETE CASCADE,
+    FOREIGN KEY (promotionID) REFERENCES PROMOTION(promotionID) ON DELETE SET NULL,
+    FOREIGN KEY (membershipID) REFERENCES MEMBERSHIP(membershipID) ON DELETE CASCADE
 );
 
 CREATE TABLE PAYMENT (
@@ -137,8 +137,8 @@ CREATE TABLE PAYMENT (
     customerID INT NOT NULL,
     subscriptionID INT,
     status ENUM('pending', 'completed', 'failed', 'refunded') DEFAULT 'pending',
-    FOREIGN KEY (customerID) REFERENCES USER(userID),
-    FOREIGN KEY (subscriptionID) REFERENCES SUBSCRIPTION(subscriptionID)
+    FOREIGN KEY (customerID) REFERENCES USER(userID) ON DELETE CASCADE,
+    FOREIGN KEY (subscriptionID) REFERENCES SUBSCRIPTION(subscriptionID) ON DELETE SET NULL
 );
 
 CREATE TABLE FEEDBACK (
@@ -149,9 +149,9 @@ CREATE TABLE FEEDBACK (
     customerID INT NOT NULL,
     trainerID INT,
     courseID INT,
-    FOREIGN KEY (customerID) REFERENCES USER(userID),
-    FOREIGN KEY (trainerID) REFERENCES USER(userID),
-    FOREIGN KEY (courseID) REFERENCES COURSE(courseID)
+    FOREIGN KEY (customerID) REFERENCES USER(userID) ON DELETE CASCADE,
+    FOREIGN KEY (trainerID) REFERENCES USER(userID) ON DELETE SET NULL,
+    FOREIGN KEY (courseID) REFERENCES COURSE(courseID) ON DELETE SET NULL
 );
 
 CREATE TABLE PROGRESS_REPORT (
@@ -163,7 +163,7 @@ CREATE TABLE PROGRESS_REPORT (
     muscleMass DECIMAL(5,2),
     bmi DECIMAL(5,2),
     customerID INT NOT NULL,
-    FOREIGN KEY (customerID) REFERENCES USER(userID)
+    FOREIGN KEY (customerID) REFERENCES USER(userID) ON DELETE CASCADE
 );
 
 -- Tabelle di relazione many-to-many
@@ -172,8 +172,8 @@ CREATE TABLE teaching (
     trainerID INT NOT NULL,
     courseID INT NOT NULL,
     PRIMARY KEY (trainerID, courseID),
-    FOREIGN KEY (trainerID) REFERENCES USER(userID),
-    FOREIGN KEY (courseID) REFERENCES COURSE(courseID)
+    FOREIGN KEY (trainerID) REFERENCES USER(userID) ON DELETE CASCADE,
+    FOREIGN KEY (courseID) REFERENCES COURSE(courseID) ON DELETE CASCADE
 );
 
 CREATE TABLE enrollment (
@@ -182,16 +182,16 @@ CREATE TABLE enrollment (
     enrollmentDate DATE DEFAULT (CURRENT_DATE),
     status ENUM('active', 'completed', 'cancelled') DEFAULT 'active',
     PRIMARY KEY (customerID, courseID),
-    FOREIGN KEY (customerID) REFERENCES USER(userID),
-    FOREIGN KEY (courseID) REFERENCES COURSE(courseID)
+    FOREIGN KEY (customerID) REFERENCES USER(userID) ON DELETE CASCADE,
+    FOREIGN KEY (courseID) REFERENCES COURSE(courseID) ON DELETE CASCADE
 );
 
 CREATE TABLE servicing (
     maintenanceID INT NOT NULL,
     equipmentID INT NOT NULL,
     PRIMARY KEY (maintenanceID, equipmentID),
-    FOREIGN KEY (maintenanceID) REFERENCES MAINTENANCE(maintenanceID),
-    FOREIGN KEY (equipmentID) REFERENCES EQUIPMENT(equipmentID)
+    FOREIGN KEY (maintenanceID) REFERENCES MAINTENANCE(maintenanceID) ON DELETE CASCADE,
+    FOREIGN KEY (equipmentID) REFERENCES EQUIPMENT(equipmentID) ON DELETE CASCADE
 );
 
 -- Indici per migliorare le performance

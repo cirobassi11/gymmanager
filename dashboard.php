@@ -42,14 +42,10 @@ if (!$user) {
                         Sei un <strong>Amministratore</strong>. Puoi gestire utenti, corsi, abbonamenti, attrezzature e visualizzare statistiche.
                     </div>
                     <div class="row row-cols-1 row-cols-md-2 g-3">
-                        <div class="col"><a href="gestione_utenti.php" class="btn btn-primary w-100">Gestione Utenti</a></div>
+                        <div class="col"><a href="user_management.php" class="btn btn-primary w-100">Gestione Utenti</a></div>
                         <div class="col"><a href="gestione_corsi.php" class="btn btn-primary w-100">Gestione Corsi</a></div>
                         <div class="col"><a href="gestione_abbonamenti.php" class="btn btn-primary w-100">Gestione Abbonamenti</a></div>
                         <div class="col"><a href="gestione_attrezzature.php" class="btn btn-primary w-100">Gestione Attrezzature</a></div>
-                        <div class="col"><a href="statistiche_corsi.php" class="btn btn-primary w-100">Statistiche Corsi</a></div>
-                        <div class="col"><a href="statistiche_clienti.php" class="btn btn-primary w-100">Statistiche Clienti</a></div>
-                        <div class="col"><a href="statistiche_attrezzature.php" class="btn btn-primary w-100">Statistiche Attrezzature</a></div>
-                        <div class="col"><a href="pagamenti.php" class="btn btn-primary w-100">Storico Pagamenti</a></div>
                     </div>
 
                 <?php elseif ($role === 'trainer'): ?>
@@ -69,14 +65,11 @@ if (!$user) {
                         Sei un <strong>Cliente</strong>. Puoi gestire il tuo abbonamento, iscriverti ai corsi e seguire i tuoi progressi.
                     </div>
                     <div class="row row-cols-1 row-cols-md-2 g-3">
-                        <div class="col"><a href="acquista_abbonamento.php" class="btn btn-info w-100">Acquista Abbonamento</a></div>
-                        <div class="col"><a href="stato_abbonamento.php" class="btn btn-info w-100">Stato Abbonamento</a></div>
-                        <div class="col"><a href="storico_abbonamenti.php" class="btn btn-info w-100">Storico Abbonamenti</a></div>
+                        <div class="col"><a href="abbonamenti.php" class="btn btn-info w-100">Gestione Abbonamenti</a></div>
                         <div class="col"><a href="iscrizione_corsi.php" class="btn btn-info w-100">Iscrizione a Corsi</a></div>
                         <div class="col"><a href="allenamento_personalizzato.php" class="btn btn-info w-100">Programma Allenamento</a></div>
                         <div class="col"><a href="progressi.php" class="btn btn-info w-100">I Miei Progressi</a></div>
                         <div class="col"><a href="feedback.php" class="btn btn-info w-100">Lascia un Feedback</a></div>
-                        <div class="col"><a href="promozioni.php" class="btn btn-info w-100">Promozioni Attive</a></div>
                     </div>
 
                 <?php else: ?>
