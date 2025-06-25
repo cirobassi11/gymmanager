@@ -8,72 +8,132 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'adm
     exit();
 }
 
+// Funzione per validare le date
+function validateDates($startDate, $finishDate) {
+    $errors = [];
+    
+    // Le date sono obbligatorie
+    if (empty($startDate)) {
+        $errors[] = 'La data di inizio è obbligatoria.';
+    }
+    
+    if (empty($finishDate)) {
+        $errors[] = 'La data di fine è obbligatoria.';
+    }
+    
+    // Se entrambe le date sono fornite, controlla che la data di inizio sia precedente alla data di fine
+    if (!empty($startDate) && !empty($finishDate)) {
+        $start = new DateTime($startDate);
+        $finish = new DateTime($finishDate);
+        
+        if ($start >= $finish) {
+            $errors[] = 'La data di inizio deve essere precedente alla data di fine.';
+        }
+    }
+    
+
+    
+    return $errors;
+}
+
 // Gestione POST
 $error_message = '';
 $success_message = '';
+$validation_errors = [];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['add'])) {
-        // Inserisci il corso
-        $stmt = $conn->prepare("INSERT INTO COURSE (name, description, price, maxParticipants, startDate, finishDate) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param(
-            'ssdiss',
-            $_POST['name'],
-            $_POST['description'],
-            $_POST['price'],
-            $_POST['maxParticipants'],
-            $_POST['startDate'],
-            $_POST['finishDate']
-        );
-        if ($stmt->execute()) {
-            $courseID = $conn->insert_id;
-            
-            // Inserisci le assegnazioni trainer se selezionati
-            if (!empty($_POST['trainers'])) {
-                $stmt = $conn->prepare("INSERT INTO teaching (trainerID, courseID) VALUES (?, ?)");
-                foreach ($_POST['trainers'] as $trainerID) {
-                    $stmt->bind_param('ii', $trainerID, $courseID);
-                    $stmt->execute();
+    // Validazione comune per add e update
+    $dateErrors = validateDates($_POST['startDate'] ?? '', $_POST['finishDate'] ?? '');
+    $validation_errors = array_merge($validation_errors, $dateErrors);
+    
+    // Validazione altri campi
+    if (empty(trim($_POST['name'] ?? ''))) {
+        $validation_errors[] = 'Il nome del corso è obbligatorio.';
+    }
+    
+    if (empty($_POST['description'] ?? '') || empty(trim($_POST['description']))) {
+        $validation_errors[] = 'La descrizione è obbligatoria.';
+    }
+    
+    if (empty($_POST['price']) || $_POST['price'] < 0) {
+        $validation_errors[] = 'Il prezzo deve essere un valore positivo.';
+    }
+    
+    if (empty($_POST['maxParticipants']) || $_POST['maxParticipants'] < 1) {
+        $validation_errors[] = 'Il numero massimo di partecipanti deve essere almeno 1.';
+    }
+    
+    if (empty($_POST['trainers'])) {
+        $validation_errors[] = 'Devi assegnare almeno un trainer al corso.';
+    }
+    
+    // Se non ci sono errori di validazione, procedi con l'operazione
+    if (empty($validation_errors)) {
+        if (isset($_POST['add'])) {
+            // Inserisci il corso
+            $stmt = $conn->prepare("INSERT INTO COURSE (name, description, price, maxParticipants, startDate, finishDate) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param(
+                'ssdiss',
+                $_POST['name'],
+                $_POST['description'],
+                $_POST['price'],
+                $_POST['maxParticipants'],
+                $_POST['startDate'],
+                $_POST['finishDate']
+            );
+            if ($stmt->execute()) {
+                $courseID = $conn->insert_id;
+                
+                // Inserisci le assegnazioni trainer se selezionati
+                if (!empty($_POST['trainers'])) {
+                    $stmt = $conn->prepare("INSERT INTO teaching (trainerID, courseID) VALUES (?, ?)");
+                    foreach ($_POST['trainers'] as $trainerID) {
+                        $stmt->bind_param('ii', $trainerID, $courseID);
+                        $stmt->execute();
+                    }
                 }
+                
+                $success_message = 'Corso aggiunto con successo!';
+                unset($_POST);
+            } else {
+                $error_message = 'Errore durante l\'inserimento del corso.';
             }
-            
-            $success_message = 'Corso aggiunto con successo!';
-            unset($_POST);
-        } else {
-            $error_message = 'Errore durante l\'inserimento del corso.';
-        }
-    } elseif (isset($_POST['update'])) {
-        // Aggiorna il corso
-        $stmt = $conn->prepare("UPDATE COURSE SET name = ?, description = ?, price = ?, maxParticipants = ?, startDate = ?, finishDate = ? WHERE courseID = ?");
-        $stmt->bind_param(
-            'ssdissi',
-            $_POST['name'],
-            $_POST['description'],
-            $_POST['price'],
-            $_POST['maxParticipants'],
-            $_POST['startDate'],
-            $_POST['finishDate'],
-            $_POST['courseID']
-        );
-        if ($stmt->execute()) {
-            // Rimuovi le vecchie assegnazioni
-            $stmt = $conn->prepare("DELETE FROM teaching WHERE courseID = ?");
-            $stmt->bind_param('i', $_POST['courseID']);
-            $stmt->execute();
-            
-            // Inserisci le nuove assegnazioni trainer
-            if (!empty($_POST['trainers'])) {
-                $stmt = $conn->prepare("INSERT INTO teaching (trainerID, courseID) VALUES (?, ?)");
-                foreach ($_POST['trainers'] as $trainerID) {
-                    $stmt->bind_param('ii', $trainerID, $_POST['courseID']);
-                    $stmt->execute();
+        } elseif (isset($_POST['update'])) {
+            // Aggiorna il corso
+            $stmt = $conn->prepare("UPDATE COURSE SET name = ?, description = ?, price = ?, maxParticipants = ?, startDate = ?, finishDate = ? WHERE courseID = ?");
+            $stmt->bind_param(
+                'ssdissi',
+                $_POST['name'],
+                $_POST['description'],
+                $_POST['price'],
+                $_POST['maxParticipants'],
+                $_POST['startDate'],
+                $_POST['finishDate'],
+                $_POST['courseID']
+            );
+            if ($stmt->execute()) {
+                // Rimuovi le vecchie assegnazioni
+                $stmt = $conn->prepare("DELETE FROM teaching WHERE courseID = ?");
+                $stmt->bind_param('i', $_POST['courseID']);
+                $stmt->execute();
+                
+                // Inserisci le nuove assegnazioni trainer
+                if (!empty($_POST['trainers'])) {
+                    $stmt = $conn->prepare("INSERT INTO teaching (trainerID, courseID) VALUES (?, ?)");
+                    foreach ($_POST['trainers'] as $trainerID) {
+                        $stmt->bind_param('ii', $trainerID, $_POST['courseID']);
+                        $stmt->execute();
+                    }
                 }
+                
+                $success_message = 'Corso modificato con successo!';
+            } else {
+                $error_message = 'Errore durante la modifica del corso.';
             }
-            
-            $success_message = 'Corso modificato con successo!';
-        } else {
-            $error_message = 'Errore durante la modifica del corso.';
         }
-    } elseif (isset($_POST['delete'])) {
+    }
+    
+    if (isset($_POST['delete'])) {
         $stmt = $conn->prepare("DELETE FROM COURSE WHERE courseID = ?");
         $stmt->bind_param('i', $_POST['delete_id']);
         if ($stmt->execute()) {
@@ -120,8 +180,8 @@ function getCourseStats($conn) {
     $stmt->execute();
     $totalCourses = $stmt->get_result()->fetch_assoc()['total'];
     
-    // Corsi attivi (che non sono ancora finiti)
-    $stmt = $conn->prepare("SELECT COUNT(*) as active FROM COURSE WHERE finishDate >= CURDATE() OR finishDate IS NULL");
+    // Corsi attivi (già iniziati ma non ancora finiti)
+    $stmt = $conn->prepare("SELECT COUNT(*) as active FROM COURSE WHERE startDate <= CURDATE() AND finishDate >= CURDATE()");
     $stmt->execute();
     $activeCourses = $stmt->get_result()->fetch_assoc()['active'];
     
@@ -197,12 +257,25 @@ $stats = getCourseStats($conn);
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <h4><?= $editCourse ? 'Modifica Corso' : 'Aggiungi Corso' ?></h4>
+            
+            <?php if (!empty($validation_errors)): ?>
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        <?php foreach($validation_errors as $error): ?>
+                            <li><?= htmlspecialchars($error) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+            
             <?php if (!empty($error_message)): ?>
                 <div class="alert alert-danger"><?= htmlspecialchars($error_message) ?></div>
             <?php endif; ?>
+            
             <?php if (!empty($success_message)): ?>
                 <div class="alert alert-success"><?= htmlspecialchars($success_message) ?></div>
             <?php endif; ?>
+            
             <form method="POST" class="row g-3">
                 <?php if ($editCourse): ?>
                     <input type="hidden" name="courseID" value="<?= $editCourse['courseID'] ?>">
@@ -224,17 +297,17 @@ $stats = getCourseStats($conn);
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Data Inizio</label>
-                    <input name="startDate" class="form-control" type="date"
+                    <input name="startDate" required class="form-control" type="date"
                            value="<?= $editCourse ? $editCourse['startDate'] : (isset($_POST['startDate']) ? $_POST['startDate'] : '') ?>" />
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Data Fine</label>
-                    <input name="finishDate" class="form-control" type="date"
+                    <input name="finishDate" required class="form-control" type="date"
                            value="<?= $editCourse ? $editCourse['finishDate'] : (isset($_POST['finishDate']) ? $_POST['finishDate'] : '') ?>" />
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Trainer Assegnati</label>
-                    <select name="trainers[]" class="form-select" multiple size="4">
+                    <select name="trainers[]" class="form-select" multiple size="4" required>
                         <?php foreach($trainers as $trainer): ?>
                             <option value="<?= $trainer['userID'] ?>" 
                                 <?= (in_array($trainer['userID'], $assignedTrainers) || (isset($_POST['trainers']) && in_array($trainer['userID'], $_POST['trainers']))) ? 'selected' : '' ?>>
@@ -246,7 +319,7 @@ $stats = getCourseStats($conn);
                 </div>
                 <div class="col-12">
                     <label class="form-label">Descrizione</label>
-                    <textarea name="description" class="form-control" rows="3"><?= $editCourse ? htmlspecialchars($editCourse['description']) : (isset($_POST['description']) ? htmlspecialchars($_POST['description']) : '') ?></textarea>
+                    <textarea name="description" required class="form-control" rows="3"><?= $editCourse ? htmlspecialchars($editCourse['description']) : (isset($_POST['description']) ? htmlspecialchars($_POST['description']) : '') ?></textarea>
                 </div>
                 <div class="col-12">
                     <button name="<?= $editCourse ? 'update' : 'add' ?>" class="btn <?= $editCourse ? 'btn-warning' : 'btn-success' ?>">
@@ -264,46 +337,71 @@ $stats = getCourseStats($conn);
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h4>Corsi Registrati</h4>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Nome</th><th>Prezzo</th><th>Max Partecipanti</th>
-                        <th>Data Inizio</th><th>Data Fine</th><th>Trainer</th><th>Azioni</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach($courses as $course): ?>
-                        <?php
-                        // Recupera i trainer per questo corso
-                        $stmt = $conn->prepare("SELECT u.firstName, u.lastName FROM teaching t JOIN USER u ON t.trainerID = u.userID WHERE t.courseID = ?");
-                        $stmt->bind_param('i', $course['courseID']);
-                        $stmt->execute();
-                        $courseTrainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-                        $trainerNames = array_map(function($t) { return $t['firstName'] . ' ' . $t['lastName']; }, $courseTrainers);
-                        ?>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
                         <tr>
-                            <td><?= htmlspecialchars($course['name']) ?></td>
-                            <td>€<?= number_format($course['price'], 2) ?></td>
-                            <td><?= $course['maxParticipants'] ?></td>
-                            <td><?= $course['startDate'] ? date('d/m/Y', strtotime($course['startDate'])) : '-' ?></td>
-                            <td><?= $course['finishDate'] ? date('d/m/Y', strtotime($course['finishDate'])) : '-' ?></td>
-                            <td><?= !empty($trainerNames) ? htmlspecialchars(implode(', ', $trainerNames)) : 'Nessuno' ?></td>
-                            <td>
-                                <a href="?edit=<?= $course['courseID'] ?>" class="btn btn-sm btn-warning">Modifica</a>
-                                <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo corso?');">
-                                    <input type="hidden" name="delete_id" value="<?= $course['courseID'] ?>">
-                                    <button name="delete" class="btn btn-sm btn-danger">Elimina</button>
-                                </form>
-                            </td>
+                            <th>Nome</th><th>Prezzo</th><th>Max Partecipanti</th>
+                            <th>Data Inizio</th><th>Data Fine</th><th>Stato</th><th>Trainer</th><th>Azioni</th>
                         </tr>
-                    <?php endforeach; ?>
-                    <?php if (empty($courses)): ?>
-                        <tr><td colspan="7" class="text-center">Nessun corso registrato.</td></tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach($courses as $course): ?>
+                            <?php
+                            // Recupera i trainer per questo corso
+                            $stmt = $conn->prepare("SELECT u.firstName, u.lastName FROM teaching t JOIN USER u ON t.trainerID = u.userID WHERE t.courseID = ?");
+                            $stmt->bind_param('i', $course['courseID']);
+                            $stmt->execute();
+                            $courseTrainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                            $trainerNames = array_map(function($t) { return $t['firstName'] . ' ' . $t['lastName']; }, $courseTrainers);
+                            
+                            // Determina lo stato del corso
+                            $today = new DateTime();
+                            $startDate = new DateTime($course['startDate']);
+                            $finishDate = new DateTime($course['finishDate']);
+                            
+                            if ($startDate > $today) {
+                                $status = 'In attesa';
+                                $statusClass = 'badge bg-warning';
+                            } elseif ($finishDate >= $today) {
+                                $status = 'In corso';
+                                $statusClass = 'badge bg-success';
+                            } else {
+                                $status = 'Completato';
+                                $statusClass = 'badge bg-primary';
+                            }
+                            ?>
+                            <tr>
+                                <td><?= htmlspecialchars($course['name']) ?></td>
+                                <td>€<?= number_format($course['price'], 2) ?></td>
+                                <td><?= $course['maxParticipants'] ?></td>
+                                <td><?= $course['startDate'] ? date('d/m/Y', strtotime($course['startDate'])) : '-' ?></td>
+                                <td><?= $course['finishDate'] ? date('d/m/Y', strtotime($course['finishDate'])) : '-' ?></td>
+                                <td><span class="<?= $statusClass ?>"><?= $status ?></span></td>
+                                <td><?= !empty($trainerNames) ? htmlspecialchars(implode(', ', $trainerNames)) : 'Nessuno' ?></td>
+                                <td>
+                                    <a href="?edit=<?= $course['courseID'] ?>" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i> Modifica
+                                    </a>
+                                    <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo corso? Questa azione non può essere annullata.');">
+                                        <input type="hidden" name="delete_id" value="<?= $course['courseID'] ?>">
+                                        <button name="delete" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i> Elimina
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <?php if (empty($courses)): ?>
+                            <tr><td colspan="8" class="text-center">Nessun corso registrato.</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
