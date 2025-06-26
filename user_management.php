@@ -2,6 +2,10 @@
 require_once 'config.php';
 session_start();
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Controllo accesso admin
 if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header('Location: login.php');
@@ -174,7 +178,11 @@ function getCustomerStats($conn) {
     $genderStats = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
     // Totale clienti con abbonamenti attivi
-    $stmt = $conn->prepare("SELECT COUNT(DISTINCT customerID) as count FROM SUBSCRIPTION WHERE isActive = 1");
+    $stmt = $conn->prepare("
+        SELECT COUNT(DISTINCT customerID) as count
+        FROM SUBSCRIPTION
+        WHERE CURDATE() BETWEEN startDate AND expirationDate
+    ");
     $stmt->execute();
     $activeSubscriptions = $stmt->get_result()->fetch_assoc()['count'];
     

@@ -91,7 +91,7 @@ CREATE TABLE EXERCISE_DETAIL (
     sets INT NOT NULL,
     reps INT NOT NULL,
     weight DECIMAL(5,2),
-    restTime INT, -- in seconds
+    restTime INT,
     trainingDayID INT NOT NULL,
     exerciseID INT NOT NULL,
     orderInWorkout INT NOT NULL,
@@ -103,7 +103,7 @@ CREATE TABLE MEMBERSHIP (
     membershipID INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     price DECIMAL(10,2) NOT NULL,
-    duration INT NOT NULL, -- in days
+    duration INT NOT NULL,
     description TEXT
 );
 
@@ -111,7 +111,7 @@ CREATE TABLE PROMOTION (
     promotionID INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    discountRate DECIMAL(5,2) NOT NULL, -- percentage
+    discountRate DECIMAL(5,2) NOT NULL,
     startDate DATE NOT NULL,
     expirationDate DATE NOT NULL
 );
@@ -123,7 +123,6 @@ CREATE TABLE SUBSCRIPTION (
     customerID INT NOT NULL,
     promotionID INT,
     membershipID INT NOT NULL,
-    isActive BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (customerID) REFERENCES USER(userID) ON DELETE CASCADE,
     FOREIGN KEY (promotionID) REFERENCES PROMOTION(promotionID) ON DELETE SET NULL,
     FOREIGN KEY (membershipID) REFERENCES MEMBERSHIP(membershipID) ON DELETE CASCADE

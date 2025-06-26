@@ -56,8 +56,8 @@ INSERT INTO PROMOTION (name, description, discountRate, startDate, expirationDat
 ('Promo Estate', 'Sconto estivo del 20%', 20.00, '2025-06-01', '2025-08-31');
 
 -- Inserimento sottoscrizione
-INSERT INTO SUBSCRIPTION (startDate, expirationDate, customerID, promotionID, membershipID, isActive) VALUES
-('2025-06-01', '2025-06-30', 3, 1, 1, TRUE);
+INSERT INTO SUBSCRIPTION (startDate, expirationDate, customerID, promotionID, membershipID) VALUES
+('2025-06-01', '2025-06-30', 3, 1, 1);
 
 -- Inserimento pagamenti
 INSERT INTO PAYMENT (date, amount, type, customerID, subscriptionID, status) VALUES
