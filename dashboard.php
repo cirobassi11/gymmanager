@@ -39,7 +39,7 @@ if (!$user) {
 
                 <?php if ($role === 'admin'): ?>
                     <div class="alert alert-primary rounded-3">
-                        Sei un <strong>Amministratore</strong>. Puoi gestire utenti, corsi, abbonamenti, attrezzature e visualizzare statistiche e feedback.
+                        Sei un <strong>Amministratore</strong>. <br>Puoi gestire utenti, corsi, abbonamenti, attrezzature e visualizzare statistiche e feedback.
                     </div>
                     <div class="row row-cols-1 row-cols-md-2 g-3">
                         <div class="col"><a href="user_management.php" class="btn btn-primary w-100">Gestione Utenti</a></div>
@@ -51,19 +51,19 @@ if (!$user) {
 
                 <?php elseif ($role === 'trainer'): ?>
                     <div class="alert alert-success rounded-3">
-                        Sei un <strong>Trainer</strong>. Specializzazione: <?= htmlspecialchars($user['specialization']) ?><br>
+                        Sei un <strong>Trainer</strong>. <br>Specializzazione: <?= htmlspecialchars($user['specialization']) ?><br>
                         Disponibilità: <?= htmlspecialchars($user['availability']) ?>
                     </div>
                     <div class="row row-cols-1 row-cols-md-2 g-3">
-                        <div class="col"><a href="trainer_courses.php" class="btn btn-success w-100">I tuoi corsi</a></div>
-                        <div class="col"><a href="trainer_customers.php" class="btn btn-success w-100">Clienti seguiti</a></div>
+                        <div class="col"><a href="trainer_courses.php" class="btn btn-success w-100">I Tuoi Corsi</a></div>
+                        <div class="col"><a href="trainer_customers.php" class="btn btn-success w-100">Clienti Seguiti</a></div>
                         <div class="col"><a href="training_schedule.php" class="btn btn-success w-100">Programmi di Allenamento</a></div>
                         <div class="col"><a href="trainer_availability.php" class="btn btn-success w-100">Gestione Disponibilità</a></div>
                     </div>
 
                 <?php elseif ($role === 'customer'): ?>
                     <div class="alert alert-info rounded-3">
-                        Sei un <strong>Cliente</strong>. Puoi gestire il tuo abbonamento, iscriverti ai corsi e seguire i tuoi progressi.
+                        Sei un <strong>Cliente</strong>. <br>Puoi gestire il tuo abbonamento, iscriverti ai corsi e seguire i tuoi progressi.
                     </div>
                     <div class="row row-cols-1 row-cols-md-2 g-3">
                         <div class="col"><a href="customer_subscription.php" class="btn btn-info w-100">Gestione Abbonamenti</a></div>
