@@ -2,6 +2,10 @@
 require_once 'config.php';
 session_start();
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Controllo accesso trainer
 if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'trainer') {
     header('Location: login.php');
@@ -110,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!empty($_POST['exerciseID']) && !empty($_POST['training_day_id'])) {
             $stmt = $conn->prepare("INSERT INTO EXERCISE_DETAIL (sets, reps, weight, restTime, trainingDayID, exerciseID, orderInWorkout) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param(
-                'iidiii',
+                'iiiiiii',
                 $_POST['sets'],
                 $_POST['reps'],
                 $_POST['weight'],

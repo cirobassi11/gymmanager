@@ -90,7 +90,7 @@ CREATE TABLE EXERCISE_DETAIL (
     exerciseDetailID INT PRIMARY KEY AUTO_INCREMENT,
     sets INT NOT NULL,
     reps INT NOT NULL,
-    weight DECIMAL(5,2),
+    weight INT,
     restTime INT,
     trainingDayID INT NOT NULL,
     exerciseID INT NOT NULL,
@@ -179,7 +179,6 @@ CREATE TABLE enrollment (
     customerID INT NOT NULL,
     courseID INT NOT NULL,
     enrollmentDate DATE DEFAULT (CURRENT_DATE),
-    status ENUM('active', 'completed', 'cancelled') DEFAULT 'active',
     PRIMARY KEY (customerID, courseID),
     FOREIGN KEY (customerID) REFERENCES USER(userID) ON DELETE CASCADE,
     FOREIGN KEY (courseID) REFERENCES COURSE(courseID) ON DELETE CASCADE

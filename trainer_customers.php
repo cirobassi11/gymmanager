@@ -13,7 +13,12 @@ $trainerID = $_SESSION['userID'];
 // Recupera i clienti seguiti dal trainer attraverso i corsi
 $stmt = $conn->prepare("
     SELECT DISTINCT u.userID, u.firstName, u.lastName, u.email, u.phoneNumber, u.birthDate, u.gender,
-           e.enrollmentDate, e.status as enrollment_status,
+           e.enrollmentDate, 
+           CASE 
+               WHEN c.finishDate >= CURDATE() THEN 'active'
+               WHEN c.finishDate < CURDATE() THEN 'completed'
+               ELSE 'active'
+           END as enrollment_status,
            c.name as course_name, c.courseID
     FROM USER u
     JOIN enrollment e ON u.userID = e.customerID
@@ -66,36 +71,39 @@ function calcAge($birthDate) {
 function getTrainerCustomerStats($conn, $trainerID) {
     // Totale clienti seguiti
     $stmt = $conn->prepare("
-        SELECT COUNT(DISTINCT e.customerID) as total
-        FROM enrollment e
-        JOIN teaching t ON e.courseID = t.courseID
-        WHERE t.trainerID = ? AND e.status = 'active'
-    ");
+    SELECT COUNT(DISTINCT e.customerID) as total
+    FROM enrollment e
+    JOIN COURSE c ON e.courseID = c.courseID
+    JOIN teaching t ON c.courseID = t.courseID
+    WHERE t.trainerID = ? AND c.finishDate >= CURDATE()
+");
     $stmt->bind_param('i', $trainerID);
     $stmt->execute();
     $totalCustomers = $stmt->get_result()->fetch_assoc()['total'];
     
     // Clienti attivi questo mese
     $stmt = $conn->prepare("
-        SELECT COUNT(DISTINCT e.customerID) as active
-        FROM enrollment e
-        JOIN teaching t ON e.courseID = t.courseID
-        WHERE t.trainerID = ? 
-        AND e.status = 'active'
-        AND date(e.enrollmentDate) >= date('now', '-30 days')
-    ");
+    SELECT COUNT(DISTINCT e.customerID) as active
+    FROM enrollment e
+    JOIN COURSE c ON e.courseID = c.courseID
+    JOIN teaching t ON c.courseID = t.courseID
+    WHERE t.trainerID = ? 
+    AND c.finishDate >= CURDATE()
+    AND e.enrollmentDate >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+");
     $stmt->bind_param('i', $trainerID);
     $stmt->execute();
     $activeThisMonth = $stmt->get_result()->fetch_assoc()['active'];
     
     // Media età clienti
     $stmt = $conn->prepare("
-        SELECT u.birthDate
-        FROM USER u
-        JOIN enrollment e ON u.userID = e.customerID
-        JOIN teaching t ON e.courseID = t.courseID
-        WHERE t.trainerID = ? AND u.birthDate IS NOT NULL AND e.status = 'active'
-    ");
+    SELECT u.birthDate
+    FROM USER u
+    JOIN enrollment e ON u.userID = e.customerID
+    JOIN COURSE c ON e.courseID = c.courseID
+    JOIN teaching t ON c.courseID = t.courseID
+    WHERE t.trainerID = ? AND u.birthDate IS NOT NULL AND c.finishDate >= CURDATE()
+");
     $stmt->bind_param('i', $trainerID);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -195,9 +203,6 @@ $stats = getTrainerCustomerStats($conn, $trainerID);
                             <div class="card-body">
                                 <!-- Header cliente -->
                                 <div class="d-flex align-items-center mb-3">
-                                    <div class="bg-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                        <span class="text-white fw-bold"><?= strtoupper(substr($customer['firstName'], 0, 1) . substr($customer['lastName'], 0, 1)) ?></span>
-                                    </div>
                                     <div>
                                         <h6 class="card-title mb-1">
                                             <?= htmlspecialchars($customer['firstName'] . ' ' . $customer['lastName']) ?>

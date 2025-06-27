@@ -16,7 +16,7 @@ $stmt = $conn->prepare("
            COUNT(e.customerID) as enrolled_count
     FROM COURSE c
     JOIN teaching t ON c.courseID = t.courseID
-    LEFT JOIN enrollment e ON c.courseID = e.courseID AND e.status = 'active'
+    LEFT JOIN enrollment e ON c.courseID = e.courseID
     WHERE t.trainerID = ?
     GROUP BY c.courseID, c.name, c.description, c.price, c.maxParticipants, c.startDate, c.finishDate
     ORDER BY c.startDate DESC

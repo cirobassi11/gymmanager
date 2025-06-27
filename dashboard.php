@@ -59,6 +59,7 @@ if (!$user) {
                         <div class="col"><a href="trainer_customers.php" class="btn btn-success w-100">Clienti Seguiti</a></div>
                         <div class="col"><a href="training_schedule.php" class="btn btn-success w-100">Programmi di Allenamento</a></div>
                         <div class="col"><a href="trainer_availability.php" class="btn btn-success w-100">Gestione Disponibilità</a></div>
+                        <div class="col"><a href="exercises_management.php" class="btn btn-success w-100">Gestione Esercizi</a></div>
                     </div>
 
                 <?php elseif ($role === 'customer'): ?>

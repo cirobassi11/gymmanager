@@ -77,9 +77,9 @@ INSERT INTO teaching (trainerID, courseID) VALUES
 (2, 2);
 
 -- Iscrizioni a corsi (many-to-many)
-INSERT INTO enrollment (customerID, courseID, enrollmentDate, status) VALUES
-(3, 1, CURDATE(), 'active'),
-(4, 2, CURDATE(), 'active');
+INSERT INTO enrollment (customerID, courseID, enrollmentDate) VALUES
+(3, 1, CURDATE()),
+(4, 2, CURDATE());
 
 -- Servicing collegato alla manutenzione e all'equipment
 INSERT INTO servicing (maintenanceID, equipmentID) VALUES
