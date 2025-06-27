@@ -202,7 +202,7 @@ $upcomingCourses = count(array_filter($enrolledCourses, function($course) {
                     <h2>Iscrizione ai Corsi</h2>
                 </div>
                 <a href="dashboard.php" class="btn btn-outline-primary">
-                    Torna alla Dashboard
+                    <i class="fas fa-arrow-left me-2"></i>Torna alla Dashboard
                 </a>
             </div>
         </div>

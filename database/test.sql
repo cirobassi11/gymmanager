@@ -64,8 +64,8 @@ INSERT INTO PAYMENT (date, amount, type, customerID, subscriptionID, status) VAL
 ('2025-06-01', 24.00, 'card', 3, 1, 'completed');
 
 -- Inserimento feedback
-INSERT INTO FEEDBACK (date, rating, comment, customerID, trainerID, courseID) VALUES
-('2025-06-20', 5, 'Ottimo allenatore, molto disponibile!', 3, 2, 1);
+INSERT INTO FEEDBACK (date, rating, comment, customerID) VALUES
+('2025-06-20', 1, 'NOOOOOO', 3);
 
 -- Inserimento report di progresso
 INSERT INTO PROGRESS_REPORT (date, description, weight, bodyFatPercent, muscleMass, bmi, customerID) VALUES
