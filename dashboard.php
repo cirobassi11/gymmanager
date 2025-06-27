@@ -51,26 +51,25 @@ if (!$user) {
 
                 <?php elseif ($role === 'trainer'): ?>
                     <div class="alert alert-success rounded-3">
-                        Sei un <strong>Trainer</strong>. <br>Specializzazione: <?= htmlspecialchars($user['specialization']) ?><br>
-                        Disponibilità: <?= htmlspecialchars($user['availability']) ?>
+                        Sei un <strong>Trainer</strong>. <br>Puoi gestire i tuoi corsi, clienti, programmi di allenamento e disponibilità.
                     </div>
                     <div class="row row-cols-1 row-cols-md-2 g-3">
                         <div class="col"><a href="trainer_courses.php" class="btn btn-success w-100">I Tuoi Corsi</a></div>
                         <div class="col"><a href="trainer_customers.php" class="btn btn-success w-100">Clienti Seguiti</a></div>
                         <div class="col"><a href="training_schedule.php" class="btn btn-success w-100">Programmi di Allenamento</a></div>
-                        <div class="col"><a href="trainer_availability.php" class="btn btn-success w-100">Gestione Disponibilità</a></div>
                         <div class="col"><a href="exercises_management.php" class="btn btn-success w-100">Gestione Esercizi</a></div>
+                        <div class="col"><a href="trainer_availability.php" class="btn btn-success w-100">Gestione Disponibilità</a></div>
                     </div>
 
                 <?php elseif ($role === 'customer'): ?>
                     <div class="alert alert-info rounded-3">
-                        Sei un <strong>Cliente</strong>. <br>Puoi gestire il tuo abbonamento, iscriverti ai corsi e seguire i tuoi progressi.
+                        Sei un <strong>Cliente</strong>. <br>Puoi gestire il tuo abbonamento, iscriverti ai corsi, visualizzare i tuoi programmi di allenamento e monitorare i tuoi progressi.
                     </div>
                     <div class="row row-cols-1 row-cols-md-2 g-3">
                         <div class="col"><a href="customer_subscription.php" class="btn btn-info w-100">Gestione Abbonamenti</a></div>
                         <div class="col"><a href="customer_course_registration.php" class="btn btn-info w-100">Iscrizione a Corsi</a></div>
-                        <div class="col"><a href="customer_training_schedule.php" class="btn btn-info w-100">Programma Allenamento</a></div>
-                        <div class="col"><a href="customer_progress_report.php" class="btn btn-info w-100">I Miei Progressi</a></div>
+                        <div class="col"><a href="customer_training_schedule.php" class="btn btn-info w-100">Programmi di Allenamento</a></div>
+                        <div class="col"><a href="customer_progress_report.php" class="btn btn-info w-100">I Tuoi Progressi</a></div>
                         <div class="col"><a href="customer_feedback.php" class="btn btn-info w-100">Lascia un Feedback</a></div>
                     </div>
 

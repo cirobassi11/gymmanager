@@ -202,12 +202,6 @@ $daysOfWeek = [
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h2>Gestione Disponibilità</h2>
-                    <p class="text-muted mb-0">
-                        <?= htmlspecialchars($trainerInfo['firstName'] . ' ' . $trainerInfo['lastName']) ?>
-                        <?php if ($trainerInfo['specialization']): ?>
-                            | <?= htmlspecialchars($trainerInfo['specialization']) ?>
-                        <?php endif; ?>
-                    </p>
                 </div>
                 <a href="dashboard.php" class="btn btn-outline-primary">
                     <i class="fas fa-arrow-left me-2"></i>Torna alla Dashboard

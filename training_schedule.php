@@ -112,22 +112,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['add_exercise'])) {
         // Aggiunta esercizio
         if (!empty($_POST['exerciseID']) && !empty($_POST['training_day_id'])) {
+            // Gestione valori NULL per weight e restTime
+            $weight = !empty($_POST['weight']) ? (float)$_POST['weight'] : null;
+            $restTime = !empty($_POST['restTime']) ? (int)$_POST['restTime'] : null;
+            
             $stmt = $conn->prepare("INSERT INTO EXERCISE_DETAIL (sets, reps, weight, restTime, trainingDayID, exerciseID, orderInWorkout) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param(
-                'iiiiiii',
+                'iidiiii',
                 $_POST['sets'],
                 $_POST['reps'],
-                $_POST['weight'],
-                $_POST['restTime'],
+                $weight,
+                $restTime,
                 $_POST['training_day_id'],
                 $_POST['exerciseID'],
                 $_POST['order_in_workout']
             );
+            
             if ($stmt->execute()) {
                 $success_message = 'Esercizio aggiunto con successo!';
                 unset($_POST);
             } else {
-                $error_message = 'Errore durante l\'aggiunta dell\'esercizio.';
+                $error_message = 'Errore durante l\'aggiunta dell\'esercizio: ' . $conn->error;
             }
         } else {
             $error_message = 'Esercizio e giorno di allenamento sono obbligatori.';
@@ -160,8 +165,9 @@ $stmt = $conn->prepare("
 $stmt->execute();
 $customers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupera tutti gli esercizi disponibili
-$stmt = $conn->prepare("SELECT * FROM EXERCISE ORDER BY name");
+// Recupera gli esercizi disponibili al trainer (suoi + condivisi)
+$stmt = $conn->prepare("SELECT * FROM EXERCISE WHERE trainerID = ? OR trainerID IS NULL ORDER BY name");
+$stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $exercises = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -510,7 +516,7 @@ $stats = getTrainerStats($conn, $trainerID);
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="badge bg-secondary"><?= $day['exercise_count'] ?> esercizi</span>
                                         <a href="?view_day=<?= $day['trainingDayID'] ?>" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-dumbbell"></i> Gestisci
+                                            Gestisci
                                         </a>
                                     </div>
                                 </div>
@@ -565,7 +571,7 @@ $stats = getTrainerStats($conn, $trainerID);
                         <input name="reps" required class="form-control" type="number" min="1" value="12" />
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Peso (kg)</label>
+                        <label class="form-label">Peso</label>
                         <input name="weight" class="form-control" type="number" step="0.5" min="0" />
                     </div>
                     <div class="col-md-3">
@@ -609,7 +615,7 @@ $stats = getTrainerStats($conn, $trainerID);
                                     </td>
                                     <td><?= $exercise['sets'] ?></td>
                                     <td><?= $exercise['reps'] ?></td>
-                                    <td><?= $exercise['weight'] ? $exercise['weight'] . ' kg' : '-' ?></td>
+                                    <td><?= $exercise['weight'] ? $exercise['weight'] : '-' ?></td>
                                     <td><?= $exercise['restTime'] ? $exercise['restTime'] . ' sec' : '-' ?></td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -618,7 +624,6 @@ $stats = getTrainerStats($conn, $trainerID);
                     </div>
                 <?php else: ?>
                     <div class="text-center py-4">
-                        <i class="fas fa-dumbbell fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">Nessun esercizio</h5>
                         <p class="text-muted">Aggiungi il primo esercizio per questo giorno di allenamento.</p>
                     </div>

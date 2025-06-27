@@ -19,9 +19,9 @@ INSERT INTO COURSE (name, description, price, maxParticipants, startDate, finish
 ('Pilates Avanzato', 'Corso avanzato di Pilates', 75.00, 10, '2025-07-15', '2025-10-15');
 
 -- Inserimento esercizi
-INSERT INTO EXERCISE (name, description) VALUES
-('Squat', 'Esercizio per gambe e glutei'),
-('Push-up', 'Esercizio per petto e braccia');
+INSERT INTO EXERCISE (name, description, trainerID) VALUES
+('Squat', 'Esercizio per gambe e glutei', 1),
+('Push-up', 'Esercizio per petto e braccia', 1);
 
 -- Inserimento manutenzioni
 INSERT INTO MAINTENANCE (equipmentID, maintenanceDate, maintenanceCost, description, status) VALUES

@@ -2,6 +2,10 @@
 require_once 'config.php';
 session_start();
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Controllo accesso trainer
 if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'trainer') {
     header('Location: login.php');
@@ -45,7 +49,7 @@ $stmt = $conn->prepare("
     SELECT COUNT(DISTINCT e.customerID) as total_students
     FROM enrollment e
     JOIN teaching t ON e.courseID = t.courseID
-    WHERE t.trainerID = ? AND e.status = 'active'
+    WHERE t.trainerID = ?
 ");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();
@@ -73,12 +77,6 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h2>I Tuoi Corsi</h2>
-                    <p class="text-muted mb-0">
-                        <?= htmlspecialchars($trainerInfo['firstName'] . ' ' . $trainerInfo['lastName']) ?>
-                        <?php if ($trainerInfo['specialization']): ?>
-                            | <?= htmlspecialchars($trainerInfo['specialization']) ?>
-                        <?php endif; ?>
-                    </p>
                 </div>
                 <a href="dashboard.php" class="btn btn-outline-primary">
                     <i class="fas fa-arrow-left me-2"></i> Torna alla Dashboard
