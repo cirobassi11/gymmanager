@@ -12,6 +12,8 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'adm
     exit();
 }
 
+$currentAdminID = $_SESSION['userID']; // ID dell'admin attualmente loggato
+
 // Calcola età da data di nascita
 function calcAge($bdate) {
     if (empty($bdate)) return 'N/A';
@@ -40,6 +42,13 @@ function checkUniqueField($conn, $field, $value, $excludeUserID = null) {
     $stmt->bind_param($types, ...$params);
     $stmt->execute();
     return $stmt->get_result()->num_rows > 0;
+}
+
+// Funzione per contare quanti admin ci sono
+function countAdmins($conn) {
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM USER WHERE role = 'admin'");
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc()['count'];
 }
 
 // Gestione POST
@@ -115,39 +124,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $validation_errors = [];
         $userID = (int)$_POST['userID'];
         
+        // SICUREZZA: Impedisci all'admin di modificare se stesso
+        if ($userID === $currentAdminID) {
+            $validation_errors[] = 'Non puoi modificare il tuo stesso account per motivi di sicurezza. Chiedi a un altro amministratore.';
+        }
+        
         // Controllo se l'utente esiste
-        $stmt = $conn->prepare("SELECT userID FROM USER WHERE userID = ?");
-        $stmt->bind_param('i', $userID);
-        $stmt->execute();
-        if ($stmt->get_result()->num_rows === 0) {
-            $validation_errors[] = 'Utente non trovato.';
+        if (empty($validation_errors)) {
+            $stmt = $conn->prepare("SELECT userID, role FROM USER WHERE userID = ?");
+            $stmt->bind_param('i', $userID);
+            $stmt->execute();
+            $targetUser = $stmt->get_result()->fetch_assoc();
+            
+            if (!$targetUser) {
+                $validation_errors[] = 'Utente non trovato.';
+            } else {
+                // SICUREZZA: Se stiamo modificando un admin e ce n'è solo uno, impediscilo
+                if ($targetUser['role'] === 'admin' && $_POST['role'] !== 'admin') {
+                    $adminCount = countAdmins($conn);
+                    if ($adminCount <= 1) {
+                        $validation_errors[] = 'Non puoi rimuovere il ruolo admin dall\'ultimo amministratore del sistema!';
+                    }
+                }
+            }
         }
         
         // Validazioni base
-        if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-            $validation_errors[] = 'Email non valida!';
-        }
-        if (empty(trim($_POST['userName']))) {
-            $validation_errors[] = 'Il nome utente è obbligatorio!';
-        }
-        if (empty(trim($_POST['firstName']))) {
-            $validation_errors[] = 'Il nome è obbligatorio!';
-        }
-        if (empty(trim($_POST['lastName']))) {
-            $validation_errors[] = 'Il cognome è obbligatorio!';
-        }
-        
-        // Controllo campi unique (escludendo l'utente corrente)
-        if (checkUniqueField($conn, 'email', $_POST['email'], $userID)) {
-            $validation_errors[] = 'Esiste già un altro utente con questa email!';
-        }
-        
-        // Controllo password se inserita
-        if (!empty($_POST['password']) || !empty($_POST['confirm_password'])) {
-            if ($_POST['password'] !== $_POST['confirm_password']) {
-                $validation_errors[] = 'Le password non corrispondono!';
-            } elseif (strlen($_POST['password']) < 4) {
-                $validation_errors[] = 'La password deve essere di almeno 4 caratteri!';
+        if (empty($validation_errors)) {
+            if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+                $validation_errors[] = 'Email non valida!';
+            }
+            if (empty(trim($_POST['userName']))) {
+                $validation_errors[] = 'Il nome utente è obbligatorio!';
+            }
+            if (empty(trim($_POST['firstName']))) {
+                $validation_errors[] = 'Il nome è obbligatorio!';
+            }
+            if (empty(trim($_POST['lastName']))) {
+                $validation_errors[] = 'Il cognome è obbligatorio!';
+            }
+            
+            // Controllo campi unique (escludendo l'utente corrente)
+            if (checkUniqueField($conn, 'email', $_POST['email'], $userID)) {
+                $validation_errors[] = 'Esiste già un altro utente con questa email!';
+            }
+            
+            // Controllo password se inserita
+            if (!empty($_POST['password']) || !empty($_POST['confirm_password'])) {
+                if ($_POST['password'] !== $_POST['confirm_password']) {
+                    $validation_errors[] = 'Le password non corrispondono!';
+                } elseif (strlen($_POST['password']) < 4) {
+                    $validation_errors[] = 'La password deve essere di almeno 4 caratteri!';
+                }
             }
         }
         
@@ -207,51 +235,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
     } elseif (isset($_POST['delete'])) {
         $deleteID = (int)$_POST['delete_id'];
-        if ($deleteID > 0) {
-            // Controlla se l'utente può essere eliminato (non ha dipendenze)
-            $canDelete = true;
-            $dependencies = [];
-            
-            // Controlla se è un cliente con abbonamenti
-            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM SUBSCRIPTION WHERE customerID = ?");
+        
+        // SICUREZZA: Impedisci all'admin di eliminare se stesso
+        if ($deleteID === $currentAdminID) {
+            $error_message = 'Non puoi eliminare il tuo stesso account per motivi di sicurezza!';
+        } elseif ($deleteID > 0) {
+            // Controlla se è l'ultimo admin
+            $stmt = $conn->prepare("SELECT role FROM USER WHERE userID = ?");
             $stmt->bind_param('i', $deleteID);
             $stmt->execute();
-            $subscriptions = $stmt->get_result()->fetch_assoc()['count'];
-            if ($subscriptions > 0) {
-                $dependencies[] = "$subscriptions abbonamento/i";
-                $canDelete = false;
-            }
+            $targetUser = $stmt->get_result()->fetch_assoc();
             
-            // Controlla se è un trainer con corsi assegnati
-            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM teaching WHERE trainerID = ?");
-            $stmt->bind_param('i', $deleteID);
-            $stmt->execute();
-            $courses = $stmt->get_result()->fetch_assoc()['count'];
-            if ($courses > 0) {
-                $dependencies[] = "$courses corso/i";
-                $canDelete = false;
-            }
-            
-            // Controlla se è un cliente iscritto a corsi
-            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM enrollment WHERE customerID = ?");
-            $stmt->bind_param('i', $deleteID);
-            $stmt->execute();
-            $enrollments = $stmt->get_result()->fetch_assoc()['count'];
-            if ($enrollments > 0) {
-                $dependencies[] = "$enrollments iscrizione/i a corsi";
-                $canDelete = false;
-            }
-            
-            if ($canDelete) {
-                $stmt = $conn->prepare("DELETE FROM USER WHERE userID = ?");
-                $stmt->bind_param('i', $deleteID);
-                if ($stmt->execute()) {
-                    $success_message = 'Utente eliminato con successo!';
+            if ($targetUser && $targetUser['role'] === 'admin') {
+                $adminCount = countAdmins($conn);
+                if ($adminCount <= 1) {
+                    $error_message = 'Non puoi eliminare l\'ultimo amministratore del sistema!';
                 } else {
-                    $error_message = 'Errore durante l\'eliminazione dell\'utente: ' . $conn->error;
+                    // Procedi con l'eliminazione dopo aver controllato le dipendenze
+                    processUserDeletion($conn, $deleteID);
                 }
             } else {
-                $error_message = 'Impossibile eliminare l\'utente. Ha ancora: ' . implode(', ', $dependencies) . '. Rimuovi prima queste dipendenze.';
+                // Non è un admin, procedi normalmente
+                $this->processUserDeletion($conn, $deleteID);
             }
         } else {
             $error_message = 'ID utente non valido.';
@@ -259,9 +264,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Funzione per gestire l'eliminazione utente
+function processUserDeletion($conn, $deleteID) {
+    global $error_message, $success_message;
+    
+    // Controlla se l'utente può essere eliminato (non ha dipendenze)
+    $canDelete = true;
+    $dependencies = [];
+    
+    // Controlla se è un cliente con abbonamenti
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM SUBSCRIPTION WHERE customerID = ?");
+    $stmt->bind_param('i', $deleteID);
+    $stmt->execute();
+    $subscriptions = $stmt->get_result()->fetch_assoc()['count'];
+    if ($subscriptions > 0) {
+        $dependencies[] = "$subscriptions abbonamento/i";
+        $canDelete = false;
+    }
+    
+    // Controlla se è un trainer con corsi assegnati
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM teaching WHERE trainerID = ?");
+    $stmt->bind_param('i', $deleteID);
+    $stmt->execute();
+    $courses = $stmt->get_result()->fetch_assoc()['count'];
+    if ($courses > 0) {
+        $dependencies[] = "$courses corso/i";
+        $canDelete = false;
+    }
+    
+    // Controlla se è un cliente iscritto a corsi
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM enrollment WHERE customerID = ?");
+    $stmt->bind_param('i', $deleteID);
+    $stmt->execute();
+    $enrollments = $stmt->get_result()->fetch_assoc()['count'];
+    if ($enrollments > 0) {
+        $dependencies[] = "$enrollments iscrizione/i a corsi";
+        $canDelete = false;
+    }
+    
+    if ($canDelete) {
+        $stmt = $conn->prepare("DELETE FROM USER WHERE userID = ?");
+        $stmt->bind_param('i', $deleteID);
+        if ($stmt->execute()) {
+            $success_message = 'Utente eliminato con successo!';
+        } else {
+            $error_message = 'Errore durante l\'eliminazione dell\'utente: ' . $conn->error;
+        }
+    } else {
+        $error_message = 'Impossibile eliminare l\'utente. Ha ancora: ' . implode(', ', $dependencies) . '. Rimuovi prima queste dipendenze.';
+    }
+}
+
 // Recupera utenti per ruolo
 function getUsersByRole($conn, $role) {
-    $stmt = $conn->prepare("SELECT userID, email, userName, firstName, lastName, birthDate, gender, phoneNumber FROM USER WHERE role = ?");
+    $stmt = $conn->prepare("SELECT userID, email, userName, firstName, lastName, birthDate, gender, phoneNumber, role FROM USER WHERE role = ?");
     $stmt->bind_param('s', $role);
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -271,10 +327,16 @@ function getUsersByRole($conn, $role) {
 $editUser = null;
 if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $userID = (int)$_GET['edit'];
-    $stmt = $conn->prepare("SELECT * FROM USER WHERE userID = ?");
-    $stmt->bind_param('i', $userID);
-    $stmt->execute();
-    $editUser = $stmt->get_result()->fetch_assoc();
+    
+    // SICUREZZA: Impedisci all'admin di modificare se stesso
+    if ($userID === $currentAdminID) {
+        $error_message = 'Non puoi modificare il tuo stesso account per motivi di sicurezza. Chiedi a un altro amministratore.';
+    } else {
+        $stmt = $conn->prepare("SELECT * FROM USER WHERE userID = ?");
+        $stmt->bind_param('i', $userID);
+        $stmt->execute();
+        $editUser = $stmt->get_result()->fetch_assoc();
+    }
 }
 
 // Funzioni per le statistiche
@@ -317,6 +379,7 @@ foreach (array_keys($roles) as $role) {
 }
 
 $stats = getCustomerStats($conn);
+$adminCount = countAdmins($conn);
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -461,6 +524,12 @@ $stats = getCustomerStats($conn);
                         <option value="trainer" <?= ($editUser && $editUser['role'] === 'trainer') || (isset($_POST['role']) && $_POST['role'] === 'trainer') ? 'selected' : '' ?>>Trainer</option>
                         <option value="admin" <?= ($editUser && $editUser['role'] === 'admin') || (isset($_POST['role']) && $_POST['role'] === 'admin') ? 'selected' : '' ?>>Admin</option>
                     </select>
+                    <?php if ($editUser && $editUser['role'] === 'admin' && $adminCount <= 1): ?>
+                        <div class="form-text text-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Questo è l'ultimo amministratore: non puoi rimuovere il ruolo admin!
+                        </div>
+                    <?php endif; ?>
                 </div>
                 
                 <div class="col-12">
@@ -492,7 +561,11 @@ $stats = getCustomerStats($conn);
                         </thead>
                         <tbody>
                             <?php foreach($usersByRole[$key] as $u): ?>
-                                <tr>
+                                <?php 
+                                $isCurrentAdmin = ($u['userID'] == $currentAdminID);
+                                $isLastAdmin = ($key === 'admin' && $adminCount <= 1 && $u['userID'] == $currentAdminID);
+                                ?>
+                                <tr <?= $isCurrentAdmin ? 'class="table-info"' : '' ?>>
                                     <td><?= htmlspecialchars($u['email']) ?></td>
                                     <td><?= htmlspecialchars($u['userName']) ?></td>
                                     <td><?= htmlspecialchars($u['firstName']) ?></td>
@@ -501,15 +574,27 @@ $stats = getCustomerStats($conn);
                                     <td><?= htmlspecialchars($u['gender']) ?></td>
                                     <td><?= htmlspecialchars($u['phoneNumber']) ?></td>
                                     <td>
-                                        <a href="?edit=<?= $u['userID'] ?>" class="btn btn-sm btn-warning" title="Modifica utente">
-                                            Modifica
-                                        </a>
-                                        <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo utente?\n\nATTENZIONE: L\'operazione non può essere annullata.');">
-                                            <input type="hidden" name="delete_id" value="<?= $u['userID'] ?>">
-                                            <button name="delete" class="btn btn-sm btn-danger" title="Elimina utente">
-                                                Elimina
-                                            </button>
-                                        </form>
+                                        <?php if ($isCurrentAdmin): ?>
+                                            <span class="text-muted">
+                                                Non modificabile (sei tu)
+                                            </span>
+                                        <?php else: ?>
+                                            <a href="?edit=<?= $u['userID'] ?>" class="btn btn-sm btn-warning" title="Modifica utente">
+                                                Modifica
+                                            </a>
+                                            <?php if ($isLastAdmin): ?>
+                                                <button class="btn btn-sm btn-secondary" disabled title="Non puoi eliminare l'ultimo admin">
+                                                    Protetto
+                                                </button>
+                                            <?php else: ?>
+                                                <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo utente?\n\nATTENZIONE: L\'operazione non può essere annullata.');">
+                                                    <input type="hidden" name="delete_id" value="<?= $u['userID'] ?>">
+                                                    <button name="delete" class="btn btn-sm btn-danger" title="Elimina utente">
+                                                        Elimina
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -530,6 +615,7 @@ $stats = getCustomerStats($conn);
         const form = document.getElementById('userForm');
         const passwordField = document.querySelector('input[name="password"]');
         const confirmPasswordField = document.querySelector('input[name="confirm_password"]');
+        const roleField = document.querySelector('select[name="role"]');
         
         // Validazione password in tempo reale
         function validatePasswords() {
@@ -564,74 +650,98 @@ $stats = getCustomerStats($conn);
                 if (email) this.classList.add('is-valid');
             }
         });
+        
+        // Protezione cambio ruolo admin
+        const isEditingAdmin = <?= $editUser && $editUser['role'] === 'admin' ? 'true' : 'false' ?>;
+        const adminCount = <?= $adminCount ?>;
+        
+        if (isEditingAdmin && adminCount <= 1) {
+            roleField.addEventListener('change', function() {
+                if (this.value !== 'admin') {
+                    alert('Non puoi rimuovere il ruolo admin dall\'ultimo amministratore del sistema!');
+                    this.value = 'admin';
+                }
+            });
+        }
+        
+        // Validazione form prima dell'invio
+        form.addEventListener('submit', function(e) {
+            if (isEditingAdmin && adminCount <= 1 && roleField.value !== 'admin') {
+                e.preventDefault();
+                alert('Operazione non consentita: non puoi rimuovere il ruolo admin dall\'ultimo amministratore!');
+                return false;
+            }
+        });
     });
     
     // Grafico distribuzione genere
     const genderData = <?= json_encode($stats['genderStats']) ?>;
-    const labels = genderData.map(g => g.gender);
-    const data = genderData.map(g => g.count);
+    if (genderData && genderData.length > 0) {
+        const labels = genderData.map(g => g.gender);
+        const data = genderData.map(g => g.count);
 
-    new Chart(document.getElementById('genderChart'), {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Numero Utenti',
-                data: data,
-                backgroundColor: ['#8b9dc3', '#ff7675', '#95a5a6'],
-                borderColor: ['#6a85b6', '#e84393', '#7f8c8d'],
-                borderWidth: 1,
-                borderRadius: 4
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(255,255,255,0.95)',
-                    titleColor: '#2c3e50',
-                    bodyColor: '#2c3e50',
-                    borderColor: '#bdc3c7',
+        new Chart(document.getElementById('genderChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Numero Utenti',
+                    data: data,
+                    backgroundColor: ['#8b9dc3', '#ff7675', '#95a5a6'],
+                    borderColor: ['#6a85b6', '#e84393', '#7f8c8d'],
                     borderWidth: 1,
-                    cornerRadius: 8,
-                    callbacks: {
-                        label: context => `${context.parsed.x} ${context.label}`
-                    }
-                }
+                    borderRadius: 4
+                }]
             },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    ticks: { 
-                        color: '#2c3e50',
-                        font: { size: 11, weight: '500' }
-                    },
-                    grid: { 
-                        color: 'rgba(44, 62, 80, 0.15)',
-                        lineWidth: 1
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(255,255,255,0.95)',
+                        titleColor: '#2c3e50',
+                        bodyColor: '#2c3e50',
+                        borderColor: '#bdc3c7',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: context => `${context.parsed.x} ${context.label}`
+                        }
                     }
                 },
-                y: {
-                    ticks: {
-                        font: { 
-                            weight: 'bold',
-                            size: 12
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { 
+                            color: '#2c3e50',
+                            font: { size: 11, weight: '500' }
                         },
-                        color: '#2c3e50'
+                        grid: { 
+                            color: 'rgba(44, 62, 80, 0.15)',
+                            lineWidth: 1
+                        }
                     },
-                    grid: { display: false }
-                }
-            },
-            elements: {
-                bar: {
-                    borderSkipped: false,
+                    y: {
+                        ticks: {
+                            font: { 
+                                weight: 'bold',
+                                size: 12
+                            },
+                            color: '#2c3e50'
+                        },
+                        grid: { display: false }
+                    }
+                },
+                elements: {
+                    bar: {
+                        borderSkipped: false,
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 </script>
 </body>
 </html>
