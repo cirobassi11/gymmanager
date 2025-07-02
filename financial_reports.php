@@ -104,6 +104,23 @@ function getFinancialStats($conn, $startDate, $endDate) {
     $stmt->execute();
     $topExpenses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
+    // Top 5 clienti che spendono di più
+    $stmt = $conn->prepare("
+        SELECT u.firstName, u.lastName, u.email,
+               SUM(p.amount) as total_spent,
+               COUNT(p.paymentID) as payment_count,
+               AVG(p.amount) as avg_payment
+        FROM PAYMENT p
+        JOIN USER u ON p.customerID = u.userID
+        WHERE p.status = 'completed' AND DATE(p.date) BETWEEN ? AND ?
+        GROUP BY p.customerID, u.firstName, u.lastName, u.email
+        ORDER BY total_spent DESC
+        LIMIT 5
+    ");
+    $stmt->bind_param('ss', $startDate, $endDate);
+    $stmt->execute();
+    $topCustomers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    
     return [
         'totalRevenue' => $revenueStats['total_revenue'] ?? 0,
         'totalPayments' => $revenueStats['total_payments'] ?? 0,
@@ -111,7 +128,8 @@ function getFinancialStats($conn, $startDate, $endDate) {
         'totalMaintenances' => $expenseStats['total_maintenances'] ?? 0,
         'netProfit' => ($revenueStats['total_revenue'] ?? 0) - ($expenseStats['total_expenses'] ?? 0),
         'membershipRevenue' => $membershipRevenue,
-        'topExpenses' => $topExpenses
+        'topExpenses' => $topExpenses,
+        'topCustomers' => $topCustomers
     ];
 }
 
@@ -264,7 +282,7 @@ foreach ($dateRange as $date) {
     <div class="row">
         <!-- Entrate per Abbonamento -->
         <?php if (!empty($stats['membershipRevenue'])): ?>
-        <div class="col-lg-6 mb-4">
+        <div class="col-lg-4 mb-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">
@@ -297,7 +315,7 @@ foreach ($dateRange as $date) {
 
         <!-- Top Spese Attrezzature -->
         <?php if (!empty($stats['topExpenses'])): ?>
-        <div class="col-lg-6 mb-4">
+        <div class="col-lg-4 mb-4">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">
@@ -318,6 +336,47 @@ foreach ($dateRange as $date) {
                                     <td><?= htmlspecialchars($expense['equipment_name']) ?></td>
                                     <td><span class="badge bg-warning"><?= $expense['maintenance_count'] ?></span></td>
                                     <td><strong class="text-danger">€<?= number_format($expense['total_cost'], 2) ?></strong></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Top 5 Clienti che Spendono di Più -->
+        <?php if (!empty($stats['topCustomers'])): ?>
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        Top 5 Clienti
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Pagamenti</th>
+                                    <th>Spesa Totale</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach($stats['topCustomers'] as $index => $customer): ?>
+                                <tr>
+                                    <td>
+                                        <strong><?= htmlspecialchars($customer['firstName'] . ' ' . $customer['lastName']) ?></strong>
+                                        <br><small class="text-muted"><?= htmlspecialchars($customer['email']) ?></small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary"><?= $customer['payment_count'] ?></span>
+                                        <br><small class="text-muted">€<?= number_format($customer['avg_payment'], 2) ?> media</small>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">€<?= number_format($customer['total_spent'], 2) ?></strong>
+                                    </td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
