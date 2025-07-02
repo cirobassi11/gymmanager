@@ -526,7 +526,6 @@ $stats = getTrainerStats($conn, $trainerID);
                     </div>
                 <?php else: ?>
                     <div class="text-center py-4">
-                        <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">Nessun giorno di allenamento</h5>
                         <p class="text-muted">Aggiungi il primo giorno di allenamento per questo programma.</p>
                     </div>

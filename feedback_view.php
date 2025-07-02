@@ -8,25 +8,6 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'adm
     exit();
 }
 
-// Gestione POST
-$error_message = '';
-$success_message = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['delete_feedback'])) {
-        // Eliminazione feedback
-        $deleteID = (int)$_POST['delete_id'];
-        if ($deleteID > 0) {
-            $stmt = $conn->prepare("DELETE FROM FEEDBACK WHERE feedbackID = ?");
-            $stmt->bind_param('i', $deleteID);
-            if ($stmt->execute()) {
-                $success_message = 'Feedback eliminato con successo!';
-            } else {
-                $error_message = 'Errore durante l\'eliminazione del feedback.';
-            }
-        }
-    }
-}
-
 // Recupera tutti i feedback
 $stmt = $conn->prepare("
     SELECT f.feedbackID, f.date, f.rating, f.comment,
@@ -117,14 +98,6 @@ function generateStars($rating) {
         </div>
     </div>
 
-    <!-- Messaggi -->
-    <?php if (!empty($error_message)): ?>
-        <div class="alert alert-danger"><?= htmlspecialchars($error_message) ?></div>
-    <?php endif; ?>
-    <?php if (!empty($success_message)): ?>
-        <div class="alert alert-success"><?= htmlspecialchars($success_message) ?></div>
-    <?php endif; ?>
-
     <!-- Lista Feedback -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
@@ -148,7 +121,6 @@ function generateStars($rating) {
 
                                 <!-- Cliente -->
                                 <h6 class="card-title mb-3">
-                                    <i class="fas fa-user me-1"></i>
                                     <?= htmlspecialchars($feedback['firstName'] . ' ' . $feedback['lastName']) ?>
                                 </h6>
 
@@ -158,16 +130,6 @@ function generateStars($rating) {
                                         "<?= htmlspecialchars($feedback['comment']) ?>"
                                     </p>
                                 <?php endif; ?>
-
-                                <!-- Azioni -->
-                                <div class="d-flex justify-content-end">
-                                    <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo feedback?');">
-                                        <input type="hidden" name="delete_id" value="<?= $feedback['feedbackID'] ?>">
-                                        <button name="delete_feedback" class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
                             </div>
                         </div>
                     </div>
