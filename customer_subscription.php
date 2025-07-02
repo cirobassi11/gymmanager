@@ -245,7 +245,7 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                                 <span class="fw-bold">€<?= number_format($currentSubscription['paid_amount'], 2) ?></span>
                                 <?php if ($currentSubscription['promotion_name']): ?>
                                     <br><small class="text-success">
-                                        <i class="fas fa-tag"></i> <?= htmlspecialchars($currentSubscription['promotion_name']) ?>
+                                        <?= htmlspecialchars($currentSubscription['promotion_name']) ?>
                                         (-<?= $currentSubscription['discountRate'] ?>%)
                                     </small>
                                 <?php endif; ?>
@@ -273,7 +273,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                 <h4 class="mb-0">Nessun Abbonamento Attivo</h4>
             </div>
             <div class="card-body text-center">
-                <i class="fas fa-calendar-times fa-3x text-warning mb-3"></i>
                 <h5>Non hai un abbonamento attivo</h5>
                 <p class="text-muted">Scegli uno degli abbonamenti disponibili qui sotto per iniziare ad allenarti!</p>
             </div>
@@ -311,7 +310,7 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
     <?php if (!$currentSubscription): ?>
         <div class="card mb-4 shadow-sm">
             <div class="card-header">
-                <h4 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Abbonamenti Disponibili</h4>
+                <h4 class="mb-0">Abbonamenti Disponibili</h4>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -352,7 +351,7 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                                     <?php endif; ?>
                                     
                                     <button name="buy_subscription" class="btn btn-success w-100">
-                                        <i class="fas fa-credit-card me-2"></i>Acquista Abbonamento
+                                        Acquista Abbonamento
                                     </button>
                                 </form>
                             </div>

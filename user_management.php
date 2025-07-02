@@ -381,13 +381,11 @@ $stats = getCustomerStats($conn);
             <h4><?= $editUser ? 'Modifica Utente' : 'Aggiungi Utente' ?></h4>
             <?php if (!empty($error_message)): ?>
                 <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
                     <?= $error_message ?>
                 </div>
             <?php endif; ?>
             <?php if (!empty($success_message)): ?>
                 <div class="alert alert-success">
-                    <i class="fas fa-check-circle me-2"></i>
                     <?= htmlspecialchars($success_message) ?>
                 </div>
             <?php endif; ?>
@@ -467,12 +465,11 @@ $stats = getCustomerStats($conn);
                 
                 <div class="col-12">
                     <button name="<?= $editUser ? 'update' : 'add' ?>" class="btn <?= $editUser ? 'btn-warning' : 'btn-success' ?>" type="submit">
-                        <i class="fas <?= $editUser ? 'fa-edit' : 'fa-plus' ?> me-2"></i>
                         <?= $editUser ? 'Modifica Utente' : 'Aggiungi Utente' ?>
                     </button>
                     <?php if ($editUser): ?>
                         <a href="?" class="btn btn-secondary">
-                            <i class="fas fa-times me-2"></i>Annulla
+                            Annulla
                         </a>
                     <?php endif; ?>
                 </div>

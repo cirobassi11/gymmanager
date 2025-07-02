@@ -228,7 +228,6 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                 </div>
                 <div class="col-12">
                     <button name="<?= $editExercise ? 'update_exercise' : 'add_exercise' ?>" class="btn <?= $editExercise ? 'btn-warning' : 'btn-success' ?>">
-                        <i class="fas <?= $editExercise ? 'fa-edit' : 'fa-plus' ?>"></i>
                         <?= $editExercise ? 'Modifica Esercizio' : 'Aggiungi Esercizio' ?>
                     </button>
                     <?php if ($editExercise): ?>
@@ -308,12 +307,12 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                                                 </form>
                                             <?php else: ?>
                                                 <button class="btn btn-sm btn-secondary" disabled title="Impossibile eliminare: esercizio in uso">
-                                                    <i class="fas fa-lock"></i> In uso
+                                                    In uso
                                                 </button>
                                             <?php endif; ?>
                                         <?php else: ?>
                                             <span class="badge bg-light text-dark">
-                                                <i class="fas fa-globe"></i> Condiviso
+                                                Condiviso
                                             </span>
                                         <?php endif; ?>
                                     </td>
@@ -324,7 +323,6 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                 </div>
             <?php else: ?>
                 <div class="text-center py-5">
-                    <i class="fas fa-dumbbell fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">Nessun esercizio disponibile</h5>
                     <p class="text-muted">Aggiungi il primo esercizio alla libreria per iniziare a creare programmi di allenamento.</p>
                 </div>

@@ -595,7 +595,7 @@ $stats = getTrainerStats($conn, $trainerID);
                     </div>
                     <div class="col-12">
                         <button name="add_training_day" class="btn btn-success">
-                            <i class="fas fa-plus"></i> Aggiungi Giorno
+                            Aggiungi Giorno
                         </button>
                     </div>
                 </form>
@@ -624,7 +624,7 @@ $stats = getTrainerStats($conn, $trainerID);
                                         <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo giorno di allenamento? Verranno eliminati anche tutti gli esercizi associati.');">
                                             <input type="hidden" name="training_day_id" value="<?= $day['trainingDayID'] ?>">
                                             <button name="delete_training_day" class="btn btn-sm btn-outline-danger" title="Elimina giorno">
-                                                <i class="fas fa-trash"></i>
+                                                Elimina
                                             </button>
                                         </form>
                                     </div>
@@ -658,7 +658,7 @@ $stats = getTrainerStats($conn, $trainerID);
                         <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo giorno di allenamento? Verranno eliminati anche tutti gli esercizi associati.');">
                             <input type="hidden" name="training_day_id" value="<?= $viewDay['trainingDayID'] ?>">
                             <button name="delete_training_day" class="btn btn-outline-danger">
-                                <i class="fas fa-trash me-2"></i>Elimina Giorno
+                                Elimina Giorno
                             </button>
                         </form>
                     </div>
@@ -714,7 +714,7 @@ $stats = getTrainerStats($conn, $trainerID);
                     </div>
                     <div class="col-12">
                         <button name="add_exercise" class="btn btn-success">
-                            <i class="fas fa-plus"></i> Aggiungi Esercizio
+                            Aggiungi Esercizio
                         </button>
                     </div>
                 </form>
@@ -752,7 +752,7 @@ $stats = getTrainerStats($conn, $trainerID);
                                             <input type="hidden" name="exercise_detail_id" value="<?= $exercise['exerciseDetailID'] ?>">
                                             <input type="hidden" name="training_day_id" value="<?= $viewDay['trainingDayID'] ?>">
                                             <button name="delete_exercise" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-trash"></i> Elimina
+                                                Elimina
                                             </button>
                                         </form>
                                     </td>

@@ -137,7 +137,6 @@ function generateStars($rating) {
                 </div>
             <?php else: ?>
                 <div class="text-center py-5">
-                    <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">Nessun feedback disponibile</h5>
                     <p class="text-muted">Non sono ancora stati ricevuti feedback dai clienti.</p>
                 </div>
