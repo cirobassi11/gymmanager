@@ -505,12 +505,12 @@ $stats = getCustomerStats($conn);
                                     <td><?= htmlspecialchars($u['phoneNumber']) ?></td>
                                     <td>
                                         <a href="?edit=<?= $u['userID'] ?>" class="btn btn-sm btn-warning" title="Modifica utente">
-                                            <i class="fas fa-edit"></i>
+                                            Modifica
                                         </a>
                                         <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo utente?\n\nATTENZIONE: L\'operazione non può essere annullata.');">
                                             <input type="hidden" name="delete_id" value="<?= $u['userID'] ?>">
                                             <button name="delete" class="btn btn-sm btn-danger" title="Elimina utente">
-                                                <i class="fas fa-trash"></i>
+                                                Elimina
                                             </button>
                                         </form>
                                     </td>

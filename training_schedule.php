@@ -137,6 +137,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error_message = 'Esercizio e giorno di allenamento sono obbligatori.';
         }
+    } elseif (isset($_POST['delete_exercise'])) {
+        // NUOVA FUNZIONALITÀ: Eliminazione esercizio
+        $exerciseDetailID = (int)$_POST['exercise_detail_id'];
+        $trainingDayID = (int)$_POST['training_day_id'];
+        
+        if ($exerciseDetailID > 0 && $trainingDayID > 0) {
+            // Verifica che l'esercizio appartenga al trainer corrente
+            $stmt = $conn->prepare("
+                SELECT ed.exerciseDetailID 
+                FROM EXERCISE_DETAIL ed
+                JOIN TRAINING_DAY td ON ed.trainingDayID = td.trainingDayID
+                JOIN TRAINING_SCHEDULE ts ON td.trainingScheduleID = ts.trainingScheduleID
+                WHERE ed.exerciseDetailID = ? AND ed.trainingDayID = ? AND ts.trainerID = ?
+            ");
+            $stmt->bind_param('iii', $exerciseDetailID, $trainingDayID, $trainerID);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            
+            if ($result) {
+                // Elimina l'esercizio
+                $stmt = $conn->prepare("DELETE FROM EXERCISE_DETAIL WHERE exerciseDetailID = ?");
+                $stmt->bind_param('i', $exerciseDetailID);
+                if ($stmt->execute()) {
+                    $success_message = 'Esercizio eliminato con successo!';
+                } else {
+                    $error_message = 'Errore durante l\'eliminazione dell\'esercizio.';
+                }
+            } else {
+                $error_message = 'Non hai i permessi per eliminare questo esercizio.';
+            }
+        }
+    } elseif (isset($_POST['delete_training_day'])) {
+        // NUOVA FUNZIONALITÀ: Eliminazione giorno di allenamento
+        $trainingDayID = (int)$_POST['training_day_id'];
+        
+        if ($trainingDayID > 0) {
+            // Verifica che il giorno appartenga al trainer corrente
+            $stmt = $conn->prepare("
+                SELECT td.trainingDayID 
+                FROM TRAINING_DAY td
+                JOIN TRAINING_SCHEDULE ts ON td.trainingScheduleID = ts.trainingScheduleID
+                WHERE td.trainingDayID = ? AND ts.trainerID = ?
+            ");
+            $stmt->bind_param('ii', $trainingDayID, $trainerID);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            
+            if ($result) {
+                // Prima elimina tutti gli esercizi del giorno
+                $stmt = $conn->prepare("DELETE FROM EXERCISE_DETAIL WHERE trainingDayID = ?");
+                $stmt->bind_param('i', $trainingDayID);
+                $stmt->execute();
+                
+                // Poi elimina il giorno
+                $stmt = $conn->prepare("DELETE FROM TRAINING_DAY WHERE trainingDayID = ?");
+                $stmt->bind_param('i', $trainingDayID);
+                if ($stmt->execute()) {
+                    $success_message = 'Giorno di allenamento eliminato con successo!';
+                    // Redirect per evitare di rimanere sulla pagina del giorno eliminato
+                    if (isset($_GET['view_day'])) {
+                        // Recupera l'ID del programma per il redirect
+                        $stmt = $conn->prepare("
+                            SELECT ts.trainingScheduleID 
+                            FROM TRAINING_SCHEDULE ts
+                            WHERE ts.trainerID = ? 
+                            LIMIT 1
+                        ");
+                        $stmt->bind_param('i', $trainerID);
+                        $stmt->execute();
+                        $scheduleResult = $stmt->get_result()->fetch_assoc();
+                        if ($scheduleResult) {
+                            header('Location: ?view=' . $scheduleResult['trainingScheduleID'] . '&success=day_deleted');
+                            exit();
+                        } else {
+                            header('Location: ?success=day_deleted');
+                            exit();
+                        }
+                    }
+                } else {
+                    $error_message = 'Errore durante l\'eliminazione del giorno di allenamento.';
+                }
+            } else {
+                $error_message = 'Non hai i permessi per eliminare questo giorno di allenamento.';
+            }
+        }
     }
 }
 
@@ -223,7 +308,7 @@ if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {
     
     // Recupera il giorno di allenamento
     $stmt = $conn->prepare("
-        SELECT td.*, ts.name as schedule_name, u.firstName, u.lastName
+        SELECT td.*, ts.name as schedule_name, ts.trainingScheduleID, u.firstName, u.lastName
         FROM TRAINING_DAY td
         JOIN TRAINING_SCHEDULE ts ON td.trainingScheduleID = ts.trainingScheduleID
         JOIN USER u ON ts.customerID = u.userID
@@ -245,6 +330,13 @@ if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {
         $stmt->bind_param('i', $dayID);
         $stmt->execute();
         $dayExercises = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+}
+
+// Gestione messaggi di successo da redirect
+if (isset($_GET['success'])) {
+    if ($_GET['success'] == 'day_deleted') {
+        $success_message = 'Giorno di allenamento eliminato con successo!';
     }
 }
 
@@ -428,15 +520,15 @@ $stats = getTrainerStats($conn, $trainerID);
                                     <td><span class="badge bg-info"><?= $schedule['day_count'] ?> giorni</span></td>
                                     <td>
                                         <a href="?view=<?= $schedule['trainingScheduleID'] ?>" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-eye"></i> Visualizza
+                                            Visualizza
                                         </a>
                                         <a href="?edit=<?= $schedule['trainingScheduleID'] ?>" class="btn btn-sm btn-warning">
-                                            <i class="fas fa-edit"></i> Modifica
+                                            Modifica
                                         </a>
                                         <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo programma?');">
                                             <input type="hidden" name="delete_id" value="<?= $schedule['trainingScheduleID'] ?>">
                                             <button name="delete_schedule" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-trash"></i> Elimina
+                                                Elimina
                                             </button>
                                         </form>
                                     </td>
@@ -473,6 +565,15 @@ $stats = getTrainerStats($conn, $trainerID);
                 </div>
             </div>
         </div>
+
+        <!-- Messaggi -->
+        <?php if (!empty($error_message)): ?>
+            <div class="alert alert-danger"><?= htmlspecialchars($error_message) ?></div>
+        <?php endif; ?>
+        
+        <?php if (!empty($success_message)): ?>
+            <div class="alert alert-success"><?= htmlspecialchars($success_message) ?></div>
+        <?php endif; ?>
 
         <!-- Form aggiunta giorno di allenamento -->
         <div class="card mb-4 shadow-sm">
@@ -513,11 +614,19 @@ $stats = getTrainerStats($conn, $trainerID);
                                 <div class="card-body">
                                     <h6 class="card-title"><?= htmlspecialchars($day['name']) ?></h6>
                                     <p class="card-text text-muted small"><?= htmlspecialchars($day['description']) ?></p>
-                                    <div class="d-flex justify-content-between align-items-center">
+                                    <div class="mb-3">
                                         <span class="badge bg-secondary"><?= $day['exercise_count'] ?> esercizi</span>
-                                        <a href="?view_day=<?= $day['trainingDayID'] ?>" class="btn btn-sm btn-primary">
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <a href="?view_day=<?= $day['trainingDayID'] ?>" class="btn btn-sm btn-primary flex-fill">
                                             Gestisci
                                         </a>
+                                        <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo giorno di allenamento? Verranno eliminati anche tutti gli esercizi associati.');">
+                                            <input type="hidden" name="training_day_id" value="<?= $day['trainingDayID'] ?>">
+                                            <button name="delete_training_day" class="btn btn-sm btn-outline-danger" title="Elimina giorno">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -537,12 +646,34 @@ $stats = getTrainerStats($conn, $trainerID);
         <!-- Visualizzazione esercizi di un giorno -->
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
-                <h3><?= htmlspecialchars($viewDay['name']) ?></h3>
-                <p><strong>Programma:</strong> <?= htmlspecialchars($viewDay['schedule_name']) ?></p>
-                <p><strong>Cliente:</strong> <?= htmlspecialchars($viewDay['firstName'] . ' ' . $viewDay['lastName']) ?></p>
-                <p><strong>Descrizione:</strong> <?= htmlspecialchars($viewDay['description']) ?></p>
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h3><?= htmlspecialchars($viewDay['name']) ?></h3>
+                        <p><strong>Programma:</strong> <?= htmlspecialchars($viewDay['schedule_name']) ?></p>
+                        <p><strong>Cliente:</strong> <?= htmlspecialchars($viewDay['firstName'] . ' ' . $viewDay['lastName']) ?></p>
+                        <p><strong>Descrizione:</strong> <?= htmlspecialchars($viewDay['description']) ?></p>
+                    </div>
+                    <div>
+                        <!-- Pulsante per eliminare il giorno -->
+                        <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo giorno di allenamento? Verranno eliminati anche tutti gli esercizi associati.');">
+                            <input type="hidden" name="training_day_id" value="<?= $viewDay['trainingDayID'] ?>">
+                            <button name="delete_training_day" class="btn btn-outline-danger">
+                                <i class="fas fa-trash me-2"></i>Elimina Giorno
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- Messaggi -->
+        <?php if (!empty($error_message)): ?>
+            <div class="alert alert-danger"><?= htmlspecialchars($error_message) ?></div>
+        <?php endif; ?>
+        
+        <?php if (!empty($success_message)): ?>
+            <div class="alert alert-success"><?= htmlspecialchars($success_message) ?></div>
+        <?php endif; ?>
 
         <!-- Form aggiunta esercizio -->
         <div class="card mb-4 shadow-sm">
@@ -599,7 +730,7 @@ $stats = getTrainerStats($conn, $trainerID);
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Ordine</th><th>Esercizio</th><th>Serie</th><th>Ripetizioni</th><th>Peso</th><th>Recupero</th>
+                                    <th>Ordine</th><th>Esercizio</th><th>Serie</th><th>Ripetizioni</th><th>Peso</th><th>Recupero</th><th>Azioni</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -614,8 +745,17 @@ $stats = getTrainerStats($conn, $trainerID);
                                     </td>
                                     <td><?= $exercise['sets'] ?></td>
                                     <td><?= $exercise['reps'] ?></td>
-                                    <td><?= $exercise['weight'] ? $exercise['weight'] : '-' ?></td>
+                                    <td><?= $exercise['weight'] ? $exercise['weight'] . ' kg' : '-' ?></td>
                                     <td><?= $exercise['restTime'] ? $exercise['restTime'] . ' sec' : '-' ?></td>
+                                    <td>
+                                        <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo esercizio?');">
+                                            <input type="hidden" name="exercise_detail_id" value="<?= $exercise['exerciseDetailID'] ?>">
+                                            <input type="hidden" name="training_day_id" value="<?= $viewDay['trainingDayID'] ?>">
+                                            <button name="delete_exercise" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-trash"></i> Elimina
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>

@@ -297,13 +297,13 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                                         
                                         <?php if ($isOwner): ?>
                                             <a href="?edit=<?= $exercise['exerciseID'] ?>" class="btn btn-sm btn-warning">
-                                                <i class="fas fa-edit"></i> Modifica
+                                                Modifica
                                             </a>
                                             <?php if ($exercise['usage_count'] == 0): ?>
                                                 <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo esercizio?');">
                                                     <input type="hidden" name="delete_id" value="<?= $exercise['exerciseID'] ?>">
                                                     <button name="delete_exercise" class="btn btn-sm btn-danger">
-                                                        <i class="fas fa-trash"></i> Elimina
+                                                        Elimina
                                                     </button>
                                                 </form>
                                             <?php else: ?>

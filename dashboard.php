@@ -46,6 +46,7 @@ if (!$user) {
                         <div class="col"><a href="course_management.php" class="btn btn-primary w-100">Gestione Corsi</a></div>
                         <div class="col"><a href="subscription_management.php" class="btn btn-primary w-100">Gestione Abbonamenti e Promozioni</a></div>
                         <div class="col"><a href="equipment_management.php" class="btn btn-primary w-100">Gestione Attrezzature</a></div>
+                        <div class="col"><a href="financial_reports.php" class="btn btn-primary w-100">Monitoraggio spese e entrate</a></div>
                         <div class="col"><a href="feedback_view.php" class="btn btn-primary w-100">Visualizza Feedback</a></div>
                     </div>
 

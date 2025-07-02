@@ -263,14 +263,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 text-center">
-                        <div class="card bg-light h-100 d-flex align-items-center justify-content-center">
-                            <div>
-                                <i class="fas fa-calendar-check fa-3x text-success mb-2"></i>
-                                <h6 class="text-success">Abbonamento Attivo</h6>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

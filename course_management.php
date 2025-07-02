@@ -381,12 +381,12 @@ $stats = getCourseStats($conn);
                                 <td><?= !empty($trainerNames) ? htmlspecialchars(implode(', ', $trainerNames)) : 'Nessuno' ?></td>
                                 <td>
                                     <a href="?edit=<?= $course['courseID'] ?>" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit"></i> Modifica
+                                        Modifica
                                     </a>
                                     <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo corso? Questa azione non può essere annullata.');">
                                         <input type="hidden" name="delete_id" value="<?= $course['courseID'] ?>">
                                         <button name="delete" class="btn btn-sm btn-danger">
-                                            <i class="fas fa-trash"></i> Elimina
+                                            Elimina
                                         </button>
                                     </form>
                                 </td>
