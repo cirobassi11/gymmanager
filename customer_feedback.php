@@ -184,7 +184,6 @@ function generateStars($rating) {
                     <input name="rating" required class="form-control" type="number" 
                            min="1" max="5" placeholder="Inserisci un numero da 1 a 5"
                            value="<?= isset($_POST['rating']) ? $_POST['rating'] : '' ?>" />
-                    <div class="form-text">1 = Pessimo, 2 = Scarso, 3 = Sufficiente, 4 = Buono, 5 = Ottimo</div>
                 </div>
 
                 <div class="col-12">
