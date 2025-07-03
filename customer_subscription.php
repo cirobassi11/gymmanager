@@ -139,12 +139,7 @@ $currentSubscription = $stmt->get_result()->fetch_assoc();
 $stmt = $conn->prepare("
     SELECT s.*, m.name as membership_name, m.price, m.description,
            p.name as promotion_name, p.discountRate,
-           pay.amount as paid_amount,
-           CASE 
-               WHEN s.expirationDate < CURDATE() THEN 'Scaduto'
-               WHEN s.startDate > CURDATE() THEN 'In attesa'
-               ELSE 'Attivo'
-           END as status
+           pay.amount as paid_amount
     FROM SUBSCRIPTION s
     JOIN MEMBERSHIP m ON s.membershipID = m.membershipID
     LEFT JOIN PROMOTION p ON s.promotionID = p.promotionID
@@ -155,6 +150,24 @@ $stmt = $conn->prepare("
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $subscriptionHistory = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+// Elabora lo stato degli abbonamenti in PHP
+foreach($subscriptionHistory as &$sub) {
+    $today = new DateTime();
+    $startDate = new DateTime($sub['startDate']);
+    $expirationDate = new DateTime($sub['expirationDate']);
+    
+    if ($expirationDate < $today) {
+        $sub['status'] = 'Scaduto';
+        $sub['status_class'] = 'secondary';
+    } elseif ($startDate > $today) {
+        $sub['status'] = 'In attesa';
+        $sub['status_class'] = 'warning';
+    } else {
+        $sub['status'] = 'Attivo';
+        $sub['status_class'] = 'success';
+    }
+}
 
 // Recupera tutti gli abbonamenti disponibili
 $stmt = $conn->prepare("SELECT * FROM MEMBERSHIP ORDER BY price ASC");
@@ -384,9 +397,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                         </thead>
                         <tbody>
                             <?php foreach($subscriptionHistory as $sub): ?>
-                                <?php
-                                $statusClass = $sub['status'] === 'Attivo' ? 'success' : ($sub['status'] === 'In attesa' ? 'warning' : 'secondary');
-                                ?>
                                 <tr>
                                     <td>
                                         <strong><?= htmlspecialchars($sub['membership_name']) ?></strong>
@@ -405,7 +415,7 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <span class="badge bg-<?= $statusClass ?>"><?= $sub['status'] ?></span>
+                                        <span class="badge bg-<?= $sub['status_class'] ?>"><?= $sub['status'] ?></span>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

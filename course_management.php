@@ -2,37 +2,30 @@
 require_once 'config.php';
 session_start();
 
-// Controllo accesso admin
+// Controllo che l'utente sia loggato e abbia il ruolo di admin
 if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header('Location: login.php');
     exit();
 }
 
-// Funzione per validare le date
+// Validazione delle date
 function validateDates($startDate, $finishDate) {
     $errors = [];
-    
     // Le date sono obbligatorie
     if (empty($startDate)) {
         $errors[] = 'La data di inizio è obbligatoria.';
     }
-    
     if (empty($finishDate)) {
         $errors[] = 'La data di fine è obbligatoria.';
     }
-    
-    // Se entrambe le date sono fornite, controlla che la data di inizio sia precedente alla data di fine
+    // Controlla che la data di inizio sia precedente alla data di fine
     if (!empty($startDate) && !empty($finishDate)) {
         $start = new DateTime($startDate);
         $finish = new DateTime($finishDate);
-        
         if ($start >= $finish) {
             $errors[] = 'La data di inizio deve essere precedente alla data di fine.';
         }
     }
-    
-
-    
     return $errors;
 }
 
@@ -46,28 +39,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dateErrors = validateDates($_POST['startDate'] ?? '', $_POST['finishDate'] ?? '');
     $validation_errors = array_merge($validation_errors, $dateErrors);
     
-    // Validazione altri campi
+    // Controllo campi obbligatori
     if (empty(trim($_POST['name'] ?? ''))) {
         $validation_errors[] = 'Il nome del corso è obbligatorio.';
     }
-    
     if (empty($_POST['description'] ?? '') || empty(trim($_POST['description']))) {
         $validation_errors[] = 'La descrizione è obbligatoria.';
     }
-    
     if (empty($_POST['price']) || $_POST['price'] < 0) {
         $validation_errors[] = 'Il prezzo deve essere un valore positivo.';
     }
-    
     if (empty($_POST['maxParticipants']) || $_POST['maxParticipants'] < 1) {
         $validation_errors[] = 'Il numero massimo di partecipanti deve essere almeno 1.';
     }
-    
     if (empty($_POST['trainers'])) {
         $validation_errors[] = 'Devi assegnare almeno un trainer al corso.';
     }
     
-    // Se non ci sono errori di validazione, procedi con l'operazione
+    // Se non ci sono errori, si procede con l'operazione
     if (empty($validation_errors)) {
         if (isset($_POST['add'])) {
             // Inserisci il corso
@@ -83,7 +72,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             if ($stmt->execute()) {
                 $courseID = $conn->insert_id;
-                
                 // Inserisci le assegnazioni trainer se selezionati
                 if (!empty($_POST['trainers'])) {
                     $stmt = $conn->prepare("INSERT INTO teaching (trainerID, courseID) VALUES (?, ?)");
@@ -92,7 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute();
                     }
                 }
-                
                 $success_message = 'Corso aggiunto con successo!';
                 unset($_POST);
             } else {
@@ -116,7 +103,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("DELETE FROM teaching WHERE courseID = ?");
                 $stmt->bind_param('i', $_POST['courseID']);
                 $stmt->execute();
-                
                 // Inserisci le nuove assegnazioni trainer
                 if (!empty($_POST['trainers'])) {
                     $stmt = $conn->prepare("INSERT INTO teaching (trainerID, courseID) VALUES (?, ?)");
@@ -125,15 +111,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute();
                     }
                 }
-                
                 $success_message = 'Corso modificato con successo!';
             } else {
                 $error_message = 'Errore durante la modifica del corso.';
             }
         }
     }
-    
     if (isset($_POST['delete'])) {
+        // Elimina il corso
         $stmt = $conn->prepare("DELETE FROM COURSE WHERE courseID = ?");
         $stmt->bind_param('i', $_POST['delete_id']);
         if ($stmt->execute()) {

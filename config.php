@@ -1,14 +1,13 @@
 <?php
-// Inizio output buffering per evitare errori "headers already sent"
 ob_start();
 
 // Avvio sessione
 session_start();
 
-// === CONFIGURAZIONE DATABASE (locale con MySQL / XAMPP) ===
+// Dati di connessione al database
 $db_host = '127.0.0.1';
 $db_user = 'root';
-$db_pass = '12341234'; // Di default XAMPP non imposta password a root
+$db_pass = '12341234';
 $db_name = 'gymdb';
 
 // Connessione MySQLi
@@ -19,11 +18,12 @@ if ($conn->connect_error) {
     die("Connessione al database fallita: " . $conn->connect_error);
 }
 
-// === FUNZIONI DI AUTENTICAZIONE ===
+// Funzione per verificare se l'utente è loggato
 function isLoggedIn() {
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 }
 
+// Funzione per ottenere l'ID dell'utente loggato
 function requireLogin() {
     if (!isLoggedIn()) {
         header('Location: login.php');

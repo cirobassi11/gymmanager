@@ -125,49 +125,108 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $activeSubscription = $stmt->get_result()->fetch_assoc();
 
-// Recupera i corsi a cui il cliente è iscritto
+// Recupera i corsi a cui il cliente è iscritto (query semplice)
 $stmt = $conn->prepare("
-    SELECT c.*, e.enrollmentDate,
-           CASE 
-               WHEN c.startDate > CURDATE() THEN 'In attesa'
-               WHEN c.finishDate >= CURDATE() THEN 'In corso'
-               ELSE 'Completato'
-           END as course_status,
-           GROUP_CONCAT(CONCAT(u.firstName, ' ', u.lastName) SEPARATOR ', ') as trainers
+    SELECT c.*, e.enrollmentDate
     FROM COURSE c
     JOIN enrollment e ON c.courseID = e.courseID
-    LEFT JOIN teaching t ON c.courseID = t.courseID
-    LEFT JOIN USER u ON t.trainerID = u.userID
     WHERE e.customerID = ?
-    GROUP BY c.courseID, e.enrollmentDate
     ORDER BY c.startDate DESC
 ");
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $enrolledCourses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupera tutti i corsi disponibili
-$stmt = $conn->prepare("
-    SELECT c.*, 
-           COUNT(e.customerID) as enrolled_count,
-           (COUNT(e.customerID) >= c.maxParticipants) as is_full,
-           CASE 
-               WHEN c.startDate > CURDATE() THEN 'In programma'
-               WHEN c.finishDate >= CURDATE() THEN 'In corso'
-               ELSE 'Completato'
-           END as course_status,
-           GROUP_CONCAT(CONCAT(u.firstName, ' ', u.lastName) SEPARATOR ', ') as trainers,
-           EXISTS(SELECT 1 FROM enrollment WHERE customerID = ? AND courseID = c.courseID) as is_enrolled
-    FROM COURSE c
-    LEFT JOIN enrollment e ON c.courseID = e.courseID
-    LEFT JOIN teaching t ON c.courseID = t.courseID
-    LEFT JOIN USER u ON t.trainerID = u.userID
-    GROUP BY c.courseID
-    ORDER BY c.startDate ASC
-");
-$stmt->bind_param('i', $customerID);
+// Elabora i corsi iscritti in PHP
+foreach($enrolledCourses as &$course) {
+    // Calcola lo stato del corso
+    $today = new DateTime();
+    $startDate = new DateTime($course['startDate']);
+    $finishDate = new DateTime($course['finishDate']);
+    
+    if ($startDate > $today) {
+        $course['status'] = 'In attesa';
+        $course['status_class'] = 'warning';
+    } elseif ($finishDate >= $today) {
+        $course['status'] = 'In corso';
+        $course['status_class'] = 'success';
+    } else {
+        $course['status'] = 'Completato';
+        $course['status_class'] = 'primary';
+    }
+    
+    // Prendi i trainer per questo corso
+    $stmt = $conn->prepare("
+        SELECT u.firstName, u.lastName
+        FROM teaching t
+        JOIN USER u ON t.trainerID = u.userID
+        WHERE t.courseID = ?
+    ");
+    $stmt->bind_param('i', $course['courseID']);
+    $stmt->execute();
+    $trainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    
+    $course['trainers'] = array_map(function($t) {
+        return $t['firstName'] . ' ' . $t['lastName'];
+    }, $trainers);
+}
+
+// Recupera tutti i corsi disponibili (query semplice)
+$stmt = $conn->prepare("SELECT * FROM COURSE ORDER BY startDate ASC");
 $stmt->execute();
-$availableCourses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$allCourses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+// Elabora i corsi disponibili in PHP
+$availableCourses = [];
+foreach($allCourses as $course) {
+    // Calcola lo stato del corso
+    $today = new DateTime();
+    $startDate = new DateTime($course['startDate']);
+    $finishDate = new DateTime($course['finishDate']);
+    
+    if ($startDate > $today) {
+        $course['status'] = 'In programma';
+        $course['status_class'] = 'warning';
+    } elseif ($finishDate >= $today) {
+        $course['status'] = 'In corso';
+        $course['status_class'] = 'success';
+    } else {
+        $course['status'] = 'Completato';
+        $course['status_class'] = 'secondary';
+    }
+    
+    // Conta gli iscritti
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM enrollment WHERE courseID = ?");
+    $stmt->bind_param('i', $course['courseID']);
+    $stmt->execute();
+    $course['enrolled_count'] = $stmt->get_result()->fetch_assoc()['count'];
+    
+    // Verifica se è pieno
+    $course['is_full'] = ($course['enrolled_count'] >= $course['maxParticipants']);
+    
+    // Verifica se il cliente è già iscritto
+    $stmt = $conn->prepare("SELECT 1 FROM enrollment WHERE customerID = ? AND courseID = ?");
+    $stmt->bind_param('ii', $customerID, $course['courseID']);
+    $stmt->execute();
+    $course['is_enrolled'] = $stmt->get_result()->num_rows > 0;
+    
+    // Prendi i trainer
+    $stmt = $conn->prepare("
+        SELECT u.firstName, u.lastName
+        FROM teaching t
+        JOIN USER u ON t.trainerID = u.userID
+        WHERE t.courseID = ?
+    ");
+    $stmt->bind_param('i', $course['courseID']);
+    $stmt->execute();
+    $trainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    
+    $course['trainers'] = array_map(function($t) {
+        return $t['firstName'] . ' ' . $t['lastName'];
+    }, $trainers);
+    
+    $availableCourses[] = $course;
+}
 
 // Informazioni cliente
 $stmt = $conn->prepare("SELECT firstName, lastName, email FROM USER WHERE userID = ?");
@@ -175,14 +234,18 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $customerInfo = $stmt->get_result()->fetch_assoc();
 
-// Statistiche
+// Statistiche semplici
 $totalEnrolled = count($enrolledCourses);
-$activeCourses = count(array_filter($enrolledCourses, function($course) {
-    return $course['course_status'] === 'In corso';
-}));
-$upcomingCourses = count(array_filter($enrolledCourses, function($course) {
-    return $course['course_status'] === 'In attesa';
-}));
+$activeCourses = 0;
+$upcomingCourses = 0;
+
+foreach($enrolledCourses as $course) {
+    if ($course['status'] === 'In corso') {
+        $activeCourses++;
+    } elseif ($course['status'] === 'In attesa') {
+        $upcomingCourses++;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -292,25 +355,27 @@ $upcomingCourses = count(array_filter($enrolledCourses, function($course) {
                         </thead>
                         <tbody>
                             <?php foreach($enrolledCourses as $course): ?>
-                                <?php
-                                $statusClass = $course['course_status'] === 'In corso' ? 'success' : 
-                                              ($course['course_status'] === 'In attesa' ? 'warning' : 'primary');
-                                ?>
                                 <tr>
                                     <td>
                                         <strong><?= htmlspecialchars($course['name']) ?></strong>
                                         <br><small class="text-muted"><?= htmlspecialchars($course['description']) ?></small>
                                     </td>
                                     <td>€<?= number_format($course['price'], 2) ?></td>
-                                    <td><?= htmlspecialchars($course['trainers'] ?: 'Non assegnato') ?></td>
+                                    <td>
+                                        <?php if (!empty($course['trainers'])): ?>
+                                            <?= htmlspecialchars(implode(', ', $course['trainers'])) ?>
+                                        <?php else: ?>
+                                            <span class="text-muted">Non assegnato</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= date('d/m/Y', strtotime($course['startDate'])) ?></td>
                                     <td><?= date('d/m/Y', strtotime($course['finishDate'])) ?></td>
                                     <td><?= date('d/m/Y', strtotime($course['enrollmentDate'])) ?></td>
                                     <td>
-                                        <span class="badge bg-<?= $statusClass ?>"><?= $course['course_status'] ?></span>
+                                        <span class="badge bg-<?= $course['status_class'] ?>"><?= $course['status'] ?></span>
                                     </td>
                                     <td>
-                                        <?php if ($course['course_status'] === 'In attesa'): ?>
+                                        <?php if ($course['status'] === 'In attesa'): ?>
                                             <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di voler annullare l\'iscrizione?');">
                                                 <input type="hidden" name="courseID" value="<?= $course['courseID'] ?>">
                                                 <button name="unenroll_course" class="btn btn-sm btn-outline-danger">
@@ -354,12 +419,10 @@ $upcomingCourses = count(array_filter($enrolledCourses, function($course) {
                         <tbody>
                             <?php foreach($availableCourses as $course): ?>
                                 <?php
-                                $statusClass = $course['course_status'] === 'In corso' ? 'success' : 
-                                              ($course['course_status'] === 'In programma' ? 'warning' : 'secondary');
                                 $canEnroll = $activeSubscription && 
                                            !$course['is_enrolled'] && 
                                            !$course['is_full'] && 
-                                           $course['course_status'] === 'In programma';
+                                           $course['status'] === 'In programma';
                                 ?>
                                 <tr class="<?= $course['is_enrolled'] ? 'table-success' : '' ?>">
                                     <td>
@@ -367,7 +430,13 @@ $upcomingCourses = count(array_filter($enrolledCourses, function($course) {
                                         <br><small class="text-muted"><?= htmlspecialchars($course['description']) ?></small>
                                     </td>
                                     <td>€<?= number_format($course['price'], 2) ?></td>
-                                    <td><?= htmlspecialchars($course['trainers'] ?: 'Non assegnato') ?></td>
+                                    <td>
+                                        <?php if (!empty($course['trainers'])): ?>
+                                            <?= htmlspecialchars(implode(', ', $course['trainers'])) ?>
+                                        <?php else: ?>
+                                            <span class="text-muted">Non assegnato</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <span class="<?= $course['is_full'] ? 'text-danger fw-bold' : 'text-success' ?>">
                                             <?= $course['enrolled_count'] ?>/<?= $course['maxParticipants'] ?>
@@ -379,7 +448,7 @@ $upcomingCourses = count(array_filter($enrolledCourses, function($course) {
                                     <td><?= date('d/m/Y', strtotime($course['startDate'])) ?></td>
                                     <td><?= date('d/m/Y', strtotime($course['finishDate'])) ?></td>
                                     <td>
-                                        <span class="badge bg-<?= $statusClass ?>"><?= $course['course_status'] ?></span>
+                                        <span class="badge bg-<?= $course['status_class'] ?>"><?= $course['status'] ?></span>
                                     </td>
                                     <td>
                                         <?php if ($course['is_enrolled']): ?>
@@ -388,7 +457,7 @@ $upcomingCourses = count(array_filter($enrolledCourses, function($course) {
                                             <small class="text-muted">Abbonamento richiesto</small>
                                         <?php elseif ($course['is_full']): ?>
                                             <span class="badge bg-danger">Completo</span>
-                                        <?php elseif ($course['course_status'] !== 'In programma'): ?>
+                                        <?php elseif ($course['status'] !== 'In programma'): ?>
                                             <span class="badge bg-secondary">Non disponibile</span>
                                         <?php else: ?>
                                             <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di voler iscriverti a questo corso?');">

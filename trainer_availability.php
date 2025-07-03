@@ -120,13 +120,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Recupera le disponibilità del trainer
 $stmt = $conn->prepare("SELECT * FROM AVAILABILITY_DAY WHERE trainerID = ? ORDER BY 
     CASE dayOfWeek 
-        WHEN 'Monday' THEN 1 
-        WHEN 'Tuesday' THEN 2 
-        WHEN 'Wednesday' THEN 3 
-        WHEN 'Thursday' THEN 4 
-        WHEN 'Friday' THEN 5 
-        WHEN 'Saturday' THEN 6 
-        WHEN 'Sunday' THEN 7 
+        WHEN 'Monday' THEN 1
+        WHEN 'Tuesday' THEN 2
+        WHEN 'Wednesday' THEN 3
+        WHEN 'Thursday' THEN 4
+        WHEN 'Friday' THEN 5
+        WHEN 'Saturday' THEN 6
+        WHEN 'Sunday' THEN 7
     END, startTime");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();

@@ -10,16 +10,10 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'tra
 
 $trainerID = $_SESSION['userID'];
 
-// Recupera i clienti seguiti dal trainer attraverso i corsi
+// Recupera i clienti seguiti dal trainer attraverso i corsi (query semplice)
 $stmt = $conn->prepare("
     SELECT DISTINCT u.userID, u.firstName, u.lastName, u.email, u.phoneNumber, u.birthDate, u.gender,
-           e.enrollmentDate, 
-           CASE 
-               WHEN c.finishDate >= CURDATE() THEN 'active'
-               WHEN c.finishDate < CURDATE() THEN 'completed'
-               ELSE 'active'
-           END as enrollment_status,
-           c.name as course_name, c.courseID
+           e.enrollmentDate, c.name as course_name, c.courseID, c.finishDate
     FROM USER u
     JOIN enrollment e ON u.userID = e.customerID
     JOIN COURSE c ON e.courseID = c.courseID
@@ -31,7 +25,7 @@ $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $customers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Raggruppa i clienti per evitare duplicati
+// Raggruppa i clienti per evitare duplicati e calcola lo stato in PHP
 $groupedCustomers = [];
 foreach ($customers as $customer) {
     $customerID = $customer['userID'];
@@ -41,11 +35,22 @@ foreach ($customers as $customer) {
             'courses' => []
         ];
     }
+    
+    // Calcola lo stato del corso in PHP
+    $today = new DateTime();
+    $finishDate = new DateTime($customer['finishDate']);
+    
+    if ($finishDate >= $today) {
+        $status = 'active';
+    } else {
+        $status = 'completed';
+    }
+    
     $groupedCustomers[$customerID]['courses'][] = [
         'courseID' => $customer['courseID'],
         'name' => $customer['course_name'],
         'enrollmentDate' => $customer['enrollmentDate'],
-        'status' => $customer['enrollment_status']
+        'status' => $status
     ];
 }
 
@@ -67,43 +72,43 @@ function calcAge($birthDate) {
     }
 }
 
-// Statistiche trainer
+// Statistiche trainer (query semplificate)
 function getTrainerCustomerStats($conn, $trainerID) {
     // Totale clienti seguiti
     $stmt = $conn->prepare("
-    SELECT COUNT(DISTINCT e.customerID) as total
-    FROM enrollment e
-    JOIN COURSE c ON e.courseID = c.courseID
-    JOIN teaching t ON c.courseID = t.courseID
-    WHERE t.trainerID = ? AND c.finishDate >= CURDATE()
-");
+        SELECT COUNT(DISTINCT e.customerID) as total
+        FROM enrollment e
+        JOIN COURSE c ON e.courseID = c.courseID
+        JOIN teaching t ON c.courseID = t.courseID
+        WHERE t.trainerID = ? AND c.finishDate >= CURDATE()
+    ");
     $stmt->bind_param('i', $trainerID);
     $stmt->execute();
     $totalCustomers = $stmt->get_result()->fetch_assoc()['total'];
     
     // Clienti attivi questo mese
     $stmt = $conn->prepare("
-    SELECT COUNT(DISTINCT e.customerID) as active
-    FROM enrollment e
-    JOIN COURSE c ON e.courseID = c.courseID
-    JOIN teaching t ON c.courseID = t.courseID
-    WHERE t.trainerID = ? 
-    AND c.finishDate >= CURDATE()
-    AND e.enrollmentDate >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-");
+        SELECT COUNT(DISTINCT e.customerID) as active
+        FROM enrollment e
+        JOIN COURSE c ON e.courseID = c.courseID
+        JOIN teaching t ON c.courseID = t.courseID
+        WHERE t.trainerID = ? 
+        AND c.finishDate >= CURDATE()
+        AND e.enrollmentDate >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    ");
     $stmt->bind_param('i', $trainerID);
     $stmt->execute();
     $activeThisMonth = $stmt->get_result()->fetch_assoc()['active'];
     
     // Media età clienti
     $stmt = $conn->prepare("
-    SELECT u.birthDate
-    FROM USER u
-    JOIN enrollment e ON u.userID = e.customerID
-    JOIN COURSE c ON e.courseID = c.courseID
-    JOIN teaching t ON c.courseID = t.courseID
-    WHERE t.trainerID = ? AND u.birthDate IS NOT NULL AND c.finishDate >= CURDATE()
-");
+        SELECT u.birthDate
+        FROM USER u
+        JOIN enrollment e ON u.userID = e.customerID
+        JOIN COURSE c ON e.courseID = c.courseID
+        JOIN teaching t ON c.courseID = t.courseID
+        WHERE t.trainerID = ? AND u.birthDate IS NOT NULL AND c.finishDate >= CURDATE()
+    ");
     $stmt->bind_param('i', $trainerID);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -187,62 +192,53 @@ $stats = getTrainerCustomerStats($conn, $trainerID);
         <div class="card-body">
             <h4>I Tuoi Clienti</h4>
             <?php if (!empty($groupedCustomers)): ?>
-                <div class="row">
-                    <?php foreach ($groupedCustomers as $customerData): 
-                        $customer = $customerData['info'];
-                        $courses = $customerData['courses'];
-                    ?>
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-body">
-                                <!-- Header cliente -->
-                                <div class="d-flex align-items-center mb-3">
-                                    <div>
-                                        <h6 class="card-title mb-1">
-                                            <?= htmlspecialchars($customer['firstName'] . ' ' . $customer['lastName']) ?>
-                                        </h6>
-                                        <small class="text-muted">
-                                            <?= calcAge($customer['birthDate']) ?> anni
-                                        </small>
-                                    </div>
-                                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Età</th>
+                                <th>Contatti</th>
+                                <th>Genere</th>
+                                <th>Corsi Seguiti</th>
 
-                                <!-- Informazioni di contatto -->
-                                <div class="mb-3">
-                                    <p class="mb-1">
-                                        <strong>Email:</strong><br>
-                                        <small><?= htmlspecialchars($customer['email']) ?></small>
-                                    </p>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($groupedCustomers as $customerData): 
+                                $customer = $customerData['info'];
+                                $courses = $customerData['courses'];
+                            ?>
+                            <tr>
+                                <td>
+                                    <strong><?= htmlspecialchars($customer['firstName'] . ' ' . $customer['lastName']) ?></strong>
+                                </td>
+                                <td><?= calcAge($customer['birthDate']) ?> anni</td>
+                                <td>
+                                    <div><?= htmlspecialchars($customer['email']) ?></div>
                                     <?php if ($customer['phoneNumber']): ?>
-                                    <p class="mb-1">
-                                        <strong>Telefono:</strong><br>
-                                        <small><?= htmlspecialchars($customer['phoneNumber']) ?></small>
-                                    </p>
+                                        <small class="text-muted"><?= htmlspecialchars($customer['phoneNumber']) ?></small>
                                     <?php endif; ?>
-                                    <p class="mb-0">
-                                        <strong>Genere:</strong>
-                                        <small><?= htmlspecialchars($customer['gender']) ?></small>
-                                    </p>
-                                </div>
-
-                                <!-- Corsi seguiti -->
-                                <div class="mb-3">
-                                    <h6 class="text-success mb-2">Corsi Seguiti:</h6>
+                                </td>
+                                <td><?= htmlspecialchars($customer['gender']) ?></td>
+                                <td>
                                     <?php foreach ($courses as $course): ?>
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <span class="badge bg-light text-dark">
+                                        <div class="mb-1">
+                                            <span class="badge bg-light text-dark me-1">
                                                 <?= htmlspecialchars($course['name']) ?>
                                             </span>
-                                            <small class="text-muted">
-                                                <?= date('d/m/Y', strtotime($course['enrollmentDate'])) ?>
-                                            </small>
+                                            <span class="badge bg-<?= $course['status'] === 'active' ? 'success' : 'secondary' ?> me-1">
+                                                <?= $course['status'] === 'active' ? 'Attivo' : 'Completato' ?>
+                                            </span>
+                                            <br><small class="text-muted">dal <?= date('d/m/Y', strtotime($course['enrollmentDate'])) ?></small>
                                         </div>
                                     <?php endforeach; ?>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
+                                </td>
+
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             <?php else: ?>
                 <div class="text-center py-5">
@@ -254,73 +250,8 @@ $stats = getTrainerCustomerStats($conn, $trainerID);
     </div>
 </div>
 
-<!-- Modal per dettagli cliente -->
-<div class="modal fade" id="customerModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Dettagli Cliente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="customerContent">
-                    <div class="text-center">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p>Caricamento...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<script>
-function showCustomerDetails(customerID, customerName) {
-    const modal = new bootstrap.Modal(document.getElementById('customerModal'));
-    const content = document.getElementById('customerContent');
-    
-    // Aggiorna il titolo del modal
-    document.querySelector('#customerModal .modal-title').textContent = `Dettagli - ${customerName}`;
-    
-    // Mostra loading
-    content.innerHTML = `
-        <div class="text-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p>Caricamento...</p>
-        </div>
-    `;
-    
-    modal.show();
-    
-    // Simula caricamento dettagli
-    setTimeout(() => {
-        content.innerHTML = `
-            <div class="alert alert-info">
-                Funzionalità in sviluppo. Qui verranno mostrati:
-            </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item">Progressi negli allenamenti</li>
-                <li class="list-group-item">Storico presenza ai corsi</li>
-                <li class="list-group-item">Programmi di allenamento personalizzati</li>
-                <li class="list-group-item">Note e feedback</li>
-                <li class="list-group-item">Obiettivi e risultati</li>
-            </ul>
-            <div class="mt-3">
-                <p><strong>Per implementare:</strong></p>
-                <ul>
-                    <li>Creare tabella per progressi cliente</li>
-                    <li>Sistema di tracking presenze</li>
-                    <li>Note trainer personalizzate</li>
-                </ul>
-            </div>
-        `;
-    }, 1000);
-}
-</script>
 </body>
 </html>
