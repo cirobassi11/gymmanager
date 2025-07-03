@@ -15,10 +15,10 @@ INSERT INTO EQUIPMENT (name, description, state, administratorID) VALUES
 ('Cyclette', 'Bicicletta statica per esercizi cardio', 'maintenance', 1);
 
 -- Inserimento corsi
-INSERT INTO COURSE (name, description, price, maxParticipants, startDate, finishDate) VALUES
-('Yoga Base', 'Corso base di Yoga per principianti', 50.00, 15, '2025-07-01', '2025-09-30'),
-('Pilates Avanzato', 'Corso avanzato di Pilates', 75.00, 10, '2025-07-15', '2025-10-15'),
-('Functional Training', 'Allenamento funzionale per tutti i livelli', 60.00, 12, '2025-08-01', '2025-10-31');
+INSERT INTO COURSE (name, description, maxParticipants, startDate, finishDate) VALUES
+('Yoga Base', 'Corso base di Yoga per principianti', 15, '2025-07-01', '2025-09-30'),
+('Pilates Avanzato', 'Corso avanzato di Pilates', 10, '2025-07-15', '2025-10-15'),
+('Functional Training', 'Allenamento funzionale per tutti i livelli', 12, '2025-08-01', '2025-10-31');
 
 -- Inserimento esercizi
 INSERT INTO EXERCISE (name, description, trainerID) VALUES

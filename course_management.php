@@ -46,9 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($_POST['description'] ?? '') || empty(trim($_POST['description']))) {
         $validation_errors[] = 'La descrizione è obbligatoria.';
     }
-    if (empty($_POST['price']) || $_POST['price'] < 0) {
-        $validation_errors[] = 'Il prezzo deve essere un valore positivo.';
-    }
     if (empty($_POST['maxParticipants']) || $_POST['maxParticipants'] < 1) {
         $validation_errors[] = 'Il numero massimo di partecipanti deve essere almeno 1.';
     }
@@ -59,13 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Se non ci sono errori, si procede con l'operazione
     if (empty($validation_errors)) {
         if (isset($_POST['add'])) {
-            // Inserisci il corso
-            $stmt = $conn->prepare("INSERT INTO COURSE (name, description, price, maxParticipants, startDate, finishDate) VALUES (?, ?, ?, ?, ?, ?)");
+            // Inserisci il corso (senza prezzo)
+            $stmt = $conn->prepare("INSERT INTO COURSE (name, description, maxParticipants, startDate, finishDate) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param(
-                'ssdiss',
+                'ssiss',
                 $_POST['name'],
                 $_POST['description'],
-                $_POST['price'],
                 $_POST['maxParticipants'],
                 $_POST['startDate'],
                 $_POST['finishDate']
@@ -86,13 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error_message = 'Errore durante l\'inserimento del corso.';
             }
         } elseif (isset($_POST['update'])) {
-            // Aggiorna il corso
-            $stmt = $conn->prepare("UPDATE COURSE SET name = ?, description = ?, price = ?, maxParticipants = ?, startDate = ?, finishDate = ? WHERE courseID = ?");
+            // Aggiorna il corso (senza prezzo)
+            $stmt = $conn->prepare("UPDATE COURSE SET name = ?, description = ?, maxParticipants = ?, startDate = ?, finishDate = ? WHERE courseID = ?");
             $stmt->bind_param(
-                'ssdissi',
+                'ssissi',
                 $_POST['name'],
                 $_POST['description'],
-                $_POST['price'],
                 $_POST['maxParticipants'],
                 $_POST['startDate'],
                 $_POST['finishDate'],
@@ -129,8 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Recupera tutti i corsi
-$stmt = $conn->prepare("SELECT courseID, name, description, price, maxParticipants, startDate, finishDate FROM COURSE ORDER BY startDate DESC");
+// Recupera tutti i corsi (senza prezzo)
+$stmt = $conn->prepare("SELECT courseID, name, description, maxParticipants, startDate, finishDate FROM COURSE ORDER BY startDate DESC");
 $stmt->execute();
 $courses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -158,7 +153,7 @@ if (isset($_GET['edit'])) {
     }
 }
 
-// Statistiche corsi
+// Statistiche corsi (senza prezzo medio)
 function getCourseStats($conn) {
     // Totale corsi
     $stmt = $conn->prepare("SELECT COUNT(*) as total FROM COURSE");
@@ -170,15 +165,15 @@ function getCourseStats($conn) {
     $stmt->execute();
     $activeCourses = $stmt->get_result()->fetch_assoc()['active'];
     
-    // Prezzo medio corsi
-    $stmt = $conn->prepare("SELECT AVG(price) as avgPrice FROM COURSE");
+    // Totale iscrizioni
+    $stmt = $conn->prepare("SELECT COUNT(*) as total_enrollments FROM enrollment");
     $stmt->execute();
-    $avgPrice = round($stmt->get_result()->fetch_assoc()['avgPrice'], 2);
+    $totalEnrollments = $stmt->get_result()->fetch_assoc()['total_enrollments'];
     
     return [
         'total' => $totalCourses,
         'active' => $activeCourses,
-        'avgPrice' => $avgPrice ?: 0
+        'totalEnrollments' => $totalEnrollments
     ];
 }
 
@@ -229,8 +224,8 @@ $stats = getCourseStats($conn);
                 <div class="col-md-4">
                     <div class="card text-white h-100" style="background: linear-gradient(135deg, #7fcdcd 0%, #c2e9fb 100%);">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
-                            <h3>€<?= $stats['avgPrice'] ?></h3>
-                            <p class="mb-0">Prezzo Medio</p>
+                            <h3><?= $stats['totalEnrollments'] ?></h3>
+                            <p class="mb-0">Iscrizioni Totali</p>
                         </div>
                     </div>
                 </div>
@@ -271,11 +266,6 @@ $stats = getCourseStats($conn);
                            value="<?= $editCourse ? htmlspecialchars($editCourse['name']) : (isset($_POST['name']) ? htmlspecialchars($_POST['name']) : '') ?>" />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Prezzo (€)</label>
-                    <input name="price" required class="form-control" type="number" step="0.01" min="0"
-                           value="<?= $editCourse ? $editCourse['price'] : (isset($_POST['price']) ? $_POST['price'] : '') ?>" />
-                </div>
-                <div class="col-md-6">
                     <label class="form-label">Max Partecipanti</label>
                     <input name="maxParticipants" required class="form-control" type="number" min="1"
                            value="<?= $editCourse ? $editCourse['maxParticipants'] : (isset($_POST['maxParticipants']) ? $_POST['maxParticipants'] : '20') ?>" />
@@ -290,7 +280,7 @@ $stats = getCourseStats($conn);
                     <input name="finishDate" required class="form-control" type="date"
                            value="<?= $editCourse ? $editCourse['finishDate'] : (isset($_POST['finishDate']) ? $_POST['finishDate'] : '') ?>" />
                 </div>
-                <div class="col-md-6">
+                <div class="col-12">
                     <label class="form-label">Trainer Assegnati</label>
                     <select name="trainers[]" class="form-select" multiple size="4" required>
                         <?php foreach($trainers as $trainer): ?>
@@ -326,7 +316,7 @@ $stats = getCourseStats($conn);
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Nome</th><th>Prezzo</th><th>Max Partecipanti</th>
+                            <th>Nome</th><th>Max Partecipanti</th>
                             <th>Data Inizio</th><th>Data Fine</th><th>Stato</th><th>Trainer</th><th>Azioni</th>
                         </tr>
                     </thead>
@@ -358,7 +348,6 @@ $stats = getCourseStats($conn);
                             ?>
                             <tr>
                                 <td><?= htmlspecialchars($course['name']) ?></td>
-                                <td>€<?= number_format($course['price'], 2) ?></td>
                                 <td><?= $course['maxParticipants'] ?></td>
                                 <td><?= $course['startDate'] ? date('d/m/Y', strtotime($course['startDate'])) : '-' ?></td>
                                 <td><?= $course['finishDate'] ? date('d/m/Y', strtotime($course['finishDate'])) : '-' ?></td>
@@ -378,7 +367,7 @@ $stats = getCourseStats($conn);
                             </tr>
                         <?php endforeach; ?>
                         <?php if (empty($courses)): ?>
-                            <tr><td colspan="8" class="text-center">Nessun corso registrato.</td></tr>
+                            <tr><td colspan="7" class="text-center">Nessun corso registrato.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>

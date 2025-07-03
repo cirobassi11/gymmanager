@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->bind_param('dii', $finalPrice, $customerID, $subscriptionID);
                     $stmt->execute();
                     
-                    $success_message = 'Abbonamento acquistato con successo! Prezzo finale: €' . number_format($finalPrice, 2);
+                    $success_message = 'Abbonamento acquistato con successo!';
                     if ($discount > 0) {
                         $success_message .= ' (Sconto applicato: €' . number_format($discount, 2) . ')';
                     }

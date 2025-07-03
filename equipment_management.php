@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stmt = $conn->prepare("
     SELECT e.*, 
            COUNT(m.maintenanceID) as maintenance_count,
-           COALESCE(SUM(m.maintenanceCost), 0) as total_cost,
+           CASE WHEN SUM(m.maintenanceCost) IS NULL THEN 0 ELSE SUM(m.maintenanceCost) END AS total_cost,
            MAX(m.maintenanceDate) as last_maintenance
     FROM EQUIPMENT e
     LEFT JOIN MAINTENANCE m ON e.equipmentID = m.equipmentID

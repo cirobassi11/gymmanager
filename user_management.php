@@ -462,7 +462,6 @@ $adminCount = countAdmins($conn);
                     <label class="form-label">Email</label>
                     <input name="email" required class="form-control" type="email" 
                            value="<?= $editUser ? htmlspecialchars($editUser['email']) : (isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '') ?>" />
-                    <div class="form-text">L'email deve essere unica nel sistema</div>
                 </div>
                 
                 <div class="col-md-6">

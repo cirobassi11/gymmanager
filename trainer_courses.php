@@ -14,15 +14,15 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'tra
 
 $trainerID = $_SESSION['userID'];
 
-// Recupera i corsi assegnati al trainer
+// Recupera i corsi assegnati al trainer (senza prezzo)
 $stmt = $conn->prepare("
-    SELECT c.courseID, c.name, c.description, c.price, c.maxParticipants, c.startDate, c.finishDate,
+    SELECT c.courseID, c.name, c.description, c.maxParticipants, c.startDate, c.finishDate,
            COUNT(e.customerID) as enrolled_count
     FROM COURSE c
     JOIN teaching t ON c.courseID = t.courseID
     LEFT JOIN enrollment e ON c.courseID = e.courseID
     WHERE t.trainerID = ?
-    GROUP BY c.courseID, c.name, c.description, c.price, c.maxParticipants, c.startDate, c.finishDate
+    GROUP BY c.courseID, c.name, c.description, c.maxParticipants, c.startDate, c.finishDate
     ORDER BY c.startDate DESC
 ");
 $stmt->bind_param('i', $trainerID);
@@ -210,7 +210,6 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
                         <thead>
                             <tr>
                                 <th>Nome</th>
-                                <th>Prezzo</th>
                                 <th>Partecipanti</th>
                                 <th>Data Inizio</th>
                                 <th>Data Fine</th>
@@ -247,7 +246,6 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
                                             <?= strlen($course['description']) > 60 ? '...' : '' ?>
                                         </small>
                                     </td>
-                                    <td>€<?= number_format($course['price'], 2) ?></td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <span class="<?= $course['enrolled_count'] >= $course['maxParticipants'] ? 'text-danger fw-bold' : 'text-success' ?> me-2">

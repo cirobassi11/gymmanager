@@ -276,7 +276,6 @@ foreach($enrolledCourses as $course) {
         <div class="alert alert-warning">
             <h5>Abbonamento Richiesto</h5>
             <p class="mb-2">Per iscriverti ai corsi devi avere un abbonamento attivo.</p>
-            <a href="customer_subscription.php" class="btn btn-warning">Acquista Abbonamento</a>
         </div>
     <?php endif; ?>
 
@@ -344,7 +343,6 @@ foreach($enrolledCourses as $course) {
                         <thead>
                             <tr>
                                 <th>Nome Corso</th>
-                                <th>Prezzo</th>
                                 <th>Trainer</th>
                                 <th>Data Inizio</th>
                                 <th>Data Fine</th>
@@ -360,7 +358,6 @@ foreach($enrolledCourses as $course) {
                                         <strong><?= htmlspecialchars($course['name']) ?></strong>
                                         <br><small class="text-muted"><?= htmlspecialchars($course['description']) ?></small>
                                     </td>
-                                    <td>€<?= number_format($course['price'], 2) ?></td>
                                     <td>
                                         <?php if (!empty($course['trainers'])): ?>
                                             <?= htmlspecialchars(implode(', ', $course['trainers'])) ?>
@@ -407,7 +404,6 @@ foreach($enrolledCourses as $course) {
                         <thead>
                             <tr>
                                 <th>Nome Corso</th>
-                                <th>Prezzo</th>
                                 <th>Trainer</th>
                                 <th>Partecipanti</th>
                                 <th>Data Inizio</th>
@@ -429,7 +425,6 @@ foreach($enrolledCourses as $course) {
                                         <strong><?= htmlspecialchars($course['name']) ?></strong>
                                         <br><small class="text-muted"><?= htmlspecialchars($course['description']) ?></small>
                                     </td>
-                                    <td>€<?= number_format($course['price'], 2) ?></td>
                                     <td>
                                         <?php if (!empty($course['trainers'])): ?>
                                             <?= htmlspecialchars(implode(', ', $course['trainers'])) ?>
@@ -476,33 +471,11 @@ foreach($enrolledCourses as $course) {
             <?php else: ?>
                 <div class="text-center py-5">
                     <h5 class="text-muted">Nessun corso disponibile</h5>
-                    <p class="text-muted">Al momento non ci sono corsi disponibili. Torna più tardi per nuove opportunità!</p>
+                    <p class="text-muted">Al momento non ci sono corsi disponibili.</p>
                 </div>
             <?php endif; ?>
         </div>
     </div>
-
-    <!-- Info Abbonamento -->
-    <?php if ($activeSubscription): ?>
-        <div class="card shadow-sm mb-4 border-success">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h6 class="text-success mb-2">Abbonamento Attivo</h6>
-                        <p class="mb-0">
-                            <strong><?= htmlspecialchars($activeSubscription['membership_name']) ?></strong> - 
-                            Valido fino al <?= date('d/m/Y', strtotime($activeSubscription['expirationDate'])) ?>
-                        </p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <a href="customer_subscription.php" class="btn btn-outline-success btn-sm">
-                            Gestisci Abbonamento
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
