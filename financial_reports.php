@@ -29,6 +29,9 @@ function getDateRangeFromFilter($filter) {
         case '1y':
             $startDate = date('Y-m-d', strtotime('-365 days'));
             break;
+        case '5y':
+            $startDate = date('Y-m-d', strtotime('-1825 days')); // 5 anni = 5 * 365 giorni
+            break;
         case 'all':
         default:
             // Trova la data più antica nei dati
@@ -217,6 +220,7 @@ function getPeriodText($filter) {
         case '1w': return 'Ultima settimana';
         case '1m': return 'Ultimo mese';
         case '1y': return 'Ultimo anno';
+        case '5y': return 'Ultimi 5 anni';
         case 'all': return 'Tutti i dati';
         default: return 'Periodo personalizzato';
     }
@@ -261,6 +265,9 @@ function getPeriodText($filter) {
                     </a>
                     <a href="?filter=1y" class="btn <?= $filter === '1y' ? 'btn-primary' : 'btn-outline-primary' ?>">
                         1 Anno
+                    </a>
+                    <a href="?filter=5y" class="btn <?= $filter === '5y' ? 'btn-primary' : 'btn-outline-primary' ?>">
+                        5 Anni
                     </a>
                     <a href="?filter=all" class="btn <?= $filter === 'all' ? 'btn-primary' : 'btn-outline-primary' ?>">
                         Tutto
