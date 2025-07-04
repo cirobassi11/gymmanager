@@ -452,10 +452,8 @@ $bmiData = array_map(function($report) {
 
     <!-- Storico Report -->
     <div class="card shadow-sm mb-4">
-        <div class="card-header">
-            <h4 class="mb-0">Storico Progressi (<?= $totalReports ?> report)</h4>
-        </div>
         <div class="card-body">
+            <h4>Storico Progressi (<?= $totalReports ?> report)</h4>
             <?php if (!empty($progressReports)): ?>
                 <div class="table-responsive">
                     <table class="table table-striped">

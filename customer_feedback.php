@@ -111,7 +111,6 @@ function generateStars($rating) {
 </head>
 <body class="bg-light">
 <div class="container py-5">
-    <!-- Header -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
@@ -151,7 +150,7 @@ function generateStars($rating) {
                 <h4>Le Tue Statistiche Feedback</h4>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <div class="card text-white h-100" style="background: linear-gradient(135deg, #6a85b6 0%, #bac8e0 100%);">
+                        <div class="card text-white h-100" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
                             <div class="card-body text-center d-flex flex-column justify-content-center">
                                 <h3><?= $totalFeedbacks ?></h3>
                                 <p class="mb-0">Feedback Inviati</p>
@@ -159,7 +158,7 @@ function generateStars($rating) {
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card text-white h-100" style="background: linear-gradient(135deg, #a8c8ec 0%, #7fcdcd 100%);">
+                        <div class="card text-white h-100" style="background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);">
                             <div class="card-body text-center d-flex flex-column justify-content-center">
                                 <h3><?= number_format($avgRating, 1) ?>/5</h3>
                                 <p class="mb-0">Valutazione Media</p>
@@ -174,10 +173,8 @@ function generateStars($rating) {
 
     <!-- Form Nuovo Feedback -->
     <div class="card mb-4 shadow-sm">
-        <div class="card-header">
-            <h4 class="mb-0">Nuovo Feedback - <?= date('d/m/Y') ?></h4>
-        </div>
         <div class="card-body">
+            <h4>Nuovo Feedback - <?= date('d/m/Y') ?></h4>
             <form method="POST" class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Valutazione (1-5)</label>
@@ -206,10 +203,8 @@ function generateStars($rating) {
     <!-- I Tuoi Feedback -->
     <?php if (!empty($myFeedbacks)): ?>
         <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h4 class="mb-0">I Tuoi Feedback (<?= $totalFeedbacks ?>)</h4>
-            </div>
             <div class="card-body">
+                <h4>I Tuoi Feedback (<?= $totalFeedbacks ?>)</h4>
                 <div class="row">
                     <?php foreach($myFeedbacks as $feedback): ?>
                     <div class="col-md-6 col-lg-4 mb-3">

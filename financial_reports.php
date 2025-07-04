@@ -12,9 +12,43 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'adm
     exit();
 }
 
-// Gestione filtri data
-$startDate = $_GET['start_date'] ?? date('Y-m-01'); // Primo giorno del mese corrente
-$endDate = $_GET['end_date'] ?? date('Y-m-t'); // Ultimo giorno del mese corrente
+// Gestione filtri temporali tramite URL parameter
+$filter = $_GET['filter'] ?? '1m'; // Default: ultimo mese
+
+// Calcola le date basate sul filtro
+function getDateRangeFromFilter($filter) {
+    $endDate = date('Y-m-d'); // Oggi
+    
+    switch($filter) {
+        case '1w':
+            $startDate = date('Y-m-d', strtotime('-7 days'));
+            break;
+        case '1m':
+            $startDate = date('Y-m-d', strtotime('-30 days'));
+            break;
+        case '1y':
+            $startDate = date('Y-m-d', strtotime('-365 days'));
+            break;
+        case 'all':
+        default:
+            // Trova la data più antica nei dati
+            $stmt = $GLOBALS['conn']->prepare("
+                SELECT MIN(date) as min_date FROM (
+                    SELECT MIN(date) as date FROM PAYMENT 
+                    UNION ALL 
+                    SELECT MIN(maintenanceDate) as date FROM MAINTENANCE
+                ) as combined_dates
+            ");
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            $startDate = $result['min_date'] ?: date('Y-m-d', strtotime('-365 days'));
+            break;
+    }
+    
+    return [$startDate, $endDate];
+}
+
+list($startDate, $endDate) = getDateRangeFromFilter($filter);
 
 // Funzione per ottenere le entrate giornaliere
 function getDailyRevenue($conn, $startDate, $endDate) {
@@ -176,6 +210,17 @@ foreach ($dateRange as $date) {
     $chartRevenue[] = $revenueByDate[$date] ?? 0;
     $chartExpenses[] = $expensesByDate[$date] ?? 0;
 }
+
+// Funzione per ottenere il testo del periodo
+function getPeriodText($filter) {
+    switch($filter) {
+        case '1w': return 'Ultima settimana';
+        case '1m': return 'Ultimo mese';
+        case '1y': return 'Ultimo anno';
+        case 'all': return 'Tutti i dati';
+        default: return 'Periodo personalizzato';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -200,26 +245,37 @@ foreach ($dateRange as $date) {
         </div>
     </div>
 
-    <!-- Filtri Data -->
+    <!-- Filtri Temporali -->
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
-            <h5>Filtri Periodo</h5>
-            <form method="GET" class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Data Inizio</label>
-                    <input type="date" name="start_date" class="form-control" value="<?= $startDate ?>" required>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Filtri Periodo</h5>
+                
+                <!-- Pulsanti filtro temporale -->
+                <div class="btn-group" role="group" aria-label="Filtri temporali">
+                    <a href="?filter=1w" class="btn <?= $filter === '1w' ? 'btn-primary' : 'btn-outline-primary' ?>">
+                        1 Settimana
+                    </a>
+                    <a href="?filter=1m" class="btn <?= $filter === '1m' ? 'btn-primary' : 'btn-outline-primary' ?>">
+                        1 Mese
+                    </a>
+                    <a href="?filter=1y" class="btn <?= $filter === '1y' ? 'btn-primary' : 'btn-outline-primary' ?>">
+                        1 Anno
+                    </a>
+                    <a href="?filter=all" class="btn <?= $filter === 'all' ? 'btn-primary' : 'btn-outline-primary' ?>">
+                        Tutto
+                    </a>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Data Fine</label>
-                    <input type="date" name="end_date" class="form-control" value="<?= $endDate ?>" required>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary">
-                        Filtra
-                    </button>
-                    <a href="?" class="btn btn-outline-secondary ms-2">Reset</a>
-                </div>
-            </form>
+            </div>
+            
+            <div class="mt-2">
+                <small class="text-muted">
+                    <span class="fw-bold">Periodo selezionato:</span> <?= getPeriodText($filter) ?>
+                    <span class="ms-3">
+                        <?= date('d/m/Y', strtotime($startDate)) ?> - <?= date('d/m/Y', strtotime($endDate)) ?>
+                    </span>
+                </small>
+            </div>
         </div>
     </div>
 
@@ -271,9 +327,14 @@ foreach ($dateRange as $date) {
     <!-- Grafico Comparativo -->
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
-            <h5 class="card-title">Confronto Entrate vs Spese</h5>
+            <h5 class="card-title">Confronto Entrate vs Spese - <?= getPeriodText($filter) ?></h5>
             <div style="height: 400px; position: relative;">
                 <canvas id="comparisonChart"></canvas>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    Il grafico mostra l'andamento giornaliero di entrate e spese per il periodo selezionato.
+                </small>
             </div>
         </div>
     </div>
@@ -393,7 +454,8 @@ foreach ($dateRange as $date) {
     <div class="card shadow-sm">
         <div class="card-body text-center py-5">
             <h5 class="text-muted">Nessun dato finanziario</h5>
-            <p class="text-muted">Non ci sono entrate o spese registrate per il periodo selezionato.</p>
+            <p class="text-muted">Non ci sono entrate o spese registrate per il periodo selezionato (<?= getPeriodText($filter) ?>).</p>
+            <p class="text-muted">Prova a selezionare un periodo diverso o aggiungi dei dati.</p>
         </div>
     </div>
     <?php endif; ?>
@@ -423,7 +485,7 @@ const commonOptions = {
             cornerRadius: 8,
             callbacks: {
                 label: function(context) {
-                    return '€' + parseFloat(context.parsed.y).toFixed(2);
+                    return context.dataset.label + ': €' + parseFloat(context.parsed.y).toFixed(2);
                 }
             }
         }

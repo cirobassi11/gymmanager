@@ -234,11 +234,9 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
 
     <!-- Abbonamento Corrente -->
     <?php if ($currentSubscription): ?>
-        <div class="card mb-4 shadow-sm border-success">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0">Il Tuo Abbonamento Attivo</h4>
-            </div>
+        <div class="card mb-4 shadow-sm">
             <div class="card-body">
+                <h4 class="mb-3">Il Tuo Abbonamento Attivo</h4>
                 <div class="row">
                     <div class="col-md-8">
                         <h5><?= htmlspecialchars($currentSubscription['membership_name']) ?></h5>
@@ -281,12 +279,9 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
         </div>
     <?php else: ?>
         <!-- Nessun abbonamento attivo -->
-        <div class="card mb-4 shadow-sm border-warning">
-            <div class="card-header bg-warning text-dark">
-                <h4 class="mb-0">Nessun Abbonamento Attivo</h4>
-            </div>
+        <div class="card mb-4 shadow-sm">
             <div class="card-body text-center">
-                <h5>Non hai un abbonamento attivo</h5>
+                <h4 class="text-warning mb-3">Nessun Abbonamento Attivo</h4>
                 <p class="text-muted">Scegli uno degli abbonamenti disponibili qui sotto per iniziare ad allenarti!</p>
             </div>
         </div>
@@ -294,11 +289,9 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
 
     <!-- Promozioni Attive -->
     <?php if (!empty($activePromotions)): ?>
-        <div class="card mb-4 shadow-sm border-info">
-            <div class="card-header bg-info text-white">
-                <h4 class="mb-0">Promozioni Attive</h4>
-            </div>
+        <div class="card mb-4 shadow-sm">
             <div class="card-body">
+                <h4 class="mb-3">Promozioni Attive</h4>
                 <div class="row">
                     <?php foreach($activePromotions as $promotion): ?>
                     <div class="col-md-6 col-lg-4 mb-3">
@@ -322,10 +315,8 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
     <!-- Abbonamenti Disponibili -->
     <?php if (!$currentSubscription): ?>
         <div class="card mb-4 shadow-sm">
-            <div class="card-header">
-                <h4 class="mb-0">Abbonamenti Disponibili</h4>
-            </div>
             <div class="card-body">
+                <h4>Abbonamenti Disponibili</h4>
                 <div class="row">
                     <?php foreach($availableMemberships as $membership): ?>
                     <div class="col-md-6 col-lg-4 mb-4">
@@ -379,10 +370,8 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
     <!-- Storico Abbonamenti -->
     <?php if (!empty($subscriptionHistory)): ?>
         <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h4 class="mb-0">Storico Abbonamenti</h4>
-            </div>
             <div class="card-body">
+                <h4>Storico Abbonamenti</h4>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>

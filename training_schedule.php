@@ -354,21 +354,9 @@ function getTrainerStats($conn, $trainerID) {
     $stmt->execute();
     $clientsFollowed = $stmt->get_result()->fetch_assoc()['count'];
     
-    // Giorni di allenamento totali creati
-    $stmt = $conn->prepare("
-        SELECT COUNT(td.trainingDayID) as total
-        FROM TRAINING_DAY td
-        JOIN TRAINING_SCHEDULE ts ON td.trainingScheduleID = ts.trainingScheduleID
-        WHERE ts.trainerID = ?
-    ");
-    $stmt->bind_param('i', $trainerID);
-    $stmt->execute();
-    $totalDays = $stmt->get_result()->fetch_assoc()['total'];
-    
     return [
         'totalSchedules' => $totalSchedules,
-        'clientsFollowed' => $clientsFollowed,
-        'totalDays' => $totalDays
+        'clientsFollowed' => $clientsFollowed
     ];
 }
 
@@ -412,7 +400,7 @@ $stats = getTrainerStats($conn, $trainerID);
             <div class="card-body">
                 <h4>Le Tue Statistiche</h4>
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="card text-white h-100" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
                             <div class="card-body text-center d-flex flex-column justify-content-center">
                                 <h3><?= $stats['totalSchedules'] ?></h3>
@@ -420,19 +408,11 @@ $stats = getTrainerStats($conn, $trainerID);
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="card text-white h-100" style="background: linear-gradient(135deg, #17a2b8 0%, #28a745 100%);">
                             <div class="card-body text-center d-flex flex-column justify-content-center">
                                 <h3><?= $stats['clientsFollowed'] ?></h3>
                                 <p class="mb-0">Clienti Seguiti</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-white h-100" style="background: linear-gradient(135deg, #6f42c1 0%, #17a2b8 100%);">
-                            <div class="card-body text-center d-flex flex-column justify-content-center">
-                                <h3><?= $stats['totalDays'] ?></h3>
-                                <p class="mb-0">Giorni di Allenamento</p>
                             </div>
                         </div>
                     </div>

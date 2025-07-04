@@ -202,10 +202,8 @@ if (!empty($trainingSchedules)) {
 
         <!-- Lista Programmi -->
         <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h4 class="mb-0">I Tuoi Programmi di Allenamento</h4>
-            </div>
             <div class="card-body">
+                <h4>I Tuoi Programmi di Allenamento</h4>
                 <?php if (!empty($trainingSchedules)): ?>
                     <div class="row">
                         <?php foreach($trainingSchedules as $schedule): ?>
@@ -291,10 +289,8 @@ if (!empty($trainingSchedules)) {
 
         <!-- Giorni di allenamento -->
         <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h4 class="mb-0">Giorni di Allenamento</h4>
-            </div>
             <div class="card-body">
+                <h4>Giorni di Allenamento</h4>
                 <?php if (!empty($trainingDays)): ?>
                     <div class="row">
                         <?php foreach($trainingDays as $day): ?>
@@ -340,10 +336,8 @@ if (!empty($trainingSchedules)) {
 
         <!-- Lista esercizi -->
         <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h4 class="mb-0">Esercizi del Giorno</h4>
-            </div>
             <div class="card-body">
+                <h4>Esercizi del Giorno</h4>
                 <?php if (!empty($dayExercises)): ?>
                     <div class="table-responsive">
                         <table class="table table-striped">

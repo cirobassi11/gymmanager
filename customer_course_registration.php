@@ -334,10 +334,8 @@ foreach($enrolledCourses as $course) {
     <!-- I Tuoi Corsi -->
     <?php if (!empty($enrolledCourses)): ?>
         <div class="card mb-4 shadow-sm">
-            <div class="card-header">
-                <h4 class="mb-0">I Tuoi Corsi</h4>
-            </div>
             <div class="card-body">
+                <h4>I Tuoi Corsi</h4>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
@@ -394,10 +392,8 @@ foreach($enrolledCourses as $course) {
 
     <!-- Corsi Disponibili -->
     <div class="card shadow-sm mb-4">
-        <div class="card-header">
-            <h4 class="mb-0">Corsi Disponibili</h4>
-        </div>
         <div class="card-body">
+            <h4>Corsi Disponibili</h4>
             <?php if (!empty($availableCourses)): ?>
                 <div class="table-responsive">
                     <table class="table table-striped">
