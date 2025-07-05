@@ -74,7 +74,6 @@ INSERT INTO PAYMENT (date, amount, customerID, subscriptionID, status) VALUES
 
 -- Inserimento feedback
 INSERT INTO FEEDBACK (date, rating, comment, customerID) VALUES
-('2025-06-20', 1, 'NOOOOOO', 3),
 ('2025-06-21', 5, 'Ottima palestra!', 4),
 ('2025-06-22', 4, 'Personale gentile.', 5);
 

@@ -51,6 +51,20 @@ function countAdmins($conn) {
     return $stmt->get_result()->fetch_assoc()['count'];
 }
 
+// Funzione per gestire l'eliminazione utente
+function processUserDeletion($conn, $deleteID) {
+    global $error_message, $success_message;
+    
+    // Elimina direttamente l'utente - il CASCADE nel database gestirà le dipendenze
+    $stmt = $conn->prepare("DELETE FROM USER WHERE userID = ?");
+    $stmt->bind_param('i', $deleteID);
+    if ($stmt->execute()) {
+        $success_message = 'Utente eliminato con successo!';
+    } else {
+        $error_message = 'Errore durante l\'eliminazione dell\'utente: ' . $conn->error;
+    }
+}
+
 // Gestione POST
 $error_message = '';
 $success_message = '';
@@ -256,62 +270,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 // Non è un admin, procedi normalmente
-                $this->processUserDeletion($conn, $deleteID);
+                processUserDeletion($conn, $deleteID);
             }
         } else {
             $error_message = 'ID utente non valido.';
         }
-    }
-}
-
-// Funzione per gestire l'eliminazione utente
-function processUserDeletion($conn, $deleteID) {
-    global $error_message, $success_message;
-    
-    // Controlla se l'utente può essere eliminato (non ha dipendenze)
-    $canDelete = true;
-    $dependencies = [];
-    
-    // Controlla se è un cliente con abbonamenti
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM SUBSCRIPTION WHERE customerID = ?");
-    $stmt->bind_param('i', $deleteID);
-    $stmt->execute();
-    $subscriptions = $stmt->get_result()->fetch_assoc()['count'];
-    if ($subscriptions > 0) {
-        $dependencies[] = "$subscriptions abbonamento/i";
-        $canDelete = false;
-    }
-    
-    // Controlla se è un trainer con corsi assegnati
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM teaching WHERE trainerID = ?");
-    $stmt->bind_param('i', $deleteID);
-    $stmt->execute();
-    $courses = $stmt->get_result()->fetch_assoc()['count'];
-    if ($courses > 0) {
-        $dependencies[] = "$courses corso/i";
-        $canDelete = false;
-    }
-    
-    // Controlla se è un cliente iscritto a corsi
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM enrollment WHERE customerID = ?");
-    $stmt->bind_param('i', $deleteID);
-    $stmt->execute();
-    $enrollments = $stmt->get_result()->fetch_assoc()['count'];
-    if ($enrollments > 0) {
-        $dependencies[] = "$enrollments iscrizione/i a corsi";
-        $canDelete = false;
-    }
-    
-    if ($canDelete) {
-        $stmt = $conn->prepare("DELETE FROM USER WHERE userID = ?");
-        $stmt->bind_param('i', $deleteID);
-        if ($stmt->execute()) {
-            $success_message = 'Utente eliminato con successo!';
-        } else {
-            $error_message = 'Errore durante l\'eliminazione dell\'utente: ' . $conn->error;
-        }
-    } else {
-        $error_message = 'Impossibile eliminare l\'utente. Ha ancora: ' . implode(', ', $dependencies) . '. Rimuovi prima queste dipendenze.';
     }
 }
 
