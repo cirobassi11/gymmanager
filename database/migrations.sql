@@ -133,7 +133,6 @@ CREATE TABLE PAYMENT (
     paymentID INT PRIMARY KEY AUTO_INCREMENT,
     date DATE NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
-    type ENUM('cash', 'card', 'bank_transfer', 'online') NOT NULL,
     customerID INT NOT NULL,
     subscriptionID INT,
     status ENUM('pending', 'completed', 'failed', 'refunded') DEFAULT 'pending',

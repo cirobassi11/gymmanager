@@ -289,7 +289,7 @@ function getPeriodText($filter) {
     <!-- Statistiche Riepilogative -->
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
-            <h4>Riepilogo Periodo (<?= date('d/m/Y', strtotime($startDate)) ?> - <?= date('d/m/Y', strtotime($endDate)) ?>)</h4>
+            <h4>Riepilogo periodo da <?= date('d/m/Y', strtotime($startDate)) ?> a <?= date('d/m/Y', strtotime($endDate)) ?></h4>
             <div class="row g-3">
                 <div class="col-md-3">
                     <div class="card text-white h-100" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
@@ -334,14 +334,9 @@ function getPeriodText($filter) {
     <!-- Grafico Comparativo -->
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
-            <h5 class="card-title">Confronto Entrate vs Spese - <?= getPeriodText($filter) ?></h5>
+            <h5 class="card-title">Entrate e Spese - <?= getPeriodText($filter) ?></h5>
             <div style="height: 400px; position: relative;">
                 <canvas id="comparisonChart"></canvas>
-            </div>
-            <div class="mt-3">
-                <small class="text-muted">
-                    Il grafico mostra l'andamento giornaliero di entrate e spese per il periodo selezionato.
-                </small>
             </div>
         </div>
     </div>

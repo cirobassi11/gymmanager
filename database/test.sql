@@ -66,11 +66,11 @@ INSERT INTO SUBSCRIPTION (startDate, expirationDate, customerID, promotionID, me
 ('2025-07-01', '2025-09-30', 6, NULL, 3);
 
 -- Pagamenti (associati alle sottoscrizioni)
-INSERT INTO PAYMENT (date, amount, type, customerID, subscriptionID, status) VALUES
-('2025-06-01', 24.00, 'card', 3, 1, 'completed'),
-('2025-06-10', 64.00, 'cash', 4, 2, 'completed'),
-('2025-07-01', 300.00, 'bank_transfer', 5, 3, 'completed'),
-('2025-07-01', 80.00, 'card', 6, 4, 'completed');
+INSERT INTO PAYMENT (date, amount, customerID, subscriptionID, status) VALUES
+('2025-06-01', 24.00, 3, 1, 'completed'),
+('2025-06-10', 64.00, 4, 2, 'completed'),
+('2025-07-01', 300.00, 5, 3, 'completed'),
+('2025-07-01', 80.00, 6, 4, 'completed');
 
 -- Inserimento feedback
 INSERT INTO FEEDBACK (date, rating, comment, customerID) VALUES

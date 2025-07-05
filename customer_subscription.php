@@ -98,10 +98,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($stmt->execute()) {
                     $subscriptionID = $conn->insert_id;
                     
-                    // Inserisci il pagamento
+                    // Inserisci il pagamento (senza specificare il metodo)
                     $stmt = $conn->prepare("
-                        INSERT INTO PAYMENT (date, amount, type, customerID, subscriptionID, status) 
-                        VALUES (CURDATE(), ?, 'card', ?, ?, 'completed')
+                        INSERT INTO PAYMENT (date, amount, customerID, subscriptionID, status) 
+                        VALUES (CURDATE(), ?, ?, ?, 'completed')
                     ");
                     $stmt->bind_param('dii', $finalPrice, $customerID, $subscriptionID);
                     $stmt->execute();
