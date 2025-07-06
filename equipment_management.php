@@ -33,33 +33,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_message = 'Il nome dell\'attrezzatura è obbligatorio.';
         }
     } elseif (isset($_POST['update_equipment'])) {
-        // Modifica attrezzatura
+        // Modifica attrezzatura - CONTROLLO PERMESSI
         $equipmentID = (int)$_POST['equipmentID'];
         if ($equipmentID > 0) {
-            $stmt = $conn->prepare("UPDATE EQUIPMENT SET name = ?, description = ?, state = ? WHERE equipmentID = ?");
-            $stmt->bind_param(
-                'sssi',
-                $_POST['name'],
-                $_POST['description'],
-                $_POST['state'],
-                $equipmentID
-            );
-            if ($stmt->execute()) {
-                $success_message = 'Attrezzatura modificata con successo!';
+            // Verifica che l'admin corrente sia il gestore dell'attrezzatura
+            $stmt = $conn->prepare("SELECT administratorID, name FROM EQUIPMENT WHERE equipmentID = ?");
+            $stmt->bind_param('i', $equipmentID);
+            $stmt->execute();
+            $equipment = $stmt->get_result()->fetch_assoc();
+            
+            if (!$equipment) {
+                $error_message = 'Attrezzatura non trovata.';
+            } elseif ($equipment['administratorID'] != $_SESSION['userID']) {
+                $error_message = 'Non hai i permessi per modificare questa attrezzatura. Solo il gestore originale può modificarla.';
             } else {
-                $error_message = 'Errore durante la modifica dell\'attrezzatura.';
+                // L'admin è il gestore, procedi con la modifica
+                // AGGIUNTA DOPPIA VERIFICA DI SICUREZZA: controlla anche nella query UPDATE
+                $stmt = $conn->prepare("UPDATE EQUIPMENT SET name = ?, description = ?, state = ? WHERE equipmentID = ? AND administratorID = ?");
+                $stmt->bind_param(
+                    'sssii',
+                    $_POST['name'],
+                    $_POST['description'],
+                    $_POST['state'],
+                    $equipmentID,
+                    $_SESSION['userID']
+                );
+                if ($stmt->execute() && $stmt->affected_rows > 0) {
+                    $success_message = 'Attrezzatura modificata con successo!';
+                } else {
+                    $error_message = 'Errore durante la modifica dell\'attrezzatura o non hai i permessi.';
+                }
             }
         }
     } elseif (isset($_POST['delete_equipment'])) {
-        // Eliminazione attrezzatura
+        // Eliminazione attrezzatura - CONTROLLO PERMESSI
         $deleteID = (int)$_POST['delete_id'];
         if ($deleteID > 0) {
-            $stmt = $conn->prepare("DELETE FROM EQUIPMENT WHERE equipmentID = ?");
+            // Verifica che l'admin corrente sia il gestore dell'attrezzatura
+            $stmt = $conn->prepare("SELECT administratorID, name FROM EQUIPMENT WHERE equipmentID = ?");
             $stmt->bind_param('i', $deleteID);
-            if ($stmt->execute()) {
-                $success_message = 'Attrezzatura eliminata con successo!';
+            $stmt->execute();
+            $equipment = $stmt->get_result()->fetch_assoc();
+            
+            if (!$equipment) {
+                $error_message = 'Attrezzatura non trovata.';
+            } elseif ($equipment['administratorID'] != $_SESSION['userID']) {
+                $error_message = 'Non hai i permessi per eliminare questa attrezzatura. Solo il gestore originale può eliminarla.';
             } else {
-                $error_message = 'Errore durante l\'eliminazione dell\'attrezzatura.';
+                // L'admin è il gestore, procedi con l'eliminazione
+                // AGGIUNTA DOPPIA VERIFICA DI SICUREZZA: controlla anche nella query DELETE
+                $stmt = $conn->prepare("DELETE FROM EQUIPMENT WHERE equipmentID = ? AND administratorID = ?");
+                $stmt->bind_param('ii', $deleteID, $_SESSION['userID']);
+                if ($stmt->execute() && $stmt->affected_rows > 0) {
+                    $success_message = 'Attrezzatura eliminata con successo!';
+                } else {
+                    $error_message = 'Errore durante l\'eliminazione dell\'attrezzatura o non hai i permessi.';
+                }
             }
         }
     } elseif (isset($_POST['add_maintenance'])) {
@@ -118,14 +147,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Recupera tutte le attrezzature
+// Recupera tutte le attrezzature con info sul gestore
 $stmt = $conn->prepare("
     SELECT e.*, 
            COUNT(m.maintenanceID) as maintenance_count,
            CASE WHEN SUM(m.maintenanceCost) IS NULL THEN 0 ELSE SUM(m.maintenanceCost) END AS total_cost,
-           MAX(m.maintenanceDate) as last_maintenance
+           MAX(m.maintenanceDate) as last_maintenance,
+           u.firstName as admin_firstName, u.lastName as admin_lastName
     FROM EQUIPMENT e
     LEFT JOIN MAINTENANCE m ON e.equipmentID = m.equipmentID
+    LEFT JOIN USER u ON e.administratorID = u.userID
     GROUP BY e.equipmentID
     ORDER BY e.name ASC
 ");
@@ -142,14 +173,23 @@ $stmt = $conn->prepare("
 $stmt->execute();
 $maintenances = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Se è una modifica attrezzatura, recupera i dati
+// Se è una modifica attrezzatura, recupera i dati E verifica i permessi
 $editEquipment = null;
 if (isset($_GET['edit_equipment']) && is_numeric($_GET['edit_equipment'])) {
     $equipmentID = (int)$_GET['edit_equipment'];
     $stmt = $conn->prepare("SELECT * FROM EQUIPMENT WHERE equipmentID = ?");
     $stmt->bind_param('i', $equipmentID);
     $stmt->execute();
-    $editEquipment = $stmt->get_result()->fetch_assoc();
+    $equipmentData = $stmt->get_result()->fetch_assoc();
+    
+    // Verifica permessi
+    if ($equipmentData && $equipmentData['administratorID'] == $_SESSION['userID']) {
+        $editEquipment = $equipmentData;
+    } elseif ($equipmentData) {
+        $error_message = 'Non hai i permessi per modificare questa attrezzatura. Solo il gestore originale può modificarla.';
+    } else {
+        $error_message = 'Attrezzatura non trovata.';
+    }
 }
 
 // Se è una modifica manutenzione, recupera i dati
@@ -363,7 +403,7 @@ $stats = getEquipmentStats($conn);
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>Nome</th><th>Stato</th><th>Ultima Manutenzione</th><th>N° Interventi</th><th>Costi Totali</th><th>Azioni</th>
+                        <th>Nome</th><th>Stato</th><th>Gestore</th><th>Ultima Manutenzione</th><th>N° Interventi</th><th>Costi Totali</th><th>Azioni</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -371,24 +411,45 @@ $stats = getEquipmentStats($conn);
                         <?php
                         $stateClass = $eq['state'] === 'available' ? 'success' : ($eq['state'] === 'maintenance' ? 'warning' : 'danger');
                         $stateText = $eq['state'] === 'available' ? 'Disponibile' : ($eq['state'] === 'maintenance' ? 'Manutenzione' : 'Rotta');
+                        $isMyEquipment = ($eq['administratorID'] == $_SESSION['userID']);
                         ?>
-                        <tr>
-                            <td><?= htmlspecialchars($eq['name']) ?></td>
+                        <tr <?= $isMyEquipment ? 'class="table-success"' : '' ?>>
+                            <td>
+                                <?= htmlspecialchars($eq['name']) ?>
+                            </td>
                             <td><span class="badge bg-<?= $stateClass ?>"><?= $stateText ?></span></td>
+                            <td>
+                                <?php if ($eq['admin_firstName'] && $eq['admin_lastName']): ?>
+                                    <?= htmlspecialchars($eq['admin_firstName'] . ' ' . $eq['admin_lastName']) ?>
+                                    <?php if ($isMyEquipment): ?>
+                                        <small class="text-success">(Tu)</small>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span class="text-muted">Non specificato</span>
+                                <?php endif; ?>
+                            </td>
                             <td><?= $eq['last_maintenance'] ? date('d/m/Y', strtotime($eq['last_maintenance'])) : 'Mai' ?></td>
                             <td><?= $eq['maintenance_count'] ?></td>
                             <td>€<?= number_format($eq['total_cost'], 2) ?></td>
                             <td>
-                                <a href="?edit_equipment=<?= $eq['equipmentID'] ?>" class="btn btn-sm btn-warning">Modifica</a>
-                                <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questa attrezzatura?');">
-                                    <input type="hidden" name="delete_id" value="<?= $eq['equipmentID'] ?>">
-                                    <button name="delete_equipment" class="btn btn-sm btn-danger">Elimina</button>
-                                </form>
+                                <?php if ($isMyEquipment): ?>
+                                    <!-- L'admin può modificare/eliminare le sue attrezzature -->
+                                    <a href="?edit_equipment=<?= $eq['equipmentID'] ?>" class="btn btn-sm btn-warning">Modifica</a>
+                                    <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questa attrezzatura?');">
+                                        <input type="hidden" name="delete_id" value="<?= $eq['equipmentID'] ?>">
+                                        <button name="delete_equipment" class="btn btn-sm btn-danger">Elimina</button>
+                                    </form>
+                                <?php else: ?>
+                                    <!-- Altri admin possono solo visualizzare -->
+                                    <button class="btn btn-sm btn-secondary" disabled title="Solo il gestore può modificare">
+                                        Solo lettura
+                                    </button>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                     <?php if (empty($equipment)): ?>
-                        <tr><td colspan="6" class="text-center">Nessuna attrezzatura disponibile.</td></tr>
+                        <tr><td colspan="7" class="text-center">Nessuna attrezzatura disponibile.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
@@ -411,6 +472,9 @@ $stats = getEquipmentStats($conn);
                             <option value="<?= $eq['equipmentID'] ?>" 
                                 <?= ($editMaintenance && $editMaintenance['equipmentID'] == $eq['equipmentID']) || (isset($_POST['equipmentID']) && $_POST['equipmentID'] == $eq['equipmentID']) ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($eq['name']) ?>
+                                <?php if ($eq['administratorID'] == $_SESSION['userID']): ?>
+                                    (Gestita da te)
+                                <?php endif; ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
