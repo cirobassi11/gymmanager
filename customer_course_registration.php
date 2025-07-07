@@ -125,7 +125,7 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $activeSubscription = $stmt->get_result()->fetch_assoc();
 
-// Recupera i corsi a cui il cliente è iscritto (query semplice)
+// Recupera i corsi a cui il cliente è iscritto
 $stmt = $conn->prepare("
     SELECT c.*, e.enrollmentDate
     FROM COURSE c
@@ -171,7 +171,7 @@ foreach($enrolledCourses as &$course) {
     }, $trainers);
 }
 
-// Recupera tutti i corsi disponibili (query semplice)
+// Recupera tutti i corsi disponibili
 $stmt = $conn->prepare("SELECT * FROM COURSE ORDER BY startDate ASC");
 $stmt->execute();
 $allCourses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
