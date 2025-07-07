@@ -188,8 +188,7 @@ CREATE TABLE servicing (
     FOREIGN KEY (equipmentID) REFERENCES EQUIPMENT(equipmentID) ON DELETE CASCADE
 );
 
--- Indici per migliorare le performance
-CREATE INDEX idx_user_email ON USER(email);
+-- Indici
 CREATE INDEX idx_user_role ON USER(role);
 CREATE INDEX idx_equipment_state ON EQUIPMENT(state);
 CREATE INDEX idx_maintenance_date ON MAINTENANCE(maintenanceDate);
@@ -198,3 +197,8 @@ CREATE INDEX idx_payment_date ON PAYMENT(date);
 CREATE INDEX idx_feedback_rating ON FEEDBACK(rating);
 CREATE INDEX idx_training_schedule_customer ON TRAINING_SCHEDULE(customerID);
 CREATE INDEX idx_training_schedule_trainer ON TRAINING_SCHEDULE(trainerID);
+CREATE INDEX idx_exercise_trainer ON EXERCISE(trainerID);
+CREATE INDEX idx_maintenance_equipment ON MAINTENANCE(equipmentID);
+CREATE INDEX idx_exercise_detail_training_day ON EXERCISE_DETAIL(trainingDayID);
+CREATE INDEX idx_progress_report_customer ON PROGRESS_REPORT(customerID);
+CREATE INDEX idx_subscription_customer ON SUBSCRIPTION(customerID);
