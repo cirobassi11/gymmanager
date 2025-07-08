@@ -68,8 +68,9 @@ if (!$user) {
                     </div>
                     <div class="row row-cols-1 row-cols-md-2 g-3">
                         <div class="col"><a href="customer_subscription.php" class="btn btn-info w-100">Gestione Abbonamenti</a></div>
-                        <div class="col"><a href="customer_course_registration.php" class="btn btn-info w-100">Iscrizione a Corsi</a></div>
+                        <div class="col"><a href="customer_course_registration.php" class="btn btn-info w-100">Gestione Corsi</a></div>
                         <div class="col"><a href="customer_training_schedule.php" class="btn btn-info w-100">Programmi di Allenamento</a></div>
+                        <div class="col"><a href="customer_trainer_availability.php" class="btn btn-info w-100">Visualizza gli orari dei trainer</a></div>
                         <div class="col"><a href="customer_progress_report.php" class="btn btn-info w-100">I Tuoi Progressi</a></div>
                         <div class="col"><a href="customer_feedback.php" class="btn btn-info w-100">Lascia un Feedback</a></div>
                     </div>
