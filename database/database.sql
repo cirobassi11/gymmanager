@@ -17,8 +17,7 @@ CREATE TABLE USER (
     phoneNumber VARCHAR(20),
     role ENUM('customer', 'trainer', 'admin') DEFAULT 'customer',
     specialization VARCHAR(255),
-    availability TEXT,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    availability TEXT
 );
 
 CREATE TABLE EQUIPMENT (
