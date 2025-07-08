@@ -83,13 +83,13 @@ INSERT INTO PROGRESS_REPORT (date, description, weight, bodyFatPercent, muscleMa
 ('2025-06-18', 'Valutazione mensile', 68.00, 22.0, 28.0, 21.5, 4);
 
 -- Trainer insegna corsi
-INSERT INTO teaching (trainerID, courseID) VALUES
+INSERT INTO TEACHING (trainerID, courseID) VALUES
 (2, 1),
 (2, 2),
 (2, 3);
 
 -- Iscrizioni corsi (più iscritti)
-INSERT INTO enrollment (customerID, courseID, enrollmentDate) VALUES
+INSERT INTO ENROLLMENT (customerID, courseID, enrollmentDate) VALUES
 (3, 1, CURDATE()),
 (4, 2, DATE('2025-06-15')),
 (5, 1, DATE('2025-06-20')),
@@ -97,5 +97,5 @@ INSERT INTO enrollment (customerID, courseID, enrollmentDate) VALUES
 (5, 3, DATE('2025-04-01'));
 
 -- Servicing
-INSERT INTO servicing (maintenanceID, equipmentID) VALUES
+INSERT INTO SERVICING (maintenanceID, equipmentID) VALUES
 (1, 2);

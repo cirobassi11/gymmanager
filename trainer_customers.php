@@ -15,9 +15,9 @@ $stmt = $conn->prepare("
     SELECT DISTINCT u.userID, u.firstName, u.lastName, u.email, u.phoneNumber, u.birthDate, u.gender,
            e.enrollmentDate, c.name as course_name, c.courseID, c.finishDate
     FROM USER u
-    JOIN enrollment e ON u.userID = e.customerID
+    JOIN ENROLLMENT e ON u.userID = e.customerID
     JOIN COURSE c ON e.courseID = c.courseID
-    JOIN teaching t ON c.courseID = t.courseID
+    JOIN TEACHING t ON c.courseID = t.courseID
     WHERE t.trainerID = ? AND u.role = 'customer'
     ORDER BY u.firstName, u.lastName, e.enrollmentDate DESC
 ");
@@ -64,9 +64,9 @@ if (isset($_GET['view_progress']) && is_numeric($_GET['view_progress'])) {
     $stmt = $conn->prepare("
         SELECT DISTINCT u.userID, u.firstName, u.lastName
         FROM USER u
-        JOIN enrollment e ON u.userID = e.customerID
+        JOIN ENROLLMENT e ON u.userID = e.customerID
         JOIN COURSE c ON e.courseID = c.courseID
-        JOIN teaching t ON c.courseID = t.courseID
+        JOIN TEACHING t ON c.courseID = t.courseID
         WHERE t.trainerID = ? AND u.userID = ? AND u.role = 'customer'
     ");
     $stmt->bind_param('ii', $trainerID, $customerID);
@@ -110,9 +110,9 @@ function getTrainerCustomerStats($conn, $trainerID) {
     // Totale clienti seguiti
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT e.customerID) as total
-        FROM enrollment e
+        FROM ENROLLMENT e
         JOIN COURSE c ON e.courseID = c.courseID
-        JOIN teaching t ON c.courseID = t.courseID
+        JOIN TEACHING t ON c.courseID = t.courseID
         WHERE t.trainerID = ? AND c.finishDate >= CURDATE()
     ");
     $stmt->bind_param('i', $trainerID);
@@ -122,9 +122,9 @@ function getTrainerCustomerStats($conn, $trainerID) {
     // Clienti attivi questo mese
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT e.customerID) as active
-        FROM enrollment e
+        FROM ENROLLMENT e
         JOIN COURSE c ON e.courseID = c.courseID
-        JOIN teaching t ON c.courseID = t.courseID
+        JOIN TEACHING t ON c.courseID = t.courseID
         WHERE t.trainerID = ? 
         AND c.finishDate >= CURDATE()
         AND e.enrollmentDate >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
@@ -137,9 +137,9 @@ function getTrainerCustomerStats($conn, $trainerID) {
     $stmt = $conn->prepare("
         SELECT u.birthDate
         FROM USER u
-        JOIN enrollment e ON u.userID = e.customerID
+        JOIN ENROLLMENT e ON u.userID = e.customerID
         JOIN COURSE c ON e.courseID = c.courseID
-        JOIN teaching t ON c.courseID = t.courseID
+        JOIN TEACHING t ON c.courseID = t.courseID
         WHERE t.trainerID = ? AND u.birthDate IS NOT NULL AND c.finishDate >= CURDATE()
     ");
     $stmt->bind_param('i', $trainerID);

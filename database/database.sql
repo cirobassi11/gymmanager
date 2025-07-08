@@ -163,7 +163,7 @@ CREATE TABLE PROGRESS_REPORT (
 
 -- Tabelle di relazione many-to-many
 
-CREATE TABLE teaching (
+CREATE TABLE TEACHING (
     trainerID INT NOT NULL,
     courseID INT NOT NULL,
     PRIMARY KEY (trainerID, courseID),
@@ -171,7 +171,7 @@ CREATE TABLE teaching (
     FOREIGN KEY (courseID) REFERENCES COURSE(courseID) ON DELETE CASCADE
 );
 
-CREATE TABLE enrollment (
+CREATE TABLE ENROLLMENT (
     customerID INT NOT NULL,
     courseID INT NOT NULL,
     enrollmentDate DATE DEFAULT (CURRENT_DATE),
@@ -180,7 +180,7 @@ CREATE TABLE enrollment (
     FOREIGN KEY (courseID) REFERENCES COURSE(courseID) ON DELETE CASCADE
 );
 
-CREATE TABLE servicing (
+CREATE TABLE SERVICING (
     maintenanceID INT NOT NULL,
     equipmentID INT NOT NULL,
     PRIMARY KEY (maintenanceID, equipmentID),

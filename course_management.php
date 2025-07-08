@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $courseID = $conn->insert_id;
                 // Inserisci le assegnazioni trainer se selezionati
                 if (!empty($_POST['trainers'])) {
-                    $stmt = $conn->prepare("INSERT INTO teaching (trainerID, courseID) VALUES (?, ?)");
+                    $stmt = $conn->prepare("INSERT INTO TEACHING (trainerID, courseID) VALUES (?, ?)");
                     foreach ($_POST['trainers'] as $trainerID) {
                         $stmt->bind_param('ii', $trainerID, $courseID);
                         $stmt->execute();
@@ -95,12 +95,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             if ($stmt->execute()) {
                 // Rimuovi le vecchie assegnazioni
-                $stmt = $conn->prepare("DELETE FROM teaching WHERE courseID = ?");
+                $stmt = $conn->prepare("DELETE FROM TEACHING WHERE courseID = ?");
                 $stmt->bind_param('i', $_POST['courseID']);
                 $stmt->execute();
                 // Inserisci le nuove assegnazioni trainer
                 if (!empty($_POST['trainers'])) {
-                    $stmt = $conn->prepare("INSERT INTO teaching (trainerID, courseID) VALUES (?, ?)");
+                    $stmt = $conn->prepare("INSERT INTO TEACHING (trainerID, courseID) VALUES (?, ?)");
                     foreach ($_POST['trainers'] as $trainerID) {
                         $stmt->bind_param('ii', $trainerID, $_POST['courseID']);
                         $stmt->execute();
@@ -144,7 +144,7 @@ if (isset($_GET['edit'])) {
     $editCourse = $stmt->get_result()->fetch_assoc();
     
     // Recupera i trainer assegnati
-    $stmt = $conn->prepare("SELECT trainerID FROM teaching WHERE courseID = ?");
+    $stmt = $conn->prepare("SELECT trainerID FROM TEACHING WHERE courseID = ?");
     $stmt->bind_param('i', $_GET['edit']);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -166,7 +166,7 @@ function getCourseStats($conn) {
     $activeCourses = $stmt->get_result()->fetch_assoc()['active'];
     
     // Totale iscrizioni
-    $stmt = $conn->prepare("SELECT COUNT(*) as total_enrollments FROM enrollment");
+    $stmt = $conn->prepare("SELECT COUNT(*) as total_enrollments FROM ENROLLMENT");
     $stmt->execute();
     $totalEnrollments = $stmt->get_result()->fetch_assoc()['total_enrollments'];
     
@@ -324,7 +324,7 @@ $stats = getCourseStats($conn);
                         <?php foreach($courses as $course): ?>
                             <?php
                             // Recupera i trainer per questo corso
-                            $stmt = $conn->prepare("SELECT u.firstName, u.lastName FROM teaching t JOIN USER u ON t.trainerID = u.userID WHERE t.courseID = ?");
+                            $stmt = $conn->prepare("SELECT u.firstName, u.lastName FROM TEACHING t JOIN USER u ON t.trainerID = u.userID WHERE t.courseID = ?");
                             $stmt->bind_param('i', $course['courseID']);
                             $stmt->execute();
                             $courseTrainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
