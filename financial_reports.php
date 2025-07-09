@@ -37,9 +37,9 @@ function getDateRangeFromFilter($filter) {
             // Trova la data più antica nei dati
             $stmt = $GLOBALS['conn']->prepare("
                 SELECT MIN(date) as min_date FROM (
-                    SELECT MIN(date) as date FROM PAYMENT 
+                    SELECT MIN(date) as date FROM PAYMENTS 
                     UNION ALL 
-                    SELECT MIN(maintenanceDate) as date FROM MAINTENANCE
+                    SELECT MIN(maintenanceDate) as date FROM MAINTENANCES
                 ) as combined_dates
             ");
             $stmt->execute();
@@ -59,7 +59,7 @@ function getDailyRevenue($conn, $startDate, $endDate) {
         SELECT DATE(p.date) as payment_date, 
                SUM(p.amount) as daily_revenue,
                COUNT(p.paymentID) as payment_count
-        FROM PAYMENT p
+        FROM PAYMENTS p
         WHERE p.status = 'completed' 
         AND DATE(p.date) BETWEEN ? AND ?
         GROUP BY DATE(p.date)
@@ -76,7 +76,7 @@ function getDailyExpenses($conn, $startDate, $endDate) {
         SELECT DATE(m.maintenanceDate) as expense_date,
                SUM(m.maintenanceCost) as daily_expenses,
                COUNT(m.maintenanceID) as maintenance_count
-        FROM MAINTENANCE m
+        FROM MAINTENANCES m
         WHERE m.maintenanceCost IS NOT NULL 
         AND DATE(m.maintenanceDate) BETWEEN ? AND ?
         GROUP BY DATE(m.maintenanceDate)
@@ -92,7 +92,7 @@ function getFinancialStats($conn, $startDate, $endDate) {
     // Totale entrate
     $stmt = $conn->prepare("
         SELECT SUM(amount) as total_revenue, COUNT(*) as total_payments
-        FROM PAYMENT 
+        FROM PAYMENTS 
         WHERE status = 'completed' AND DATE(date) BETWEEN ? AND ?
     ");
     $stmt->bind_param('ss', $startDate, $endDate);
@@ -102,7 +102,7 @@ function getFinancialStats($conn, $startDate, $endDate) {
     // Totale spese
     $stmt = $conn->prepare("
         SELECT SUM(maintenanceCost) as total_expenses, COUNT(*) as total_maintenances
-        FROM MAINTENANCE 
+        FROM MAINTENANCES 
         WHERE maintenanceCost IS NOT NULL AND DATE(maintenanceDate) BETWEEN ? AND ?
     ");
     $stmt->bind_param('ss', $startDate, $endDate);
@@ -114,9 +114,9 @@ function getFinancialStats($conn, $startDate, $endDate) {
         SELECT m.name as membership_name, 
                SUM(p.amount) as revenue,
                COUNT(p.paymentID) as sales_count
-        FROM PAYMENT p
-        JOIN SUBSCRIPTION s ON p.subscriptionID = s.subscriptionID
-        JOIN MEMBERSHIP m ON s.membershipID = m.membershipID
+        FROM PAYMENTS p
+        JOIN SUBSCRIPTIONS s ON p.subscriptionID = s.subscriptionID
+        JOIN MEMBERSHIPS m ON s.membershipID = m.membershipID
         WHERE p.status = 'completed' AND DATE(p.date) BETWEEN ? AND ?
         GROUP BY m.membershipID, m.name
         ORDER BY revenue DESC
@@ -130,8 +130,8 @@ function getFinancialStats($conn, $startDate, $endDate) {
         SELECT e.name as equipment_name,
                SUM(m.maintenanceCost) as total_cost,
                COUNT(m.maintenanceID) as maintenance_count
-        FROM MAINTENANCE m
-        JOIN EQUIPMENT e ON m.equipmentID = e.equipmentID
+        FROM MAINTENANCES m
+        JOIN EQUIPMENTS e ON m.equipmentID = e.equipmentID
         WHERE m.maintenanceCost IS NOT NULL AND DATE(m.maintenanceDate) BETWEEN ? AND ?
         GROUP BY e.equipmentID, e.name
         ORDER BY total_cost DESC
@@ -147,8 +147,8 @@ function getFinancialStats($conn, $startDate, $endDate) {
                SUM(p.amount) as total_spent,
                COUNT(p.paymentID) as payment_count,
                AVG(p.amount) as avg_payment
-        FROM PAYMENT p
-        JOIN USER u ON p.customerID = u.userID
+        FROM PAYMENTS p
+        JOIN USERS u ON p.customerID = u.userID
         WHERE p.status = 'completed' AND DATE(p.date) BETWEEN ? AND ?
         GROUP BY p.customerID, u.firstName, u.lastName, u.email
         ORDER BY total_spent DESC

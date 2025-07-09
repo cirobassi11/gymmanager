@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Verifica se esiste già una disponibilità sovrapposta per quel giorno
                 $stmt = $conn->prepare("
-                    SELECT availabilityDayID FROM AVAILABILITY_DAY 
+                    SELECT availabilityDayID FROM AVAILABILITY_DAYS 
                     WHERE trainerID = ? AND dayOfWeek = ? AND 
                     ((startTime <= ? AND finishTime > ?) OR 
                      (startTime < ? AND finishTime >= ?) OR
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($stmt->get_result()->num_rows > 0) {
                     $error_message = 'Esiste già una disponibilità sovrapposta per questo giorno e orario.';
                 } else {
-                    $stmt = $conn->prepare("INSERT INTO AVAILABILITY_DAY (trainerID, dayOfWeek, startTime, finishTime) VALUES (?, ?, ?, ?)");
+                    $stmt = $conn->prepare("INSERT INTO AVAILABILITY_DAYS (trainerID, dayOfWeek, startTime, finishTime) VALUES (?, ?, ?, ?)");
                     $stmt->bind_param('isss', $trainerID, $_POST['dayOfWeek'], $_POST['startTime'], $_POST['finishTime']);
                     
                     if ($stmt->execute()) {
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Verifica sovrapposizioni escludendo la disponibilità corrente
                 $stmt = $conn->prepare("
-                    SELECT availabilityDayID FROM AVAILABILITY_DAY 
+                    SELECT availabilityDayID FROM AVAILABILITY_DAYS 
                     WHERE trainerID = ? AND dayOfWeek = ? AND availabilityDayID != ? AND
                     ((startTime <= ? AND finishTime > ?) OR 
                      (startTime < ? AND finishTime >= ?) OR
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($stmt->get_result()->num_rows > 0) {
                     $error_message = 'Esiste già una disponibilità sovrapposta per questo giorno e orario.';
                 } else {
-                    $stmt = $conn->prepare("UPDATE AVAILABILITY_DAY SET dayOfWeek = ?, startTime = ?, finishTime = ? WHERE availabilityDayID = ? AND trainerID = ?");
+                    $stmt = $conn->prepare("UPDATE AVAILABILITY_DAYS SET dayOfWeek = ?, startTime = ?, finishTime = ? WHERE availabilityDayID = ? AND trainerID = ?");
                     $stmt->bind_param('sssii', $_POST['dayOfWeek'], $_POST['startTime'], $_POST['finishTime'], $_POST['availabilityDayID'], $trainerID);
                     
                     if ($stmt->execute()) {
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif (isset($_POST['delete'])) {
         // Eliminazione disponibilità
-        $stmt = $conn->prepare("DELETE FROM AVAILABILITY_DAY WHERE availabilityDayID = ? AND trainerID = ?");
+        $stmt = $conn->prepare("DELETE FROM AVAILABILITY_DAYS WHERE availabilityDayID = ? AND trainerID = ?");
         $stmt->bind_param('ii', $_POST['delete_id'], $trainerID);
         
         if ($stmt->execute()) {
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Recupera le disponibilità del trainer
-$stmt = $conn->prepare("SELECT * FROM AVAILABILITY_DAY WHERE trainerID = ? ORDER BY 
+$stmt = $conn->prepare("SELECT * FROM AVAILABILITY_DAYS WHERE trainerID = ? ORDER BY 
     CASE dayOfWeek 
         WHEN 'Monday' THEN 1
         WHEN 'Tuesday' THEN 2
@@ -136,14 +136,14 @@ $availabilities = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $editAvailability = null;
 if (isset($_GET['edit'])) {
     $availabilityID = (int)$_GET['edit'];
-    $stmt = $conn->prepare("SELECT * FROM AVAILABILITY_DAY WHERE availabilityDayID = ? AND trainerID = ?");
+    $stmt = $conn->prepare("SELECT * FROM AVAILABILITY_DAYS WHERE availabilityDayID = ? AND trainerID = ?");
     $stmt->bind_param('ii', $availabilityID, $trainerID);
     $stmt->execute();
     $editAvailability = $stmt->get_result()->fetch_assoc();
 }
 
 // Informazioni trainer
-$stmt = $conn->prepare("SELECT firstName, lastName, specialization FROM USER WHERE userID = ?");
+$stmt = $conn->prepare("SELECT firstName, lastName, specialization FROM USERS WHERE userID = ?");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $trainerInfo = $stmt->get_result()->fetch_assoc();

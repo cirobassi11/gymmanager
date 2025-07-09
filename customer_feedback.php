@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($validation_errors)) {
             // Inserisci il feedback
             $stmt = $conn->prepare("
-                INSERT INTO FEEDBACK (date, rating, comment, customerID) 
+                INSERT INTO FEEDBACKS (date, rating, comment, customerID) 
                 VALUES (?, ?, ?, ?)
             ");
             $stmt->bind_param(
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Recupera i feedback già inviati dal cliente
 $stmt = $conn->prepare("
     SELECT f.*
-    FROM FEEDBACK f
+    FROM FEEDBACKS f
     WHERE f.customerID = ?
     ORDER BY f.date DESC
 ");
@@ -68,7 +68,7 @@ $stmt->execute();
 $myFeedbacks = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Informazioni cliente
-$stmt = $conn->prepare("SELECT firstName, lastName, email FROM USER WHERE userID = ?");
+$stmt = $conn->prepare("SELECT firstName, lastName, email FROM USERS WHERE userID = ?");
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $customerInfo = $stmt->get_result()->fetch_assoc();

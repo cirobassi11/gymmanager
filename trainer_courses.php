@@ -18,7 +18,7 @@ $trainerID = $_SESSION['userID'];
 $stmt = $conn->prepare("
     SELECT c.courseID, c.name, c.description, c.maxParticipants, c.startDate, c.finishDate,
            COUNT(e.customerID) as enrolled_count
-    FROM COURSE c
+    FROM COURSES c
     JOIN TEACHING t ON c.courseID = t.courseID
     LEFT JOIN ENROLLMENT e ON c.courseID = e.courseID
     WHERE t.trainerID = ?
@@ -77,7 +77,7 @@ $totalCourses = $stmt->get_result()->fetch_assoc()['total'];
 
 $stmt = $conn->prepare("
     SELECT COUNT(*) as active 
-    FROM COURSE c
+    FROM COURSES c
     JOIN TEACHING t ON c.courseID = t.courseID
     WHERE t.trainerID = ? AND c.startDate <= CURDATE() AND c.finishDate >= CURDATE()
 ");
@@ -96,7 +96,7 @@ $stmt->execute();
 $totalStudents = $stmt->get_result()->fetch_assoc()['total_students'];
 
 // Informazioni trainer
-$stmt = $conn->prepare("SELECT firstName, lastName, specialization FROM USER WHERE userID = ?");
+$stmt = $conn->prepare("SELECT firstName, lastName, specialization FROM USERS WHERE userID = ?");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $trainerInfo = $stmt->get_result()->fetch_assoc();

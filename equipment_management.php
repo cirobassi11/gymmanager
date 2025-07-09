@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_equipment'])) {
         // Aggiunta attrezzatura
         if (!empty($_POST['name'])) {
-            $stmt = $conn->prepare("INSERT INTO EQUIPMENT (name, description, state, administratorID) VALUES (?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO EQUIPMENTSS (name, description, state, administratorID) VALUES (?, ?, ?, ?)");
             $stmt->bind_param(
                 'sssi',
                 $_POST['name'],
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $equipmentID = (int)$_POST['equipmentID'];
         if ($equipmentID > 0) {
             // Verifica che l'admin corrente sia il gestore dell'attrezzatura
-            $stmt = $conn->prepare("SELECT administratorID, name FROM EQUIPMENT WHERE equipmentID = ?");
+            $stmt = $conn->prepare("SELECT administratorID, name FROM EQUIPMENTS WHERE equipmentID = ?");
             $stmt->bind_param('i', $equipmentID);
             $stmt->execute();
             $equipment = $stmt->get_result()->fetch_assoc();
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // L'admin è il gestore, procedi con la modifica
                 // AGGIUNTA DOPPIA VERIFICA DI SICUREZZA: controlla anche nella query UPDATE
-                $stmt = $conn->prepare("UPDATE EQUIPMENT SET name = ?, description = ?, state = ? WHERE equipmentID = ? AND administratorID = ?");
+                $stmt = $conn->prepare("UPDATE EQUIPMENTS SET name = ?, description = ?, state = ? WHERE equipmentID = ? AND administratorID = ?");
                 $stmt->bind_param(
                     'sssii',
                     $_POST['name'],
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $deleteID = (int)$_POST['delete_id'];
         if ($deleteID > 0) {
             // Verifica che l'admin corrente sia il gestore dell'attrezzatura
-            $stmt = $conn->prepare("SELECT administratorID, name FROM EQUIPMENT WHERE equipmentID = ?");
+            $stmt = $conn->prepare("SELECT administratorID, name FROM EQUIPMENTS WHERE equipmentID = ?");
             $stmt->bind_param('i', $deleteID);
             $stmt->execute();
             $equipment = $stmt->get_result()->fetch_assoc();
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // L'admin è il gestore, procedi con l'eliminazione
                 // AGGIUNTA DOPPIA VERIFICA DI SICUREZZA: controlla anche nella query DELETE
-                $stmt = $conn->prepare("DELETE FROM EQUIPMENT WHERE equipmentID = ? AND administratorID = ?");
+                $stmt = $conn->prepare("DELETE FROM EQUIPMENTS WHERE equipmentID = ? AND administratorID = ?");
                 $stmt->bind_param('ii', $deleteID, $_SESSION['userID']);
                 if ($stmt->execute() && $stmt->affected_rows > 0) {
                     $success_message = 'Attrezzatura eliminata con successo!';
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['add_maintenance'])) {
         // Aggiunta manutenzione
         if (!empty($_POST['equipmentID']) && !empty($_POST['maintenanceDate'])) {
-            $stmt = $conn->prepare("INSERT INTO MAINTENANCE (equipmentID, maintenanceDate, maintenanceCost, description, status) VALUES (?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO MAINTENANCES (equipmentID, maintenanceDate, maintenanceCost, description, status) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param(
                 'isdss',
                 $_POST['equipmentID'],
@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Modifica manutenzione
         $maintenanceID = (int)$_POST['maintenanceID'];
         if ($maintenanceID > 0) {
-            $stmt = $conn->prepare("UPDATE MAINTENANCE SET equipmentID = ?, maintenanceDate = ?, maintenanceCost = ?, description = ?, status = ? WHERE maintenanceID = ?");
+            $stmt = $conn->prepare("UPDATE MAINTENANCES SET equipmentID = ?, maintenanceDate = ?, maintenanceCost = ?, description = ?, status = ? WHERE maintenanceID = ?");
             $stmt->bind_param(
                 'isdssi',
                 $_POST['equipmentID'],
@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Eliminazione manutenzione
         $deleteID = (int)$_POST['delete_maintenance_id'];
         if ($deleteID > 0) {
-            $stmt = $conn->prepare("DELETE FROM MAINTENANCE WHERE maintenanceID = ?");
+            $stmt = $conn->prepare("DELETE FROM MAINTENANCES WHERE maintenanceID = ?");
             $stmt->bind_param('i', $deleteID);
             if ($stmt->execute()) {
                 $success_message = 'Manutenzione eliminata con successo!';
@@ -154,9 +154,9 @@ $stmt = $conn->prepare("
            CASE WHEN SUM(m.maintenanceCost) IS NULL THEN 0 ELSE SUM(m.maintenanceCost) END AS total_cost,
            MAX(m.maintenanceDate) as last_maintenance,
            u.firstName as admin_firstName, u.lastName as admin_lastName
-    FROM EQUIPMENT e
-    LEFT JOIN MAINTENANCE m ON e.equipmentID = m.equipmentID
-    LEFT JOIN USER u ON e.administratorID = u.userID
+    FROM EQUIPMENTS e
+    LEFT JOIN MAINTENANCES m ON e.equipmentID = m.equipmentID
+    LEFT JOIN USERS u ON e.administratorID = u.userID
     GROUP BY e.equipmentID
     ORDER BY e.name ASC
 ");
@@ -166,8 +166,8 @@ $equipment = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 // Recupera tutte le manutenzioni
 $stmt = $conn->prepare("
     SELECT m.*, e.name as equipment_name 
-    FROM MAINTENANCE m
-    JOIN EQUIPMENT e ON m.equipmentID = e.equipmentID
+    FROM MAINTENANCES m
+    JOIN EQUIPMENTS e ON m.equipmentID = e.equipmentID
     ORDER BY m.maintenanceDate DESC
 ");
 $stmt->execute();
@@ -177,7 +177,7 @@ $maintenances = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $editEquipment = null;
 if (isset($_GET['edit_equipment']) && is_numeric($_GET['edit_equipment'])) {
     $equipmentID = (int)$_GET['edit_equipment'];
-    $stmt = $conn->prepare("SELECT * FROM EQUIPMENT WHERE equipmentID = ?");
+    $stmt = $conn->prepare("SELECT * FROM EQUIPMENTS WHERE equipmentID = ?");
     $stmt->bind_param('i', $equipmentID);
     $stmt->execute();
     $equipmentData = $stmt->get_result()->fetch_assoc();
@@ -196,7 +196,7 @@ if (isset($_GET['edit_equipment']) && is_numeric($_GET['edit_equipment'])) {
 $editMaintenance = null;
 if (isset($_GET['edit_maintenance']) && is_numeric($_GET['edit_maintenance'])) {
     $maintenanceID = (int)$_GET['edit_maintenance'];
-    $stmt = $conn->prepare("SELECT * FROM MAINTENANCE WHERE maintenanceID = ?");
+    $stmt = $conn->prepare("SELECT * FROM MAINTENANCES WHERE maintenanceID = ?");
     $stmt->bind_param('i', $maintenanceID);
     $stmt->execute();
     $editMaintenance = $stmt->get_result()->fetch_assoc();
@@ -205,26 +205,26 @@ if (isset($_GET['edit_maintenance']) && is_numeric($_GET['edit_maintenance'])) {
 // Statistiche
 function getEquipmentStats($conn) {
     // Totale attrezzature
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM EQUIPMENT");
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM EQUIPMENTS");
     $stmt->execute();
     $totalEquipment = $stmt->get_result()->fetch_assoc()['total'];
     
     // Percentuale in buono stato
-    $stmt = $conn->prepare("SELECT COUNT(*) as available FROM EQUIPMENT WHERE state = 'available'");
+    $stmt = $conn->prepare("SELECT COUNT(*) as available FROM EQUIPMENTS WHERE state = 'available'");
     $stmt->execute();
     $availableEquipment = $stmt->get_result()->fetch_assoc()['available'];
     $goodStatePercentage = $totalEquipment > 0 ? round(($availableEquipment / $totalEquipment) * 100, 1) : 0;
     
     // Manutenzioni totali
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM MAINTENANCE");
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM MAINTENANCES");
     $stmt->execute();
     $totalMaintenances = $stmt->get_result()->fetch_assoc()['total'];
     
     // Attrezzature che richiedono manutenzione più frequente (top 5)
     $stmt = $conn->prepare("
         SELECT e.name, COUNT(m.maintenanceID) as maintenance_count
-        FROM EQUIPMENT e
-        LEFT JOIN MAINTENANCE m ON e.equipmentID = m.equipmentID
+        FROM EQUIPMENTS e
+        LEFT JOIN MAINTENANCES m ON e.equipmentID = m.equipmentID
         GROUP BY e.equipmentID, e.name
         HAVING maintenance_count > 0
         ORDER BY maintenance_count DESC
@@ -236,8 +236,8 @@ function getEquipmentStats($conn) {
     // Macchinari con costi di manutenzione più elevati (top 5)
     $stmt = $conn->prepare("
         SELECT e.name, COALESCE(SUM(m.maintenanceCost), 0) as total_cost
-        FROM EQUIPMENT e
-        LEFT JOIN MAINTENANCE m ON e.equipmentID = m.equipmentID
+        FROM EQUIPMENTS e
+        LEFT JOIN MAINTENANCES m ON e.equipmentID = m.equipmentID
         GROUP BY e.equipmentID, e.name
         HAVING total_cost > 0
         ORDER BY total_cost DESC

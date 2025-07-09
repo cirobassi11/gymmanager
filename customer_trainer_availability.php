@@ -13,10 +13,10 @@ $customerID = $_SESSION['userID'];
 // Recupera i trainer che seguono questo cliente (attraverso corsi e programmi di allenamento)
 $stmt = $conn->prepare("
     SELECT DISTINCT u.userID, u.firstName, u.lastName, u.specialization
-    FROM USER u
+    FROM USERS u
     LEFT JOIN TEACHING t ON u.userID = t.trainerID
     LEFT JOIN ENROLLMENT e ON t.courseID = e.courseID AND e.customerID = ?
-    LEFT JOIN TRAINING_SCHEDULE ts ON u.userID = ts.trainerID AND ts.customerID = ?
+    LEFT JOIN TRAINING_SCHEDULES ts ON u.userID = ts.trainerID AND ts.customerID = ?
     WHERE u.role = 'trainer' 
     AND (e.customerID IS NOT NULL OR ts.customerID IS NOT NULL)
     ORDER BY u.firstName, u.lastName
@@ -42,7 +42,7 @@ if (isset($_GET['trainer']) && is_numeric($_GET['trainer'])) {
     if ($selectedTrainer) {
         // Recupera le disponibilità del trainer
         $stmt = $conn->prepare("
-            SELECT * FROM AVAILABILITY_DAY 
+            SELECT * FROM AVAILABILITY_DAYS 
             WHERE trainerID = ? 
             ORDER BY 
                 CASE dayOfWeek 
@@ -73,7 +73,7 @@ $daysOfWeek = [
 ];
 
 // Informazioni cliente
-$stmt = $conn->prepare("SELECT firstName, lastName FROM USER WHERE userID = ?");
+$stmt = $conn->prepare("SELECT firstName, lastName FROM USERS WHERE userID = ?");
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $customerInfo = $stmt->get_result()->fetch_assoc();
@@ -119,7 +119,7 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                         <?php foreach($myTrainers as $trainer): ?>
                             <?php
                             // Recupera le disponibilità per questo trainer
-                            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM AVAILABILITY_DAY WHERE trainerID = ?");
+                            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM AVAILABILITY_DAYS WHERE trainerID = ?");
                             $stmt->bind_param('i', $trainer['userID']);
                             $stmt->execute();
                             $availabilityCount = $stmt->get_result()->fetch_assoc()['count'];
@@ -130,7 +130,7 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                             // Controlla se è trainer di corsi
                             $stmt = $conn->prepare("
                                 SELECT DISTINCT c.name
-                                FROM COURSE c
+                                FROM COURSES c
                                 JOIN TEACHING t ON c.courseID = t.courseID
                                 JOIN ENROLLMENT e ON c.courseID = e.courseID
                                 WHERE t.trainerID = ? AND e.customerID = ?
@@ -146,7 +146,7 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                             // Controlla se ha programmi di allenamento
                             $stmt = $conn->prepare("
                                 SELECT COUNT(*) as count
-                                FROM TRAINING_SCHEDULE ts
+                                FROM TRAINING_SCHEDULES ts
                                 WHERE ts.trainerID = ? AND ts.customerID = ?
                             ");
                             $stmt->bind_param('ii', $trainer['userID'], $customerID);

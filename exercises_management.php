@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (empty($validation_errors)) {
             if (isset($_POST['add_exercise'])) {
-                $stmt = $conn->prepare("INSERT INTO EXERCISE (name, description, trainerID) VALUES (?, ?, ?)");
+                $stmt = $conn->prepare("INSERT INTO EXERCISES (name, description, trainerID) VALUES (?, ?, ?)");
                 $stmt->bind_param('ssi', $name, $description, $trainerID);
                 if ($stmt->execute()) {
                     $success_message = "Esercizio aggiunto con successo!";
@@ -39,14 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } elseif (isset($_POST['update_exercise'])) {
                 $exerciseID = (int)$_POST['exerciseID'];
-                $stmt = $conn->prepare("SELECT exerciseID FROM EXERCISE WHERE exerciseID = ? AND trainerID = ?");
+                $stmt = $conn->prepare("SELECT exerciseID FROM EXERCISES WHERE exerciseID = ? AND trainerID = ?");
                 $stmt->bind_param('ii', $exerciseID, $trainerID);
                 $stmt->execute();
 
                 if ($stmt->get_result()->num_rows === 0) {
                     $error_message = "Puoi modificare solo i tuoi esercizi.";
                 } else {
-                    $stmt = $conn->prepare("UPDATE EXERCISE SET name = ?, description = ? WHERE exerciseID = ? AND trainerID = ?");
+                    $stmt = $conn->prepare("UPDATE EXERCISES SET name = ?, description = ? WHERE exerciseID = ? AND trainerID = ?");
                     $stmt->bind_param('ssii', $name, $description, $exerciseID, $trainerID);
                     if ($stmt->execute()) {
                         $success_message = "Esercizio modificato con successo!";
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['delete_exercise'])) {
         $deleteID = (int)$_POST['delete_id'];
         if ($deleteID > 0) {
-            $stmt = $conn->prepare("SELECT exerciseID FROM EXERCISE WHERE exerciseID = ? AND trainerID = ?");
+            $stmt = $conn->prepare("SELECT exerciseID FROM EXERCISES WHERE exerciseID = ? AND trainerID = ?");
             $stmt->bind_param('ii', $deleteID, $trainerID);
             $stmt->execute();
 
@@ -68,9 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $stmt = $conn->prepare("
                     SELECT COUNT(*) as count 
-                    FROM EXERCISE_DETAIL ed
-                    JOIN TRAINING_DAY td ON ed.trainingDayID = td.trainingDayID
-                    JOIN TRAINING_SCHEDULE ts ON td.trainingScheduleID = ts.trainingScheduleID
+                    FROM EXERCISE_DETAILS ed
+                    JOIN TRAINING_DAYS td ON ed.trainingDayID = td.trainingDayID
+                    JOIN TRAINING_SCHEDULES ts ON td.trainingScheduleID = ts.trainingScheduleID
                     WHERE ed.exerciseID = ? AND ts.trainerID = ?
                 ");
                 $stmt->bind_param('ii', $deleteID, $trainerID);
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($usageCount > 0) {
                     $error_message = "Impossibile eliminare l'esercizio: è utilizzato in $usageCount tuoi programmi.";
                 } else {
-                    $stmt = $conn->prepare("DELETE FROM EXERCISE WHERE exerciseID = ? AND trainerID = ?");
+                    $stmt = $conn->prepare("DELETE FROM EXERCISES WHERE exerciseID = ? AND trainerID = ?");
                     $stmt->bind_param('ii', $deleteID, $trainerID);
                     if ($stmt->execute()) {
                         $success_message = "Esercizio eliminato con successo!";
@@ -97,10 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stmt = $conn->prepare("
     SELECT e.exerciseID, e.name, e.description,
            COUNT(ed.exerciseDetailID) as usage_count
-    FROM EXERCISE e
-    LEFT JOIN EXERCISE_DETAIL ed ON e.exerciseID = ed.exerciseID
-    LEFT JOIN TRAINING_DAY td ON ed.trainingDayID = td.trainingDayID
-    LEFT JOIN TRAINING_SCHEDULE ts ON td.trainingScheduleID = ts.trainingScheduleID AND ts.trainerID = ?
+    FROM EXERCISES e
+    LEFT JOIN EXERCISE_DETAILS ed ON e.exerciseID = ed.exerciseID
+    LEFT JOIN TRAINING_DAYS td ON ed.trainingDayID = td.trainingDayID
+    LEFT JOIN TRAINING_SCHEDULES ts ON td.trainingScheduleID = ts.trainingScheduleID AND ts.trainerID = ?
     WHERE e.trainerID = ? OR e.trainerID IS NULL
     GROUP BY e.exerciseID, e.name, e.description
     ORDER BY e.name ASC
@@ -111,17 +111,17 @@ $exercises = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Statistiche
 function getExerciseStats($conn, $trainerID) {
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM EXERCISE WHERE trainerID = ?");
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM EXERCISES WHERE trainerID = ?");
     $stmt->bind_param('i', $trainerID);
     $stmt->execute();
     $total = $stmt->get_result()->fetch_assoc()['total'];
 
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT e.exerciseID) as used
-        FROM EXERCISE e
-        JOIN EXERCISE_DETAIL ed ON e.exerciseID = ed.exerciseID
-        JOIN TRAINING_DAY td ON ed.trainingDayID = td.trainingDayID
-        JOIN TRAINING_SCHEDULE ts ON td.trainingScheduleID = ts.trainingScheduleID
+        FROM EXERCISES e
+        JOIN EXERCISE_DETAILS ed ON e.exerciseID = ed.exerciseID
+        JOIN TRAINING_DAYS td ON ed.trainingDayID = td.trainingDayID
+        JOIN TRAINING_SCHEDULES ts ON td.trainingScheduleID = ts.trainingScheduleID
         WHERE e.trainerID = ? AND ts.trainerID = ?
     ");
     $stmt->bind_param('ii', $trainerID, $trainerID);
@@ -137,7 +137,7 @@ $stats = getExerciseStats($conn, $trainerID);
 $editExercise = null;
 if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $exerciseID = (int)$_GET['edit'];
-    $stmt = $conn->prepare("SELECT * FROM EXERCISE WHERE exerciseID = ? AND trainerID = ?");
+    $stmt = $conn->prepare("SELECT * FROM EXERCISES WHERE exerciseID = ? AND trainerID = ?");
     $stmt->bind_param('ii', $exerciseID, $trainerID);
     $stmt->execute();
     $editExercise = $stmt->get_result()->fetch_assoc();
@@ -287,7 +287,7 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                                     <td>
                                         <?php 
                                         // Verifica se l'esercizio è del trainer (può essere modificato/eliminato)
-                                        $stmt = $conn->prepare("SELECT trainerID FROM EXERCISE WHERE exerciseID = ?");
+                                        $stmt = $conn->prepare("SELECT trainerID FROM EXERCISES WHERE exerciseID = ?");
                                         $stmt->bind_param('i', $exercise['exerciseID']);
                                         $stmt->execute();
                                         $creator = $stmt->get_result()->fetch_assoc()['trainerID'];

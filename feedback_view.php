@@ -12,8 +12,8 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'adm
 $stmt = $conn->prepare("
     SELECT f.feedbackID, f.date, f.rating, f.comment,
            u.firstName, u.lastName
-    FROM FEEDBACK f
-    JOIN USER u ON f.customerID = u.userID
+    FROM FEEDBACKS f
+    JOIN USERS u ON f.customerID = u.userID
     ORDER BY f.date DESC
 ");
 $stmt->execute();
@@ -22,12 +22,12 @@ $feedbacks = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 // Statistiche
 function getFeedbackStats($conn) {
     // Totale feedback
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM FEEDBACK");
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM FEEDBACKS");
     $stmt->execute();
     $totalFeedbacks = $stmt->get_result()->fetch_assoc()['total'];
     
     // Rating medio
-    $stmt = $conn->prepare("SELECT AVG(rating) as avg_rating FROM FEEDBACK WHERE rating IS NOT NULL");
+    $stmt = $conn->prepare("SELECT AVG(rating) as avg_rating FROM FEEDBACKS WHERE rating IS NOT NULL");
     $stmt->execute();
     $avgRating = round($stmt->get_result()->fetch_assoc()['avg_rating'], 1);
     

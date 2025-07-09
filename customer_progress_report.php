@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Verifica che non esista già un report per quella data
-        $stmt = $conn->prepare("SELECT progressReportID FROM PROGRESS_REPORT WHERE customerID = ? AND date = ?");
+        $stmt = $conn->prepare("SELECT progressReportID FROM PROGRESS_REPORTS WHERE customerID = ? AND date = ?");
         $stmt->bind_param('is', $customerID, $date);
         $stmt->execute();
         if ($stmt->get_result()->num_rows > 0) {
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($validation_errors)) {
             // Inserisci il nuovo report
             $stmt = $conn->prepare("
-                INSERT INTO PROGRESS_REPORT (date, description, weight, bodyFatPercent, muscleMass, bmi, customerID) 
+                INSERT INTO PROGRESS_REPORTS (date, description, weight, bodyFatPercent, muscleMass, bmi, customerID) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->bind_param(
@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($validation_errors)) {
             // Aggiorna il report esistente
             $stmt = $conn->prepare("
-                UPDATE PROGRESS_REPORT 
+                UPDATE PROGRESS_REPORTS 
                 SET date = ?, description = ?, weight = ?, bodyFatPercent = ?, muscleMass = ?, bmi = ?
                 WHERE progressReportID = ? AND customerID = ?
             ");
@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['delete_progress'])) {
         $deleteID = (int)$_POST['delete_id'];
         if ($deleteID > 0) {
-            $stmt = $conn->prepare("DELETE FROM PROGRESS_REPORT WHERE progressReportID = ? AND customerID = ?");
+            $stmt = $conn->prepare("DELETE FROM PROGRESS_REPORTS WHERE progressReportID = ? AND customerID = ?");
             $stmt->bind_param('ii', $deleteID, $customerID);
             if ($stmt->execute()) {
                 $success_message = 'Report eliminato con successo!';
@@ -165,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Recupera tutti i report del cliente
 $stmt = $conn->prepare("
-    SELECT * FROM PROGRESS_REPORT 
+    SELECT * FROM PROGRESS_REPORTS 
     WHERE customerID = ? 
     ORDER BY date DESC
 ");
@@ -177,14 +177,14 @@ $progressReports = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $editReport = null;
 if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $reportID = (int)$_GET['edit'];
-    $stmt = $conn->prepare("SELECT * FROM PROGRESS_REPORT WHERE progressReportID = ? AND customerID = ?");
+    $stmt = $conn->prepare("SELECT * FROM PROGRESS_REPORTS WHERE progressReportID = ? AND customerID = ?");
     $stmt->bind_param('ii', $reportID, $customerID);
     $stmt->execute();
     $editReport = $stmt->get_result()->fetch_assoc();
 }
 
 // Informazioni cliente
-$stmt = $conn->prepare("SELECT firstName, lastName, email FROM USER WHERE userID = ?");
+$stmt = $conn->prepare("SELECT firstName, lastName, email FROM USERS WHERE userID = ?");
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $customerInfo = $stmt->get_result()->fetch_assoc();

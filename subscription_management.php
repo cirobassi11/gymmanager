@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_membership'])) {
         // Aggiunta abbonamento
         if (!empty($_POST['name']) && !empty($_POST['price']) && !empty($_POST['duration'])) {
-            $stmt = $conn->prepare("INSERT INTO MEMBERSHIP (name, price, duration, description) VALUES (?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO MEMBERSHIPS (name, price, duration, description) VALUES (?, ?, ?, ?)");
             $stmt->bind_param(
                 'sdis',
                 $_POST['name'],
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Modifica abbonamento
         $membershipID = (int)$_POST['membershipID'];
         if ($membershipID > 0) {
-            $stmt = $conn->prepare("UPDATE MEMBERSHIP SET name = ?, price = ?, duration = ?, description = ? WHERE membershipID = ?");
+            $stmt = $conn->prepare("UPDATE MEMBERSHIPS SET name = ?, price = ?, duration = ?, description = ? WHERE membershipID = ?");
             $stmt->bind_param(
                 'sdisi',
                 $_POST['name'],
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Eliminazione abbonamento
         $deleteID = (int)$_POST['delete_id'];
         if ($deleteID > 0) {
-            $stmt = $conn->prepare("DELETE FROM MEMBERSHIP WHERE membershipID = ?");
+            $stmt = $conn->prepare("DELETE FROM MEMBERSHIPS WHERE membershipID = ?");
             $stmt->bind_param('i', $deleteID);
             if ($stmt->execute()) {
                 $success_message = 'Abbonamento eliminato con successo!';
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['add_promotion'])) {
         // Aggiunta promozione
         if (!empty($_POST['promo_name']) && !empty($_POST['discountRate']) && !empty($_POST['startDate']) && !empty($_POST['expirationDate'])) {
-            $stmt = $conn->prepare("INSERT INTO PROMOTION (name, description, discountRate, startDate, expirationDate) VALUES (?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO PROMOTIONS (name, description, discountRate, startDate, expirationDate) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param(
                 'ssdss',
                 $_POST['promo_name'],
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Modifica promozione
         $promotionID = (int)$_POST['promotionID'];
         if ($promotionID > 0) {
-            $stmt = $conn->prepare("UPDATE PROMOTION SET name = ?, description = ?, discountRate = ?, startDate = ?, expirationDate = ? WHERE promotionID = ?");
+            $stmt = $conn->prepare("UPDATE PROMOTIONS SET name = ?, description = ?, discountRate = ?, startDate = ?, expirationDate = ? WHERE promotionID = ?");
             $stmt->bind_param(
                 'ssdssi',
                 $_POST['promo_name'],
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Eliminazione promozione
         $deleteID = (int)$_POST['delete_promo_id'];
         if ($deleteID > 0) {
-            $stmt = $conn->prepare("DELETE FROM PROMOTION WHERE promotionID = ?");
+            $stmt = $conn->prepare("DELETE FROM PROMOTIONS WHERE promotionID = ?");
             $stmt->bind_param('i', $deleteID);
             if ($stmt->execute()) {
                 $success_message = 'Promozione eliminata con successo!';
@@ -124,12 +124,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Recupera tutti gli abbonamenti
-$stmt = $conn->prepare("SELECT * FROM MEMBERSHIP ORDER BY price ASC");
+$stmt = $conn->prepare("SELECT * FROM MEMBERSHIPS ORDER BY price ASC");
 $stmt->execute();
 $memberships = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Recupera tutte le promozioni
-$stmt = $conn->prepare("SELECT * FROM PROMOTION ORDER BY expirationDate DESC");
+$stmt = $conn->prepare("SELECT * FROM PROMOTIONS ORDER BY expirationDate DESC");
 $stmt->execute();
 $promotions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -137,7 +137,7 @@ $promotions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $editMembership = null;
 if (isset($_GET['edit_membership']) && is_numeric($_GET['edit_membership'])) {
     $membershipID = (int)$_GET['edit_membership'];
-    $stmt = $conn->prepare("SELECT * FROM MEMBERSHIP WHERE membershipID = ?");
+    $stmt = $conn->prepare("SELECT * FROM MEMBERSHIPS WHERE membershipID = ?");
     $stmt->bind_param('i', $membershipID);
     $stmt->execute();
     $editMembership = $stmt->get_result()->fetch_assoc();
@@ -147,7 +147,7 @@ if (isset($_GET['edit_membership']) && is_numeric($_GET['edit_membership'])) {
 $editPromotion = null;
 if (isset($_GET['edit_promotion']) && is_numeric($_GET['edit_promotion'])) {
     $promotionID = (int)$_GET['edit_promotion'];
-    $stmt = $conn->prepare("SELECT * FROM PROMOTION WHERE promotionID = ?");
+    $stmt = $conn->prepare("SELECT * FROM PROMOTIONS WHERE promotionID = ?");
     $stmt->bind_param('i', $promotionID);
     $stmt->execute();
     $editPromotion = $stmt->get_result()->fetch_assoc();
@@ -156,17 +156,17 @@ if (isset($_GET['edit_promotion']) && is_numeric($_GET['edit_promotion'])) {
 // Statistiche
 function getSubscriptionStats($conn) {
     // Totale abbonamenti
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM MEMBERSHIP");
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM MEMBERSHIPS");
     $stmt->execute();
     $totalMemberships = $stmt->get_result()->fetch_assoc()['total'];
     
     // Abbonamenti attivi venduti
-    $stmt = $conn->prepare("SELECT COUNT(*) as active FROM SUBSCRIPTION WHERE startDate <= CURDATE() AND expirationDate >= CURDATE()");
+    $stmt = $conn->prepare("SELECT COUNT(*) as active FROM SUBSCRIPTIONS WHERE startDate <= CURDATE() AND expirationDate >= CURDATE()");
     $stmt->execute();
     $activeSubscriptions = $stmt->get_result()->fetch_assoc()['active'];
     
     // Promozioni attive
-    $stmt = $conn->prepare("SELECT COUNT(*) as active FROM PROMOTION WHERE startDate <= CURDATE() AND expirationDate >= CURDATE()");
+    $stmt = $conn->prepare("SELECT COUNT(*) as active FROM PROMOTIONS WHERE startDate <= CURDATE() AND expirationDate >= CURDATE()");
     $stmt->execute();
     $activePromotions = $stmt->get_result()->fetch_assoc()['active'];
     

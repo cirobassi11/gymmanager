@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Verifica che il cliente non abbia già un abbonamento attivo
         $stmt = $conn->prepare("
             SELECT subscriptionID 
-            FROM SUBSCRIPTION 
+            FROM SUBSCRIPTIONS 
             WHERE customerID = ? AND startDate <= CURDATE() AND expirationDate >= CURDATE()
         ");
         $stmt->bind_param('i', $customerID);
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (empty($validation_errors)) {
             // Recupera i dettagli dell'abbonamento
-            $stmt = $conn->prepare("SELECT * FROM MEMBERSHIP WHERE membershipID = ?");
+            $stmt = $conn->prepare("SELECT * FROM MEMBERSHIPS WHERE membershipID = ?");
             $stmt->bind_param('i', $membershipID);
             $stmt->execute();
             $membership = $stmt->get_result()->fetch_assoc();
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($promotionID) {
                     $stmt = $conn->prepare("
-                        SELECT * FROM PROMOTION 
+                        SELECT * FROM PROMOTIONS 
                         WHERE promotionID = ? AND startDate <= CURDATE() AND expirationDate >= CURDATE()
                     ");
                     $stmt->bind_param('i', $promotionID);
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Inserisci la sottoscrizione
                 $stmt = $conn->prepare("
-                    INSERT INTO SUBSCRIPTION (startDate, expirationDate, customerID, promotionID, membershipID) 
+                    INSERT INTO SUBSCRIPTIONS (startDate, expirationDate, customerID, promotionID, membershipID) 
                     VALUES (?, ?, ?, ?, ?)
                 ");
                 $stmt->bind_param(
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // Inserisci il pagamento (senza specificare il metodo)
                     $stmt = $conn->prepare("
-                        INSERT INTO PAYMENT (date, amount, customerID, subscriptionID, status) 
+                        INSERT INTO PAYMENTS (date, amount, customerID, subscriptionID, status) 
                         VALUES (CURDATE(), ?, ?, ?, 'completed')
                     ");
                     $stmt->bind_param('dii', $finalPrice, $customerID, $subscriptionID);
@@ -123,10 +123,10 @@ $stmt = $conn->prepare("
     SELECT s.*, m.name as membership_name, m.price, m.description,
            p.name as promotion_name, p.discountRate,
            pay.amount as paid_amount
-    FROM SUBSCRIPTION s
-    JOIN MEMBERSHIP m ON s.membershipID = m.membershipID
-    LEFT JOIN PROMOTION p ON s.promotionID = p.promotionID
-    LEFT JOIN PAYMENT pay ON s.subscriptionID = pay.subscriptionID
+    FROM SUBSCRIPTIONS s
+    JOIN MEMBERSHIPS m ON s.membershipID = m.membershipID
+    LEFT JOIN PROMOTIONS p ON s.promotionID = p.promotionID
+    LEFT JOIN PAYMENTS pay ON s.subscriptionID = pay.subscriptionID
     WHERE s.customerID = ? AND s.startDate <= CURDATE() AND s.expirationDate >= CURDATE()
     ORDER BY s.startDate DESC
     LIMIT 1
@@ -140,10 +140,10 @@ $stmt = $conn->prepare("
     SELECT s.*, m.name as membership_name, m.price, m.description,
            p.name as promotion_name, p.discountRate,
            pay.amount as paid_amount
-    FROM SUBSCRIPTION s
-    JOIN MEMBERSHIP m ON s.membershipID = m.membershipID
-    LEFT JOIN PROMOTION p ON s.promotionID = p.promotionID
-    LEFT JOIN PAYMENT pay ON s.subscriptionID = pay.subscriptionID
+    FROM SUBSCRIPTIONS s
+    JOIN MEMBERSHIPS m ON s.membershipID = m.membershipID
+    LEFT JOIN PROMOTIONS p ON s.promotionID = p.promotionID
+    LEFT JOIN PAYMENTS pay ON s.subscriptionID = pay.subscriptionID
     WHERE s.customerID = ?
     ORDER BY s.startDate DESC
 ");
@@ -170,13 +170,13 @@ foreach($subscriptionHistory as &$sub) {
 }
 
 // Recupera tutti gli abbonamenti disponibili
-$stmt = $conn->prepare("SELECT * FROM MEMBERSHIP ORDER BY price ASC");
+$stmt = $conn->prepare("SELECT * FROM MEMBERSHIPS ORDER BY price ASC");
 $stmt->execute();
 $availableMemberships = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Recupera le promozioni attive
 $stmt = $conn->prepare("
-    SELECT * FROM PROMOTION 
+    SELECT * FROM PROMOTIONS 
     WHERE startDate <= CURDATE() AND expirationDate >= CURDATE()
     ORDER BY discountRate DESC
 ");
@@ -184,7 +184,7 @@ $stmt->execute();
 $activePromotions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Informazioni cliente
-$stmt = $conn->prepare("SELECT firstName, lastName, email FROM USER WHERE userID = ?");
+$stmt = $conn->prepare("SELECT firstName, lastName, email FROM USERS WHERE userID = ?");
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $customerInfo = $stmt->get_result()->fetch_assoc();

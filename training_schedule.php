@@ -2,10 +2,6 @@
 require_once 'config.php';
 session_start();
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 // Controllo accesso trainer
 if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'trainer') {
     header('Location: login.php');
@@ -34,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Se non ci sono errori, inserisci il programma
         if (empty($validation_errors)) {
-            $stmt = $conn->prepare("INSERT INTO TRAINING_SCHEDULE (name, description, creationDate, customerID, trainerID) VALUES (?, ?, CURDATE(), ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO TRAINING_SCHEDULES (name, description, creationDate, customerID, trainerID) VALUES (?, ?, CURDATE(), ?, ?)");
             $stmt->bind_param(
                 'ssii',
                 $_POST['name'],
@@ -63,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (empty($validation_errors)) {
             $scheduleID = (int)$_POST['trainingScheduleID'];
-            $stmt = $conn->prepare("UPDATE TRAINING_SCHEDULE SET name = ?, description = ?, customerID = ? WHERE trainingScheduleID = ? AND trainerID = ?");
+            $stmt = $conn->prepare("UPDATE TRAINING_SCHEDULES SET name = ?, description = ?, customerID = ? WHERE trainingScheduleID = ? AND trainerID = ?");
             $stmt->bind_param(
                 'ssiii',
                 $_POST['name'],
@@ -81,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['delete_schedule'])) {
         $deleteID = (int)$_POST['delete_id'];
         if ($deleteID > 0) {
-            $stmt = $conn->prepare("DELETE FROM TRAINING_SCHEDULE WHERE trainingScheduleID = ? AND trainerID = ?");
+            $stmt = $conn->prepare("DELETE FROM TRAINING_SCHEDULES WHERE trainingScheduleID = ? AND trainerID = ?");
             $stmt->bind_param('ii', $deleteID, $trainerID);
             if ($stmt->execute()) {
                 $success_message = 'Programma eliminato con successo!';
@@ -92,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['add_training_day'])) {
         // Aggiunta giorno di allenamento
         if (!empty($_POST['day_name']) && !empty($_POST['schedule_id'])) {
-            $stmt = $conn->prepare("INSERT INTO TRAINING_DAY (name, description, trainingScheduleID, dayOrder) VALUES (?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO TRAINING_DAYS (name, description, trainingScheduleID, dayOrder) VALUES (?, ?, ?, ?)");
             $stmt->bind_param(
                 'ssii',
                 $_POST['day_name'],
@@ -116,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $weight = !empty($_POST['weight']) ? (float)$_POST['weight'] : null;
             $restTime = !empty($_POST['restTime']) ? (int)$_POST['restTime'] : null;
             
-            $stmt = $conn->prepare("INSERT INTO EXERCISE_DETAIL (sets, reps, weight, restTime, trainingDayID, exerciseID, orderInWorkout) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO EXERCISE_DETAILS (sets, reps, weight, restTime, trainingDayID, exerciseID, orderInWorkout) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param(
                 'iidiiii',
                 $_POST['sets'],
@@ -146,9 +142,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Verifica che l'esercizio appartenga al trainer corrente
             $stmt = $conn->prepare("
                 SELECT ed.exerciseDetailID 
-                FROM EXERCISE_DETAIL ed
-                JOIN TRAINING_DAY td ON ed.trainingDayID = td.trainingDayID
-                JOIN TRAINING_SCHEDULE ts ON td.trainingScheduleID = ts.trainingScheduleID
+                FROM EXERCISE_DETAILS ed
+                JOIN TRAINING_DAYS td ON ed.trainingDayID = td.trainingDayID
+                JOIN TRAINING_SCHEDULES ts ON td.trainingScheduleID = ts.trainingScheduleID
                 WHERE ed.exerciseDetailID = ? AND ed.trainingDayID = ? AND ts.trainerID = ?
             ");
             $stmt->bind_param('iii', $exerciseDetailID, $trainingDayID, $trainerID);
@@ -157,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($result) {
                 // Elimina l'esercizio
-                $stmt = $conn->prepare("DELETE FROM EXERCISE_DETAIL WHERE exerciseDetailID = ?");
+                $stmt = $conn->prepare("DELETE FROM EXERCISE_DETAILS WHERE exerciseDetailID = ?");
                 $stmt->bind_param('i', $exerciseDetailID);
                 if ($stmt->execute()) {
                     $success_message = 'Esercizio eliminato con successo!';
@@ -176,8 +172,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Verifica che il giorno appartenga al trainer corrente
             $stmt = $conn->prepare("
                 SELECT td.trainingDayID 
-                FROM TRAINING_DAY td
-                JOIN TRAINING_SCHEDULE ts ON td.trainingScheduleID = ts.trainingScheduleID
+                FROM TRAINING_DAYS td
+                JOIN TRAINING_SCHEDULES ts ON td.trainingScheduleID = ts.trainingScheduleID
                 WHERE td.trainingDayID = ? AND ts.trainerID = ?
             ");
             $stmt->bind_param('ii', $trainingDayID, $trainerID);
@@ -186,12 +182,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($result) {
                 // Prima elimina tutti gli esercizi del giorno
-                $stmt = $conn->prepare("DELETE FROM EXERCISE_DETAIL WHERE trainingDayID = ?");
+                $stmt = $conn->prepare("DELETE FROM EXERCISE_DETAILS WHERE trainingDayID = ?");
                 $stmt->bind_param('i', $trainingDayID);
                 $stmt->execute();
                 
                 // Poi elimina il giorno
-                $stmt = $conn->prepare("DELETE FROM TRAINING_DAY WHERE trainingDayID = ?");
+                $stmt = $conn->prepare("DELETE FROM TRAINING_DAYS WHERE trainingDayID = ?");
                 $stmt->bind_param('i', $trainingDayID);
                 if ($stmt->execute()) {
                     $success_message = 'Giorno di allenamento eliminato con successo!';
@@ -200,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Recupera l'ID del programma per il redirect
                         $stmt = $conn->prepare("
                             SELECT ts.trainingScheduleID 
-                            FROM TRAINING_SCHEDULE ts
+                            FROM TRAINING_SCHEDULES ts
                             WHERE ts.trainerID = ? 
                             LIMIT 1
                         ");
@@ -229,9 +225,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stmt = $conn->prepare("
     SELECT ts.*, u.firstName, u.lastName, 
            COUNT(td.trainingDayID) as day_count
-    FROM TRAINING_SCHEDULE ts
-    JOIN USER u ON ts.customerID = u.userID
-    LEFT JOIN TRAINING_DAY td ON ts.trainingScheduleID = td.trainingScheduleID
+    FROM TRAINING_SCHEDULES ts
+    JOIN USERS u ON ts.customerID = u.userID
+    LEFT JOIN TRAINING_DAYS td ON ts.trainingScheduleID = td.trainingScheduleID
     WHERE ts.trainerID = ?
     GROUP BY ts.trainingScheduleID
     ORDER BY ts.creationDate DESC
@@ -243,7 +239,7 @@ $schedules = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 // Recupera tutti i clienti del trainer (dai corsi e dagli allenamenti esistenti)
 $stmt = $conn->prepare("
     SELECT DISTINCT u.userID, u.firstName, u.lastName 
-    FROM USER u 
+    FROM USERS u 
     WHERE u.role = 'customer'
     ORDER BY u.firstName, u.lastName
 ");
@@ -251,7 +247,7 @@ $stmt->execute();
 $customers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Recupera gli esercizi disponibili al trainer (suoi + condivisi)
-$stmt = $conn->prepare("SELECT * FROM EXERCISE WHERE trainerID = ? OR trainerID IS NULL ORDER BY name");
+$stmt = $conn->prepare("SELECT * FROM EXERCISES WHERE trainerID = ? OR trainerID IS NULL ORDER BY name");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $exercises = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -260,7 +256,7 @@ $exercises = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $editSchedule = null;
 if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $scheduleID = (int)$_GET['edit'];
-    $stmt = $conn->prepare("SELECT * FROM TRAINING_SCHEDULE WHERE trainingScheduleID = ? AND trainerID = ?");
+    $stmt = $conn->prepare("SELECT * FROM TRAINING_SCHEDULES WHERE trainingScheduleID = ? AND trainerID = ?");
     $stmt->bind_param('ii', $scheduleID, $trainerID);
     $stmt->execute();
     $editSchedule = $stmt->get_result()->fetch_assoc();
@@ -275,8 +271,8 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
     // Recupera il programma
     $stmt = $conn->prepare("
         SELECT ts.*, u.firstName, u.lastName 
-        FROM TRAINING_SCHEDULE ts
-        JOIN USER u ON ts.customerID = u.userID
+        FROM TRAINING_SCHEDULES ts
+        JOIN USERS u ON ts.customerID = u.userID
         WHERE ts.trainingScheduleID = ? AND ts.trainerID = ?
     ");
     $stmt->bind_param('ii', $scheduleID, $trainerID);
@@ -288,8 +284,8 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
         $stmt = $conn->prepare("
             SELECT td.*, 
                    COUNT(ed.exerciseDetailID) as exercise_count
-            FROM TRAINING_DAY td
-            LEFT JOIN EXERCISE_DETAIL ed ON td.trainingDayID = ed.trainingDayID
+            FROM TRAINING_DAYS td
+            LEFT JOIN EXERCISE_DETAILS ed ON td.trainingDayID = ed.trainingDayID
             WHERE td.trainingScheduleID = ?
             GROUP BY td.trainingDayID
             ORDER BY td.dayOrder
@@ -309,9 +305,9 @@ if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {
     // Recupera il giorno di allenamento
     $stmt = $conn->prepare("
         SELECT td.*, ts.name as schedule_name, ts.trainingScheduleID, u.firstName, u.lastName
-        FROM TRAINING_DAY td
-        JOIN TRAINING_SCHEDULE ts ON td.trainingScheduleID = ts.trainingScheduleID
-        JOIN USER u ON ts.customerID = u.userID
+        FROM TRAINING_DAYS td
+        JOIN TRAINING_SCHEDULES ts ON td.trainingScheduleID = ts.trainingScheduleID
+        JOIN USERS u ON ts.customerID = u.userID
         WHERE td.trainingDayID = ? AND ts.trainerID = ?
     ");
     $stmt->bind_param('ii', $dayID, $trainerID);
@@ -322,8 +318,8 @@ if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {
         // Recupera gli esercizi del giorno
         $stmt = $conn->prepare("
             SELECT ed.*, e.name as exercise_name, e.description as exercise_description
-            FROM EXERCISE_DETAIL ed
-            JOIN EXERCISE e ON ed.exerciseID = e.exerciseID
+            FROM EXERCISE_DETAILS ed
+            JOIN EXERCISES e ON ed.exerciseID = e.exerciseID
             WHERE ed.trainingDayID = ?
             ORDER BY ed.orderInWorkout
         ");
@@ -343,13 +339,13 @@ if (isset($_GET['success'])) {
 // Statistiche
 function getTrainerStats($conn, $trainerID) {
     // Totale programmi creati
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM TRAINING_SCHEDULE WHERE trainerID = ?");
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM TRAINING_SCHEDULES WHERE trainerID = ?");
     $stmt->bind_param('i', $trainerID);
     $stmt->execute();
     $totalSchedules = $stmt->get_result()->fetch_assoc()['total'];
     
     // Clienti seguiti
-    $stmt = $conn->prepare("SELECT COUNT(DISTINCT customerID) as count FROM TRAINING_SCHEDULE WHERE trainerID = ?");
+    $stmt = $conn->prepare("SELECT COUNT(DISTINCT customerID) as count FROM TRAINING_SCHEDULES WHERE trainerID = ?");
     $stmt->bind_param('i', $trainerID);
     $stmt->execute();
     $clientsFollowed = $stmt->get_result()->fetch_assoc()['count'];

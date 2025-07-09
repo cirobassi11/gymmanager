@@ -28,7 +28,7 @@ function calcAge($bdate) {
 
 // Funzione per verificare se un campo unique esiste già
 function checkUniqueField($conn, $field, $value, $excludeUserID = null) {
-    $sql = "SELECT userID FROM USER WHERE $field = ?";
+    $sql = "SELECT userID FROM USERS WHERE $field = ?";
     $params = [$value];
     $types = 's';
     
@@ -46,7 +46,7 @@ function checkUniqueField($conn, $field, $value, $excludeUserID = null) {
 
 // Funzione per contare quanti admin ci sono
 function countAdmins($conn) {
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM USER WHERE role = 'admin'");
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM USERS WHERE role = 'admin'");
     $stmt->execute();
     return $stmt->get_result()->fetch_assoc()['count'];
 }
@@ -56,7 +56,7 @@ function processUserDeletion($conn, $deleteID) {
     global $error_message, $success_message;
     
     // Elimina direttamente l'utente - il CASCADE nel database gestirà le dipendenze
-    $stmt = $conn->prepare("DELETE FROM USER WHERE userID = ?");
+    $stmt = $conn->prepare("DELETE FROM USERS WHERE userID = ?");
     $stmt->bind_param('i', $deleteID);
     if ($stmt->execute()) {
         $success_message = 'Utente eliminato con successo!';
@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Se non ci sono errori, procedi con l'inserimento
         if (empty($validation_errors)) {
-            $stmt = $conn->prepare("INSERT INTO USER (email, password, userName, firstName, lastName, birthDate, gender, phoneNumber, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO USERS (email, password, userName, firstName, lastName, birthDate, gender, phoneNumber, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param(
                 'sssssssss',
                 $_POST['email'],
@@ -145,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Controllo se l'utente esiste
         if (empty($validation_errors)) {
-            $stmt = $conn->prepare("SELECT userID, role FROM USER WHERE userID = ?");
+            $stmt = $conn->prepare("SELECT userID, role FROM USERS WHERE userID = ?");
             $stmt->bind_param('i', $userID);
             $stmt->execute();
             $targetUser = $stmt->get_result()->fetch_assoc();
@@ -197,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Decidi se aggiornare la password o meno
             if (!empty($_POST['password'])) {
                 // Aggiorna con nuova password
-                $stmt = $conn->prepare("UPDATE USER SET email = ?, password = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
+                $stmt = $conn->prepare("UPDATE USERS SET email = ?, password = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
                 $stmt->bind_param(
                     'sssssssssi',
                     $_POST['email'],
@@ -213,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
             } else {
                 // Aggiorna senza cambiare password
-                $stmt = $conn->prepare("UPDATE USER SET email = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
+                $stmt = $conn->prepare("UPDATE USERS SET email = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
                 $stmt->bind_param(
                     'ssssssssi',
                     $_POST['email'],
@@ -255,7 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_message = 'Non puoi eliminare il tuo stesso account per motivi di sicurezza!';
         } elseif ($deleteID > 0) {
             // Controlla se è l'ultimo admin
-            $stmt = $conn->prepare("SELECT role FROM USER WHERE userID = ?");
+            $stmt = $conn->prepare("SELECT role FROM USERS WHERE userID = ?");
             $stmt->bind_param('i', $deleteID);
             $stmt->execute();
             $targetUser = $stmt->get_result()->fetch_assoc();
@@ -280,7 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Recupera utenti per ruolo
 function getUsersByRole($conn, $role) {
-    $stmt = $conn->prepare("SELECT userID, email, userName, firstName, lastName, birthDate, gender, phoneNumber, role FROM USER WHERE role = ?");
+    $stmt = $conn->prepare("SELECT userID, email, userName, firstName, lastName, birthDate, gender, phoneNumber, role FROM USERS WHERE role = ?");
     $stmt->bind_param('s', $role);
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -295,7 +295,7 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     if ($userID === $currentAdminID) {
         $error_message = 'Non puoi modificare il tuo stesso account per motivi di sicurezza. Chiedi a un altro amministratore.';
     } else {
-        $stmt = $conn->prepare("SELECT * FROM USER WHERE userID = ?");
+        $stmt = $conn->prepare("SELECT * FROM USERS WHERE userID = ?");
         $stmt->bind_param('i', $userID);
         $stmt->execute();
         $editUser = $stmt->get_result()->fetch_assoc();
@@ -305,7 +305,7 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
 // Funzioni per le statistiche
 function getCustomerStats($conn) {
     // Età media clienti
-    $stmt = $conn->prepare("SELECT birthDate FROM USER WHERE role = 'customer' AND birthDate IS NOT NULL");
+    $stmt = $conn->prepare("SELECT birthDate FROM USERS WHERE role = 'customer' AND birthDate IS NOT NULL");
     $stmt->execute();
     $result = $stmt->get_result();
     $ages = [];
@@ -315,14 +315,14 @@ function getCustomerStats($conn) {
     $avgAge = !empty($ages) ? round(array_sum($ages) / count($ages), 1) : 0;
     
     // Distribuzione di genere
-    $stmt = $conn->prepare("SELECT gender, COUNT(*) as count FROM USER WHERE role = 'customer' GROUP BY gender");
+    $stmt = $conn->prepare("SELECT gender, COUNT(*) as count FROM USERS WHERE role = 'customer' GROUP BY gender");
     $stmt->execute();
     $genderStats = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
     // Totale clienti con abbonamenti attivi
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT customerID) as count
-        FROM SUBSCRIPTION
+        FROM SUBSCRIPTIONS
         WHERE CURDATE() BETWEEN startDate AND expirationDate
     ");
     $stmt->execute();

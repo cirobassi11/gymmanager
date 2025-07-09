@@ -14,9 +14,9 @@ $trainerID = $_SESSION['userID'];
 $stmt = $conn->prepare("
     SELECT DISTINCT u.userID, u.firstName, u.lastName, u.email, u.phoneNumber, u.birthDate, u.gender,
            e.enrollmentDate, c.name as course_name, c.courseID, c.finishDate
-    FROM USER u
+    FROM USERS u
     JOIN ENROLLMENT e ON u.userID = e.customerID
-    JOIN COURSE c ON e.courseID = c.courseID
+    JOIN COURSES c ON e.courseID = c.courseID
     JOIN TEACHING t ON c.courseID = t.courseID
     WHERE t.trainerID = ? AND u.role = 'customer'
     ORDER BY u.firstName, u.lastName, e.enrollmentDate DESC
@@ -63,9 +63,9 @@ if (isset($_GET['view_progress']) && is_numeric($_GET['view_progress'])) {
     // Verifica che il cliente sia seguito dal trainer
     $stmt = $conn->prepare("
         SELECT DISTINCT u.userID, u.firstName, u.lastName
-        FROM USER u
+        FROM USERS u
         JOIN ENROLLMENT e ON u.userID = e.customerID
-        JOIN COURSE c ON e.courseID = c.courseID
+        JOIN COURSES c ON e.courseID = c.courseID
         JOIN TEACHING t ON c.courseID = t.courseID
         WHERE t.trainerID = ? AND u.userID = ? AND u.role = 'customer'
     ");
@@ -76,7 +76,7 @@ if (isset($_GET['view_progress']) && is_numeric($_GET['view_progress'])) {
     if ($viewCustomerProgress) {
         // Recupera i progress report del cliente
         $stmt = $conn->prepare("
-            SELECT * FROM PROGRESS_REPORT 
+            SELECT * FROM PROGRESS_REPORTS 
             WHERE customerID = ? 
             ORDER BY date DESC
             LIMIT 10
@@ -88,7 +88,7 @@ if (isset($_GET['view_progress']) && is_numeric($_GET['view_progress'])) {
 }
 
 // Recupera informazioni del trainer
-$stmt = $conn->prepare("SELECT firstName, lastName, specialization FROM USER WHERE userID = ?");
+$stmt = $conn->prepare("SELECT firstName, lastName, specialization FROM USERS WHERE userID = ?");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $trainerInfo = $stmt->get_result()->fetch_assoc();
@@ -111,7 +111,7 @@ function getTrainerCustomerStats($conn, $trainerID) {
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT e.customerID) as total
         FROM ENROLLMENT e
-        JOIN COURSE c ON e.courseID = c.courseID
+        JOIN COURSES c ON e.courseID = c.courseID
         JOIN TEACHING t ON c.courseID = t.courseID
         WHERE t.trainerID = ? AND c.finishDate >= CURDATE()
     ");
@@ -123,7 +123,7 @@ function getTrainerCustomerStats($conn, $trainerID) {
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT e.customerID) as active
         FROM ENROLLMENT e
-        JOIN COURSE c ON e.courseID = c.courseID
+        JOIN COURSES c ON e.courseID = c.courseID
         JOIN TEACHING t ON c.courseID = t.courseID
         WHERE t.trainerID = ? 
         AND c.finishDate >= CURDATE()
@@ -136,9 +136,9 @@ function getTrainerCustomerStats($conn, $trainerID) {
     // Media età clienti
     $stmt = $conn->prepare("
         SELECT u.birthDate
-        FROM USER u
+        FROM USERS u
         JOIN ENROLLMENT e ON u.userID = e.customerID
-        JOIN COURSE c ON e.courseID = c.courseID
+        JOIN COURSES c ON e.courseID = c.courseID
         JOIN TEACHING t ON c.courseID = t.courseID
         WHERE t.trainerID = ? AND u.birthDate IS NOT NULL AND c.finishDate >= CURDATE()
     ");

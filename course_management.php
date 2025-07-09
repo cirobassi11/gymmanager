@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($validation_errors)) {
         if (isset($_POST['add'])) {
             // Inserisci il corso (senza prezzo)
-            $stmt = $conn->prepare("INSERT INTO COURSE (name, description, maxParticipants, startDate, finishDate) VALUES (?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO COURSES (name, description, maxParticipants, startDate, finishDate) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param(
                 'ssiss',
                 $_POST['name'],
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } elseif (isset($_POST['update'])) {
             // Aggiorna il corso (senza prezzo)
-            $stmt = $conn->prepare("UPDATE COURSE SET name = ?, description = ?, maxParticipants = ?, startDate = ?, finishDate = ? WHERE courseID = ?");
+            $stmt = $conn->prepare("UPDATE COURSES SET name = ?, description = ?, maxParticipants = ?, startDate = ?, finishDate = ? WHERE courseID = ?");
             $stmt->bind_param(
                 'ssissi',
                 $_POST['name'],
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (isset($_POST['delete'])) {
         // Elimina il corso
-        $stmt = $conn->prepare("DELETE FROM COURSE WHERE courseID = ?");
+        $stmt = $conn->prepare("DELETE FROM COURSES WHERE courseID = ?");
         $stmt->bind_param('i', $_POST['delete_id']);
         if ($stmt->execute()) {
             $success_message = 'Corso eliminato con successo!';
@@ -125,12 +125,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Recupera tutti i corsi (senza prezzo)
-$stmt = $conn->prepare("SELECT courseID, name, description, maxParticipants, startDate, finishDate FROM COURSE ORDER BY startDate DESC");
+$stmt = $conn->prepare("SELECT courseID, name, description, maxParticipants, startDate, finishDate FROM COURSES ORDER BY startDate DESC");
 $stmt->execute();
 $courses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Recupera tutti i trainer per il form
-$stmt = $conn->prepare("SELECT userID, firstName, lastName FROM USER WHERE role = 'trainer' ORDER BY firstName, lastName");
+$stmt = $conn->prepare("SELECT userID, firstName, lastName FROM USERS WHERE role = 'trainer' ORDER BY firstName, lastName");
 $stmt->execute();
 $trainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -138,7 +138,7 @@ $trainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $editCourse = null;
 $assignedTrainers = [];
 if (isset($_GET['edit'])) {
-    $stmt = $conn->prepare("SELECT * FROM COURSE WHERE courseID = ?");
+    $stmt = $conn->prepare("SELECT * FROM COURSES WHERE courseID = ?");
     $stmt->bind_param('i', $_GET['edit']);
     $stmt->execute();
     $editCourse = $stmt->get_result()->fetch_assoc();
@@ -156,12 +156,12 @@ if (isset($_GET['edit'])) {
 // Statistiche corsi (senza prezzo medio)
 function getCourseStats($conn) {
     // Totale corsi
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM COURSE");
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM COURSES");
     $stmt->execute();
     $totalCourses = $stmt->get_result()->fetch_assoc()['total'];
     
     // Corsi attivi (già iniziati ma non ancora finiti)
-    $stmt = $conn->prepare("SELECT COUNT(*) as active FROM COURSE WHERE startDate <= CURDATE() AND finishDate >= CURDATE()");
+    $stmt = $conn->prepare("SELECT COUNT(*) as active FROM COURSES WHERE startDate <= CURDATE() AND finishDate >= CURDATE()");
     $stmt->execute();
     $activeCourses = $stmt->get_result()->fetch_assoc()['active'];
     
@@ -324,7 +324,7 @@ $stats = getCourseStats($conn);
                         <?php foreach($courses as $course): ?>
                             <?php
                             // Recupera i trainer per questo corso
-                            $stmt = $conn->prepare("SELECT u.firstName, u.lastName FROM TEACHING t JOIN USER u ON t.trainerID = u.userID WHERE t.courseID = ?");
+                            $stmt = $conn->prepare("SELECT u.firstName, u.lastName FROM TEACHING t JOIN USERS u ON t.trainerID = u.userID WHERE t.courseID = ?");
                             $stmt->bind_param('i', $course['courseID']);
                             $stmt->execute();
                             $courseTrainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);

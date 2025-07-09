@@ -15,9 +15,9 @@ $stmt = $conn->prepare("
     SELECT ts.*, 
            u.firstName as trainer_firstName, u.lastName as trainer_lastName,
            COUNT(td.trainingDayID) as total_days
-    FROM TRAINING_SCHEDULE ts
-    JOIN USER u ON ts.trainerID = u.userID
-    LEFT JOIN TRAINING_DAY td ON ts.trainingScheduleID = td.trainingScheduleID
+    FROM TRAINING_SCHEDULES ts
+    JOIN USERS u ON ts.trainerID = u.userID
+    LEFT JOIN TRAINING_DAYS td ON ts.trainingScheduleID = td.trainingScheduleID
     WHERE ts.customerID = ?
     GROUP BY ts.trainingScheduleID
     ORDER BY ts.creationDate DESC
@@ -37,8 +37,8 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
         SELECT ts.*, 
                u.firstName as trainer_firstName, u.lastName as trainer_lastName,
                u.specialization as trainer_specialization
-        FROM TRAINING_SCHEDULE ts
-        JOIN USER u ON ts.trainerID = u.userID
+        FROM TRAINING_SCHEDULES ts
+        JOIN USERS u ON ts.trainerID = u.userID
         WHERE ts.trainingScheduleID = ? AND ts.customerID = ?
     ");
     $stmt->bind_param('ii', $scheduleID, $customerID);
@@ -50,8 +50,8 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
         $stmt = $conn->prepare("
             SELECT td.*,
                    COUNT(ed.exerciseDetailID) as exercise_count
-            FROM TRAINING_DAY td
-            LEFT JOIN EXERCISE_DETAIL ed ON td.trainingDayID = ed.trainingDayID
+            FROM TRAINING_DAYS td
+            LEFT JOIN EXERCISE_DETAILS ed ON td.trainingDayID = ed.trainingDayID
             WHERE td.trainingScheduleID = ?
             GROUP BY td.trainingDayID
             ORDER BY td.dayOrder
@@ -72,9 +72,9 @@ if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {
     $stmt = $conn->prepare("
         SELECT td.*, ts.name as schedule_name,
                u.firstName as trainer_firstName, u.lastName as trainer_lastName
-        FROM TRAINING_DAY td
-        JOIN TRAINING_SCHEDULE ts ON td.trainingScheduleID = ts.trainingScheduleID
-        JOIN USER u ON ts.trainerID = u.userID
+        FROM TRAINING_DAYS td
+        JOIN TRAINING_SCHEDULES ts ON td.trainingScheduleID = ts.trainingScheduleID
+        JOIN USERS u ON ts.trainerID = u.userID
         WHERE td.trainingDayID = ? AND ts.customerID = ?
     ");
     $stmt->bind_param('ii', $dayID, $customerID);
@@ -85,8 +85,8 @@ if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {
         // Recupera gli esercizi del giorno
         $stmt = $conn->prepare("
             SELECT ed.*, e.name as exercise_name, e.description as exercise_description
-            FROM EXERCISE_DETAIL ed
-            JOIN EXERCISE e ON ed.exerciseID = e.exerciseID
+            FROM EXERCISE_DETAILS ed
+            JOIN EXERCISES e ON ed.exerciseID = e.exerciseID
             WHERE ed.trainingDayID = ?
             ORDER BY ed.orderInWorkout
         ");
@@ -97,7 +97,7 @@ if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {
 }
 
 // Informazioni cliente
-$stmt = $conn->prepare("SELECT firstName, lastName FROM USER WHERE userID = ?");
+$stmt = $conn->prepare("SELECT firstName, lastName FROM USERS WHERE userID = ?");
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $customerInfo = $stmt->get_result()->fetch_assoc();
@@ -114,8 +114,8 @@ if (!empty($trainingSchedules)) {
     $placeholders = str_repeat('?,', count($scheduleIDs) - 1) . '?';
     $stmt = $conn->prepare("
         SELECT COUNT(ed.exerciseDetailID) as total
-        FROM EXERCISE_DETAIL ed
-        JOIN TRAINING_DAY td ON ed.trainingDayID = td.trainingDayID
+        FROM EXERCISE_DETAILS ed
+        JOIN TRAINING_DAYS td ON ed.trainingDayID = td.trainingDayID
         WHERE td.trainingScheduleID IN ($placeholders)
     ");
     $stmt->bind_param(str_repeat('i', count($scheduleIDs)), ...$scheduleIDs);

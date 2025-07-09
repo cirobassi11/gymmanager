@@ -1,6 +1,10 @@
 <?php
 require_once 'config.php';
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 if (!isset($_SESSION['userID']) || !isset($_SESSION['role'])) {
     header('Location: login.php');
     exit();
@@ -9,7 +13,7 @@ if (!isset($_SESSION['userID']) || !isset($_SESSION['role'])) {
 $user_id = $_SESSION['userID'];
 $role = $_SESSION['role'];
 
-$sql = "SELECT firstName, lastName, role, specialization, availability FROM USER WHERE userID = ?";
+$sql = "SELECT firstName, lastName, role, specialization FROM USERS WHERE userID = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();

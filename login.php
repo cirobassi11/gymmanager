@@ -1,6 +1,10 @@
 <?php
 require_once 'config.php';
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 if (isset($_SESSION['userID']) && isset($_SESSION['role'])) {
     header('Location: dashboard.php');
     exit();
@@ -15,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($email === '' || $password === '') {
         $error = "Compila tutti i campi.";
     } else {
-        $stmt = $conn->prepare("SELECT userID, password, role, userName FROM USER WHERE email = ?");
+        $stmt = $conn->prepare("SELECT userID, password, role, userName FROM USERS WHERE email = ?");
         $stmt->bind_param('s', $email);
         $stmt->execute();
         $result = $stmt->get_result();

@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Verifica che il corso esista
-        $stmt = $conn->prepare("SELECT * FROM COURSE WHERE courseID = ?");
+        $stmt = $conn->prepare("SELECT * FROM COURSES WHERE courseID = ?");
         $stmt->bind_param('i', $courseID);
         $stmt->execute();
         $course = $stmt->get_result()->fetch_assoc();
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Verifica che il cliente abbia un abbonamento attivo
             $stmt = $conn->prepare("
                 SELECT subscriptionID 
-                FROM SUBSCRIPTION 
+                FROM SUBSCRIPTIONS 
                 WHERE customerID = ? AND startDate <= CURDATE() AND expirationDate >= CURDATE()
             ");
             $stmt->bind_param('i', $customerID);
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         if (empty($validation_errors)) {
-            // Iscrivi il cliente al corso
+            // Iscrizione cliente al corso
             $stmt = $conn->prepare("INSERT INTO ENROLLMENT (customerID, courseID, enrollmentDate) VALUES (?, ?, CURDATE())");
             $stmt->bind_param('ii', $customerID, $courseID);
             
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_message = 'Non sei iscritto a questo corso.';
         } else {
             // Verifica che il corso non sia già iniziato
-            $stmt = $conn->prepare("SELECT startDate FROM COURSE WHERE courseID = ?");
+            $stmt = $conn->prepare("SELECT startDate FROM COURSES WHERE courseID = ?");
             $stmt->bind_param('i', $courseID);
             $stmt->execute();
             $course = $stmt->get_result()->fetch_assoc();
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($course['startDate'] < date('Y-m-d')) {
                 $error_message = 'Non puoi annullare l\'iscrizione a un corso già iniziato.';
             } else {
-                // Rimuovi l'iscrizione
+                // Rimozione iscrizione
                 $stmt = $conn->prepare("DELETE FROM ENROLLMENT WHERE customerID = ? AND courseID = ?");
                 $stmt->bind_param('ii', $customerID, $courseID);
                 
@@ -117,8 +117,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Verifica abbonamento attivo
 $stmt = $conn->prepare("
     SELECT s.*, m.name as membership_name
-    FROM SUBSCRIPTION s
-    JOIN MEMBERSHIP m ON s.membershipID = m.membershipID
+    FROM SUBSCRIPTIONS s
+    JOIN MEMBERSHIPS m ON s.membershipID = m.membershipID
     WHERE s.customerID = ? AND s.startDate <= CURDATE() AND s.expirationDate >= CURDATE()
 ");
 $stmt->bind_param('i', $customerID);
@@ -128,7 +128,7 @@ $activeSubscription = $stmt->get_result()->fetch_assoc();
 // Recupera i corsi a cui il cliente è iscritto
 $stmt = $conn->prepare("
     SELECT c.*, e.enrollmentDate
-    FROM COURSE c
+    FROM COURSES c
     JOIN ENROLLMENT e ON c.courseID = e.courseID
     WHERE e.customerID = ?
     ORDER BY c.startDate DESC
@@ -159,7 +159,7 @@ foreach($enrolledCourses as &$course) {
     $stmt = $conn->prepare("
         SELECT u.firstName, u.lastName
         FROM TEACHING t
-        JOIN USER u ON t.trainerID = u.userID
+        JOIN USERS u ON t.trainerID = u.userID
         WHERE t.courseID = ?
     ");
     $stmt->bind_param('i', $course['courseID']);
@@ -172,7 +172,7 @@ foreach($enrolledCourses as &$course) {
 }
 
 // Recupera tutti i corsi disponibili
-$stmt = $conn->prepare("SELECT * FROM COURSE ORDER BY startDate ASC");
+$stmt = $conn->prepare("SELECT * FROM COURSES ORDER BY startDate ASC");
 $stmt->execute();
 $allCourses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -214,7 +214,7 @@ foreach($allCourses as $course) {
     $stmt = $conn->prepare("
         SELECT u.firstName, u.lastName
         FROM TEACHING t
-        JOIN USER u ON t.trainerID = u.userID
+        JOIN USERS u ON t.trainerID = u.userID
         WHERE t.courseID = ?
     ");
     $stmt->bind_param('i', $course['courseID']);
@@ -229,7 +229,7 @@ foreach($allCourses as $course) {
 }
 
 // Informazioni cliente
-$stmt = $conn->prepare("SELECT firstName, lastName, email FROM USER WHERE userID = ?");
+$stmt = $conn->prepare("SELECT firstName, lastName, email FROM USERS WHERE userID = ?");
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $customerInfo = $stmt->get_result()->fetch_assoc();
