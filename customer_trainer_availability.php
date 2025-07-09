@@ -12,7 +12,7 @@ $customerID = $_SESSION['userID'];
 
 // Recupera i trainer che seguono questo cliente (attraverso corsi e programmi di allenamento)
 $stmt = $conn->prepare("
-    SELECT DISTINCT u.userID, u.firstName, u.lastName, u.specialization
+    SELECT DISTINCT u.userID, u.firstName, u.lastName
     FROM USERS u
     LEFT JOIN TEACHING t ON u.userID = t.trainerID
     LEFT JOIN ENROLLMENT e ON t.courseID = e.courseID AND e.customerID = ?
@@ -164,12 +164,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                                         <?= htmlspecialchars($trainer['firstName'] . ' ' . $trainer['lastName']) ?>
                                     </h5>
                                     
-                                    <?php if ($trainer['specialization']): ?>
-                                        <p class="card-text text-muted">
-                                            <small><?= htmlspecialchars($trainer['specialization']) ?></small>
-                                        </p>
-                                    <?php endif; ?>
-                                    
                                     <div class="mb-3">
                                         <?php foreach ($relationships as $relationship): ?>
                                             <small class="d-block text-info"><?= htmlspecialchars($relationship) ?></small>
@@ -212,9 +206,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                 <div class="row">
                     <div class="col-md-8">
                         <h3><?= htmlspecialchars($selectedTrainer['firstName'] . ' ' . $selectedTrainer['lastName']) ?></h3>
-                        <?php if ($selectedTrainer['specialization']): ?>
-                            <p class="text-muted"><?= htmlspecialchars($selectedTrainer['specialization']) ?></p>
-                        <?php endif; ?>
                     </div>
                     <div class="col-md-4 text-end">
                         <div class="card bg-light h-100">

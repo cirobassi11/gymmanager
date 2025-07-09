@@ -35,8 +35,7 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
     // Verifica che il programma appartenga al cliente
     $stmt = $conn->prepare("
         SELECT ts.*, 
-               u.firstName as trainer_firstName, u.lastName as trainer_lastName,
-               u.specialization as trainer_specialization
+               u.firstName as trainer_firstName, u.lastName as trainer_lastName
         FROM TRAINING_SCHEDULES ts
         JOIN USERS u ON ts.trainerID = u.userID
         WHERE ts.trainingScheduleID = ? AND ts.customerID = ?
@@ -274,12 +273,6 @@ if (!empty($trainingSchedules)) {
                                 <p class="card-text">
                                     <strong><?= htmlspecialchars($viewSchedule['trainer_firstName'] . ' ' . $viewSchedule['trainer_lastName']) ?></strong>
                                 </p>
-                                <?php if ($viewSchedule['trainer_specialization']): ?>
-                                    <p class="card-text">
-                                        <small class="text-muted">Specializzazione:</small><br>
-                                        <span><?= htmlspecialchars($viewSchedule['trainer_specialization']) ?></span>
-                                    </p>
-                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

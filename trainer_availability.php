@@ -143,7 +143,7 @@ if (isset($_GET['edit'])) {
 }
 
 // Informazioni trainer
-$stmt = $conn->prepare("SELECT firstName, lastName, specialization FROM USERS WHERE userID = ?");
+$stmt = $conn->prepare("SELECT firstName, lastName FROM USERS WHERE userID = ?");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $trainerInfo = $stmt->get_result()->fetch_assoc();

@@ -15,8 +15,7 @@ CREATE TABLE USERS (
     birthDate DATE,
     gender ENUM('M', 'F', 'Other'),
     phoneNumber VARCHAR(20),
-    role ENUM('customer', 'trainer', 'admin') DEFAULT 'customer',
-    specialization VARCHAR(255)
+    role ENUM('customer', 'trainer', 'admin') DEFAULT 'customer'
 );
 
 CREATE TABLE EQUIPMENTS (

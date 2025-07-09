@@ -88,7 +88,7 @@ if (isset($_GET['view_progress']) && is_numeric($_GET['view_progress'])) {
 }
 
 // Recupera informazioni del trainer
-$stmt = $conn->prepare("SELECT firstName, lastName, specialization FROM USERS WHERE userID = ?");
+$stmt = $conn->prepare("SELECT firstName, lastName FROM USERS WHERE userID = ?");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $trainerInfo = $stmt->get_result()->fetch_assoc();
