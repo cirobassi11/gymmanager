@@ -235,11 +235,11 @@ function getEquipmentStats($conn) {
     
     // Macchinari con costi di manutenzione più elevati (top 5)
     $stmt = $conn->prepare("
-        SELECT e.name, COALESCE(SUM(m.maintenanceCost), 0) as total_cost
+        SELECT e.name, SUM(m.maintenanceCost) as total_cost
         FROM EQUIPMENTS e
-        LEFT JOIN MAINTENANCES m ON e.equipmentID = m.equipmentID
+        INNER JOIN MAINTENANCES m ON e.equipmentID = m.equipmentID
+        WHERE m.maintenanceCost IS NOT NULL
         GROUP BY e.equipmentID, e.name
-        HAVING total_cost > 0
         ORDER BY total_cost DESC
         LIMIT 5
     ");
