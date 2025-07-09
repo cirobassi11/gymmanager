@@ -135,25 +135,19 @@ function getTrainerCustomerStats($conn, $trainerID) {
     
     // Media età clienti
     $stmt = $conn->prepare("
-        SELECT u.birthDate
+        SELECT ROUND(AVG(TIMESTAMPDIFF(YEAR, u.birthDate, CURDATE())), 1) as avgAge
         FROM USERS u
         JOIN ENROLLMENT e ON u.userID = e.customerID
         JOIN COURSES c ON e.courseID = c.courseID
         JOIN TEACHING t ON c.courseID = t.courseID
-        WHERE t.trainerID = ? AND u.birthDate IS NOT NULL AND c.finishDate >= CURDATE()
+        WHERE t.trainerID = ? 
+        AND u.birthDate IS NOT NULL 
+        AND c.finishDate >= CURDATE()
     ");
     $stmt->bind_param('i', $trainerID);
     $stmt->execute();
-    $result = $stmt->get_result();
-    
-    $ages = [];
-    while ($row = $result->fetch_assoc()) {
-        $age = calcAge($row['birthDate']);
-        if (is_numeric($age)) {
-            $ages[] = $age;
-        }
-    }
-    $avgAge = !empty($ages) ? round(array_sum($ages) / count($ages), 1) : 0;
+    $result = $stmt->get_result()->fetch_assoc();
+    $avgAge = $result['avgAge'] ?? 0;
     
     return [
         'total' => $totalCustomers,

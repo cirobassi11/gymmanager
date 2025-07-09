@@ -311,14 +311,14 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
 // Funzioni per le statistiche
 function getCustomerStats($conn) {
     // Età media clienti
-    $stmt = $conn->prepare("SELECT birthDate FROM USERS WHERE role = 'customer' AND birthDate IS NOT NULL");
+    $stmt = $conn->prepare("
+        SELECT ROUND(AVG(TIMESTAMPDIFF(YEAR, birthDate, CURDATE())), 1) as avgAge
+        FROM USERS 
+        WHERE role = 'customer' AND birthDate IS NOT NULL
+    ");
     $stmt->execute();
-    $result = $stmt->get_result();
-    $ages = [];
-    while ($row = $result->fetch_assoc()) {
-        $ages[] = calcAge($row['birthDate']);
-    }
-    $avgAge = !empty($ages) ? round(array_sum($ages) / count($ages), 1) : 0;
+    $result = $stmt->get_result()->fetch_assoc();
+    $avgAge = $result['avgAge'] ?? 0;
     
     // Distribuzione di genere
     $stmt = $conn->prepare("SELECT gender, COUNT(*) as count FROM USERS WHERE role = 'customer' GROUP BY gender");
