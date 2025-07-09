@@ -2,12 +2,12 @@ USE gymdb;
 
 -- Inserimento utenti
 INSERT INTO USERS (email, password, userName, firstName, lastName, birthDate, gender, phoneNumber, role, specialization) VALUES
-('admin@gym.com', 'adminpass', 'adminUser', 'Alice', 'Admin', '1980-01-01', 'F', '1234567890', 'admin', NULL),
-('trainer1@gym.com', 'trainerpass', 'fitTrainer', 'Bob', 'Trainer', '1990-05-15', 'M', '0987654321', 'trainer', 'Yoga, Pilates'),
-('customer1@gym.com', 'custpass', 'john_doe', 'John', 'Doe', '1995-03-20', 'M', '1112223333', 'customer', NULL),
-('customer2@gym.com', 'custpass2', 'jane_doe', 'Jane', 'Doe', '1992-07-10', 'F', '4445556666', 'customer', NULL),
-('customer3@gym.com', 'custpass3', 'mike_smith', 'Mike', 'Smith', '1988-11-05', 'M', '7778889999', 'customer', NULL),
-('customer4@gym.com', 'custpass4', 'emma_jones', 'Emma', 'Jones', '1990-02-25', 'F', '2223334444', 'customer', NULL);
+('admin@gym.com', '$2y$10$9v2OOlFuBDzlqaRGBbMKfONJrpPOfk4iiu83tnQB1gdsU1ZdZUY6.', 'adminUser', 'Alice', 'Admin', '1980-01-01', 'F', '1234567890', 'admin', NULL),
+('trainer1@gym.com', '$2y$10$lMEuQiVE1R5/dQfM9gw/E.QJ/gLdXaqN26.ZjmimfHZ1alOBR0/ym', 'fitTrainer', 'Bob', 'Trainer', '1990-05-15', 'M', '0987654321', 'trainer', 'Yoga, Pilates'),
+('customer1@gym.com', '$2y$10$c1xd0JeTBuF9dXoGuwOq5uKo4aVaDOEpn/C2AqMA0P9FkPc9LjOEm', 'john_doe', 'John', 'Doe', '1995-03-20', 'M', '1112223333', 'customer', NULL),
+('customer2@gym.com', '$2y$10$BASb5fmC42Wfp732AXS3ueRdLVKPhUqb8C6kDisf5.lewXirEhSqC', 'jane_doe', 'Jane', 'Doe', '1992-07-10', 'F', '4445556666', 'customer', NULL),
+('customer3@gym.com', '$2y$10$Z0wrccZSukbEpYJ7/jFj4uhc55hEZ.ETvrR20.fsJo4EPuktKXOCG', 'mike_smith', 'Mike', 'Smith', '1988-11-05', 'M', '7778889999', 'customer', NULL),
+('customer4@gym.com', '$2y$10$gNt8TTTBT8zb55J8JHCjyOP1bdEw2H92n1PXfYQAs/b6ujLTBAAPu', 'emma_jones', 'Emma', 'Jones', '1990-02-25', 'F', '2223334444', 'customer', NULL);
 
 -- Inserimento attrezzature
 INSERT INTO EQUIPMENTS (name, description, state, administratorID) VALUES
@@ -66,11 +66,11 @@ INSERT INTO SUBSCRIPTIONS (startDate, expirationDate, customerID, promotionID, m
 ('2025-07-01', '2025-09-30', 6, NULL, 3);
 
 -- Pagamenti (associati alle sottoscrizioni)
-INSERT INTO PAYMENTS (date, amount, customerID, subscriptionID, status) VALUES
-('2025-06-01', 24.00, 3, 1, 'completed'),
-('2025-06-10', 64.00, 4, 2, 'completed'),
-('2025-07-01', 300.00, 5, 3, 'completed'),
-('2025-07-01', 80.00, 6, 4, 'completed');
+INSERT INTO PAYMENTS (date, amount, customerID, subscriptionID) VALUES
+('2025-06-01', 24.00, 3, 1),
+('2025-06-10', 64.00, 4, 2),
+('2025-07-01', 300.00, 5, 3),
+('2025-07-01', 80.00, 6, 4);
 
 -- Inserimento feedback
 INSERT INTO FEEDBACKS (date, rating, comment, customerID) VALUES

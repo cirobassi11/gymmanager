@@ -28,7 +28,7 @@ function calcAge($bdate) {
 
 // Funzione per verificare se un campo unique esiste già
 function checkUniqueField($conn, $field, $value, $excludeUserID = null) {
-    $sql = "SELECT userID FROM USERS WHERE $field = ?";
+    $sql = "SELECT userID FROM USER WHERE $field = ?";
     $params = [$value];
     $types = 's';
     
@@ -56,7 +56,7 @@ function processUserDeletion($conn, $deleteID) {
     global $error_message, $success_message;
     
     // Elimina direttamente l'utente - il CASCADE nel database gestirà le dipendenze
-    $stmt = $conn->prepare("DELETE FROM USERS WHERE userID = ?");
+    $stmt = $conn->prepare("DELETE FROM USER WHERE userID = ?");
     $stmt->bind_param('i', $deleteID);
     if ($stmt->execute()) {
         $success_message = 'Utente eliminato con successo!';
@@ -99,11 +99,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Se non ci sono errori, procedi con l'inserimento
         if (empty($validation_errors)) {
-            $stmt = $conn->prepare("INSERT INTO USERS (email, password, userName, firstName, lastName, birthDate, gender, phoneNumber, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            // Cripta la password prima dell'inserimento
+            $hashedPassword = hashPassword($_POST['password']);
+            
+            $stmt = $conn->prepare("INSERT INTO USER (email, password, userName, firstName, lastName, birthDate, gender, phoneNumber, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param(
                 'sssssssss',
                 $_POST['email'],
-                $_POST['password'],
+                $hashedPassword,  // Usa la password criptata
                 $_POST['userName'],
                 $_POST['firstName'],
                 $_POST['lastName'],
@@ -145,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Controllo se l'utente esiste
         if (empty($validation_errors)) {
-            $stmt = $conn->prepare("SELECT userID, role FROM USERS WHERE userID = ?");
+            $stmt = $conn->prepare("SELECT userID, role FROM USER WHERE userID = ?");
             $stmt->bind_param('i', $userID);
             $stmt->execute();
             $targetUser = $stmt->get_result()->fetch_assoc();
@@ -196,12 +199,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($validation_errors)) {
             // Decidi se aggiornare la password o meno
             if (!empty($_POST['password'])) {
-                // Aggiorna con nuova password
-                $stmt = $conn->prepare("UPDATE USERS SET email = ?, password = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
+                // Cripta la nuova password
+                $hashedPassword = hashPassword($_POST['password']);
+                
+                // Aggiorna con nuova password criptata
+                $stmt = $conn->prepare("UPDATE USER SET email = ?, password = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
                 $stmt->bind_param(
                     'sssssssssi',
                     $_POST['email'],
-                    $_POST['password'],
+                    $hashedPassword,  // Usa la password criptata
                     $_POST['userName'],
                     $_POST['firstName'],
                     $_POST['lastName'],
@@ -213,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
             } else {
                 // Aggiorna senza cambiare password
-                $stmt = $conn->prepare("UPDATE USERS SET email = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
+                $stmt = $conn->prepare("UPDATE USER SET email = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
                 $stmt->bind_param(
                     'ssssssssi',
                     $_POST['email'],
@@ -255,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_message = 'Non puoi eliminare il tuo stesso account per motivi di sicurezza!';
         } elseif ($deleteID > 0) {
             // Controlla se è l'ultimo admin
-            $stmt = $conn->prepare("SELECT role FROM USERS WHERE userID = ?");
+            $stmt = $conn->prepare("SELECT role FROM USER WHERE userID = ?");
             $stmt->bind_param('i', $deleteID);
             $stmt->execute();
             $targetUser = $stmt->get_result()->fetch_assoc();
@@ -295,7 +301,7 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     if ($userID === $currentAdminID) {
         $error_message = 'Non puoi modificare il tuo stesso account per motivi di sicurezza. Chiedi a un altro amministratore.';
     } else {
-        $stmt = $conn->prepare("SELECT * FROM USERS WHERE userID = ?");
+        $stmt = $conn->prepare("SELECT * FROM USER WHERE userID = ?");
         $stmt->bind_param('i', $userID);
         $stmt->execute();
         $editUser = $stmt->get_result()->fetch_assoc();

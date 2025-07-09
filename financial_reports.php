@@ -36,11 +36,10 @@ function getDateRangeFromFilter($filter) {
         default:
             // Trova la data più antica nei dati
             $stmt = $GLOBALS['conn']->prepare("
-                SELECT MIN(date) as min_date FROM (
-                    SELECT MIN(date) as date FROM PAYMENTS 
-                    UNION ALL 
-                    SELECT MIN(maintenanceDate) as date FROM MAINTENANCES
-                ) as combined_dates
+                SELECT LEAST(
+                    (SELECT MIN(date) FROM PAYMENTS),
+                    (SELECT MIN(maintenanceDate) FROM MAINTENANCES)
+                ) as min_date
             ");
             $stmt->execute();
             $result = $stmt->get_result()->fetch_assoc();
@@ -60,8 +59,7 @@ function getDailyRevenue($conn, $startDate, $endDate) {
                SUM(p.amount) as daily_revenue,
                COUNT(p.paymentID) as payment_count
         FROM PAYMENTS p
-        WHERE p.status = 'completed' 
-        AND DATE(p.date) BETWEEN ? AND ?
+        WHERE DATE(p.date) BETWEEN ? AND ?
         GROUP BY DATE(p.date)
         ORDER BY payment_date ASC
     ");
@@ -93,7 +91,7 @@ function getFinancialStats($conn, $startDate, $endDate) {
     $stmt = $conn->prepare("
         SELECT SUM(amount) as total_revenue, COUNT(*) as total_payments
         FROM PAYMENTS 
-        WHERE status = 'completed' AND DATE(date) BETWEEN ? AND ?
+        WHERE DATE(date) BETWEEN ? AND ?
     ");
     $stmt->bind_param('ss', $startDate, $endDate);
     $stmt->execute();
@@ -117,7 +115,7 @@ function getFinancialStats($conn, $startDate, $endDate) {
         FROM PAYMENTS p
         JOIN SUBSCRIPTIONS s ON p.subscriptionID = s.subscriptionID
         JOIN MEMBERSHIPS m ON s.membershipID = m.membershipID
-        WHERE p.status = 'completed' AND DATE(p.date) BETWEEN ? AND ?
+        WHERE DATE(p.date) BETWEEN ? AND ?
         GROUP BY m.membershipID, m.name
         ORDER BY revenue DESC
     ");
@@ -149,7 +147,7 @@ function getFinancialStats($conn, $startDate, $endDate) {
                AVG(p.amount) as avg_payment
         FROM PAYMENTS p
         JOIN USERS u ON p.customerID = u.userID
-        WHERE p.status = 'completed' AND DATE(p.date) BETWEEN ? AND ?
+        WHERE DATE(p.date) BETWEEN ? AND ?
         GROUP BY p.customerID, u.firstName, u.lastName, u.email
         ORDER BY total_spent DESC
         LIMIT 5

@@ -133,7 +133,6 @@ CREATE TABLE PAYMENTS (
     amount DECIMAL(10,2) NOT NULL,
     customerID INT NOT NULL,
     subscriptionID INT,
-    status ENUM('pending', 'completed', 'failed', 'refunded') DEFAULT 'pending',
     FOREIGN KEY (customerID) REFERENCES USERS(userID) ON DELETE CASCADE,
     FOREIGN KEY (subscriptionID) REFERENCES SUBSCRIPTIONS(subscriptionID) ON DELETE SET NULL
 );

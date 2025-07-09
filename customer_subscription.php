@@ -100,8 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // Inserisci il pagamento (senza specificare il metodo)
                     $stmt = $conn->prepare("
-                        INSERT INTO PAYMENTS (date, amount, customerID, subscriptionID, status) 
-                        VALUES (CURDATE(), ?, ?, ?, 'completed')
+                        INSERT INTO PAYMENTS (date, amount, customerID, subscriptionID) 
+                        VALUES (CURDATE(), ?, ?, ?)
                     ");
                     $stmt->bind_param('dii', $finalPrice, $customerID, $subscriptionID);
                     $stmt->execute();
