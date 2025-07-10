@@ -26,24 +26,6 @@ function calcAge($bdate) {
     }
 }
 
-// Funzione per verificare se un campo unique esiste già
-function checkUniqueField($conn, $field, $value, $excludeUserID = null) {
-    $sql = "SELECT userID FROM USER WHERE $field = ?";
-    $params = [$value];
-    $types = 's';
-    
-    if ($excludeUserID !== null) {
-        $sql .= " AND userID != ?";
-        $params[] = $excludeUserID;
-        $types .= 'i';
-    }
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param($types, ...$params);
-    $stmt->execute();
-    return $stmt->get_result()->num_rows > 0;
-}
-
 // Funzione per contare quanti admin ci sono
 function countAdmins($conn) {
     $stmt = $conn->prepare("SELECT COUNT(*) as count FROM USERS WHERE role = 'admin'");
@@ -51,17 +33,31 @@ function countAdmins($conn) {
     return $stmt->get_result()->fetch_assoc()['count'];
 }
 
+// Funzione per interpretare errori MySQL di duplicati
+function getMySQLDuplicateError($mysql_error) {
+    if (strpos($mysql_error, 'Duplicate entry') !== false) {
+        if (strpos($mysql_error, 'email') !== false || strpos($mysql_error, 'UNIQUE') !== false) {
+            return 'Esiste già un utente con questa email!';
+        } else {
+            return 'Errore: valore duplicato rilevato!';
+        }
+    }
+    return 'Errore database: ' . $mysql_error;
+}
+
 // Funzione per gestire l'eliminazione utente
 function processUserDeletion($conn, $deleteID) {
     global $error_message, $success_message;
     
-    // Elimina direttamente l'utente - il CASCADE nel database gestirà le dipendenze
-    $stmt = $conn->prepare("DELETE FROM USER WHERE userID = ?");
-    $stmt->bind_param('i', $deleteID);
-    if ($stmt->execute()) {
-        $success_message = 'Utente eliminato con successo!';
-    } else {
-        $error_message = 'Errore durante l\'eliminazione dell\'utente: ' . $conn->error;
+    try {
+        // Elimina direttamente l'utente - il CASCADE nel database gestirà le dipendenze
+        $stmt = $conn->prepare("DELETE FROM USERS WHERE userID = ?");
+        $stmt->bind_param('i', $deleteID);
+        if ($stmt->execute()) {
+            $success_message = 'Utente eliminato con successo!';
+        }
+    } catch (mysqli_sql_exception $e) {
+        $error_message = 'Errore durante l\'eliminazione dell\'utente: ' . $e->getMessage();
     }
 }
 
@@ -72,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add'])) {
         $validation_errors = [];
         
-        // Validazioni base
+        // Validazioni base (lato server)
         if ($_POST['password'] !== $_POST['confirm_password']) {
             $validation_errors[] = 'Le password non corrispondono!';
         }
@@ -92,46 +88,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $validation_errors[] = 'Il cognome è obbligatorio!';
         }
         
-        // Controllo campi unique
-        if (checkUniqueField($conn, 'email', $_POST['email'])) {
-            $validation_errors[] = 'Esiste già un utente con questa email!';
-        }
-        
-        // Se non ci sono errori, procedi con l'inserimento
+        // Se non ci sono errori di validazione, procedi con l'inserimento
         if (empty($validation_errors)) {
-            // Cripta la password prima dell'inserimento
-            $hashedPassword = hashPassword($_POST['password']);
-            
-            $stmt = $conn->prepare("INSERT INTO USER (email, password, userName, firstName, lastName, birthDate, gender, phoneNumber, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param(
-                'sssssssss',
-                $_POST['email'],
-                $hashedPassword,  // Usa la password criptata
-                $_POST['userName'],
-                $_POST['firstName'],
-                $_POST['lastName'],
-                $_POST['birthDate'],
-                $_POST['gender'],
-                $_POST['phoneNumber'],
-                $_POST['role']
-            );
-            
-            if ($stmt->execute()) {
-                $success_message = 'Utente aggiunto con successo!';
-                // Pulisci $_POST per svuotare il form
-                unset($_POST);
-            } else {
-                // Gestisci errori MySQL specifici
-                $mysql_error = $conn->error;
-                if (strpos($mysql_error, 'Duplicate entry') !== false) {
-                    if (strpos($mysql_error, 'email') !== false) {
-                        $error_message = 'Esiste già un utente con questa email!';
-                    } else {
-                        $error_message = 'Errore: valore duplicato rilevato!';
-                    }
-                } else {
-                    $error_message = 'Errore durante l\'inserimento dell\'utente: ' . $mysql_error;
+            try {
+                $hashedPassword = hashPassword($_POST['password']);
+                
+                $stmt = $conn->prepare("INSERT INTO USERS (email, password, userName, firstName, lastName, birthDate, gender, phoneNumber, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param(
+                    'sssssssss',
+                    $_POST['email'],
+                    $hashedPassword,
+                    $_POST['userName'],
+                    $_POST['firstName'],
+                    $_POST['lastName'],
+                    $_POST['birthDate'],
+                    $_POST['gender'],
+                    $_POST['phoneNumber'],
+                    $_POST['role']
+                );
+                
+                if ($stmt->execute()) {
+                    $success_message = 'Utente aggiunto con successo!';
+                    unset($_POST);
                 }
+            } catch (mysqli_sql_exception $e) {
+                $error_message = getMySQLDuplicateError($e->getMessage());
             }
         } else {
             $error_message = implode('<br>', $validation_errors);
@@ -146,9 +127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $validation_errors[] = 'Non puoi modificare il tuo stesso account per motivi di sicurezza. Chiedi a un altro amministratore.';
         }
         
-        // Controllo se l'utente esiste
+        // Controllo se l'utente esiste e validazioni di sicurezza
         if (empty($validation_errors)) {
-            $stmt = $conn->prepare("SELECT userID, role FROM USER WHERE userID = ?");
+            $stmt = $conn->prepare("SELECT userID, role FROM USERS WHERE userID = ?");
             $stmt->bind_param('i', $userID);
             $stmt->execute();
             $targetUser = $stmt->get_result()->fetch_assoc();
@@ -181,11 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $validation_errors[] = 'Il cognome è obbligatorio!';
             }
             
-            // Controllo campi unique (escludendo l'utente corrente)
-            if (checkUniqueField($conn, 'email', $_POST['email'], $userID)) {
-                $validation_errors[] = 'Esiste già un altro utente con questa email!';
-            }
-            
             // Controllo password se inserita
             if (!empty($_POST['password']) || !empty($_POST['confirm_password'])) {
                 if ($_POST['password'] !== $_POST['confirm_password']) {
@@ -197,57 +173,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         if (empty($validation_errors)) {
-            // Decidi se aggiornare la password o meno
-            if (!empty($_POST['password'])) {
-                // Cripta la nuova password
-                $hashedPassword = hashPassword($_POST['password']);
-                
-                // Aggiorna con nuova password criptata
-                $stmt = $conn->prepare("UPDATE USER SET email = ?, password = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
-                $stmt->bind_param(
-                    'sssssssssi',
-                    $_POST['email'],
-                    $hashedPassword,  // Usa la password criptata
-                    $_POST['userName'],
-                    $_POST['firstName'],
-                    $_POST['lastName'],
-                    $_POST['birthDate'],
-                    $_POST['gender'],
-                    $_POST['phoneNumber'],
-                    $_POST['role'],
-                    $userID
-                );
-            } else {
-                // Aggiorna senza cambiare password
-                $stmt = $conn->prepare("UPDATE USER SET email = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
-                $stmt->bind_param(
-                    'ssssssssi',
-                    $_POST['email'],
-                    $_POST['userName'],
-                    $_POST['firstName'],
-                    $_POST['lastName'],
-                    $_POST['birthDate'],
-                    $_POST['gender'],
-                    $_POST['phoneNumber'],
-                    $_POST['role'],
-                    $userID
-                );
-            }
-            
-            if ($stmt->execute()) {
-                $success_message = 'Utente modificato con successo!';
-            } else {
-                // Gestisci errori MySQL specifici
-                $mysql_error = $conn->error;
-                if (strpos($mysql_error, 'Duplicate entry') !== false) {
-                    if (strpos($mysql_error, 'email') !== false) {
-                        $error_message = 'Esiste già un altro utente con questa email!';
-                    } else {
-                        $error_message = 'Errore: valore duplicato rilevato!';
-                    }
+            try {
+                // Decidi se aggiornare la password o meno
+                if (!empty($_POST['password'])) {
+                    // Cripta la nuova password
+                    $hashedPassword = hashPassword($_POST['password']);
+                    
+                    // Aggiorna con nuova password criptata
+                    $stmt = $conn->prepare("UPDATE USERS SET email = ?, password = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
+                    $stmt->bind_param(
+                        'sssssssssi',
+                        $_POST['email'],
+                        $hashedPassword,
+                        $_POST['userName'],
+                        $_POST['firstName'],
+                        $_POST['lastName'],
+                        $_POST['birthDate'],
+                        $_POST['gender'],
+                        $_POST['phoneNumber'],
+                        $_POST['role'],
+                        $userID
+                    );
                 } else {
-                    $error_message = 'Errore durante la modifica dell\'utente: ' . $mysql_error;
+                    // Aggiorna senza cambiare password
+                    $stmt = $conn->prepare("UPDATE USERS SET email = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
+                    $stmt->bind_param(
+                        'ssssssssi',
+                        $_POST['email'],
+                        $_POST['userName'],
+                        $_POST['firstName'],
+                        $_POST['lastName'],
+                        $_POST['birthDate'],
+                        $_POST['gender'],
+                        $_POST['phoneNumber'],
+                        $_POST['role'],
+                        $userID
+                    );
                 }
+                
+                if ($stmt->execute()) {
+                    $success_message = 'Utente modificato con successo!';
+                }
+            } catch (mysqli_sql_exception $e) {
+                // Gestisci errori MySQL (inclusi duplicati)
+                $error_message = getMySQLDuplicateError($e->getMessage());
             }
         } else {
             $error_message = implode('<br>', $validation_errors);
@@ -261,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_message = 'Non puoi eliminare il tuo stesso account per motivi di sicurezza!';
         } elseif ($deleteID > 0) {
             // Controlla se è l'ultimo admin
-            $stmt = $conn->prepare("SELECT role FROM USER WHERE userID = ?");
+            $stmt = $conn->prepare("SELECT role FROM USERS WHERE userID = ?");
             $stmt->bind_param('i', $deleteID);
             $stmt->execute();
             $targetUser = $stmt->get_result()->fetch_assoc();
@@ -301,7 +270,7 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     if ($userID === $currentAdminID) {
         $error_message = 'Non puoi modificare il tuo stesso account per motivi di sicurezza. Chiedi a un altro amministratore.';
     } else {
-        $stmt = $conn->prepare("SELECT * FROM USER WHERE userID = ?");
+        $stmt = $conn->prepare("SELECT * FROM USERS WHERE userID = ?");
         $stmt->bind_param('i', $userID);
         $stmt->execute();
         $editUser = $stmt->get_result()->fetch_assoc();
