@@ -122,11 +122,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stmt = $conn->prepare("
     SELECT s.*, m.name as membership_name, m.price, m.description,
            p.name as promotion_name, p.discountRate,
-           pay.amount as paid_amount
+           (SELECT amount FROM PAYMENTS WHERE subscriptionID = s.subscriptionID LIMIT 1) as paid_amount
     FROM SUBSCRIPTIONS s
     JOIN MEMBERSHIPS m ON s.membershipID = m.membershipID
     LEFT JOIN PROMOTIONS p ON s.promotionID = p.promotionID
-    LEFT JOIN PAYMENTS pay ON s.subscriptionID = pay.subscriptionID
     WHERE s.customerID = ? AND s.startDate <= CURDATE() AND s.expirationDate >= CURDATE()
     ORDER BY s.startDate DESC
     LIMIT 1
@@ -138,36 +137,19 @@ $currentSubscription = $stmt->get_result()->fetch_assoc();
 // Recupera lo storico abbonamenti
 $stmt = $conn->prepare("
     SELECT s.*, m.name as membership_name, m.price, m.description,
-           p.name as promotion_name, p.discountRate,
-           pay.amount as paid_amount
+       p.name as promotion_name, p.discountRate,
+       pay.amount as paid_amount
     FROM SUBSCRIPTIONS s
     JOIN MEMBERSHIPS m ON s.membershipID = m.membershipID
     LEFT JOIN PROMOTIONS p ON s.promotionID = p.promotionID
-    LEFT JOIN PAYMENTS pay ON s.subscriptionID = pay.subscriptionID
+    JOIN PAYMENTS pay ON pay.subscriptionID = s.subscriptionID
     WHERE s.customerID = ?
-    ORDER BY s.startDate DESC
+    AND NOT (s.startDate <= CURDATE() AND s.expirationDate >= CURDATE())
+    ORDER BY s.startDate DESC;
 ");
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $subscriptionHistory = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-// Stato degli abbonamenti
-foreach($subscriptionHistory as &$sub) {
-    $today = new DateTime();
-    $startDate = new DateTime($sub['startDate']);
-    $expirationDate = new DateTime($sub['expirationDate']);
-    
-    if ($expirationDate < $today) {
-        $sub['status'] = 'Scaduto';
-        $sub['status_class'] = 'secondary';
-    } elseif ($startDate > $today) {
-        $sub['status'] = 'In attesa';
-        $sub['status_class'] = 'warning';
-    } else {
-        $sub['status'] = 'Attivo';
-        $sub['status_class'] = 'success';
-    }
-}
 
 // Recupera tutti gli abbonamenti disponibili
 $stmt = $conn->prepare("SELECT * FROM MEMBERSHIPS ORDER BY price ASC");
@@ -189,6 +171,7 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $customerInfo = $stmt->get_result()->fetch_assoc();
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -381,7 +364,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                                 <th>Data Scadenza</th>
                                 <th>Prezzo Pagato</th>
                                 <th>Promozione</th>
-                                <th>Stato</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -402,9 +384,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                                         <?php else: ?>
                                             <span class="text-muted">Nessuna</span>
                                         <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-<?= $sub['status_class'] ?>"><?= $sub['status'] ?></span>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
