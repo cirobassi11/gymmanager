@@ -137,7 +137,6 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $enrolledCourses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Elabora i corsi iscritti in PHP
 foreach($enrolledCourses as &$course) {
     // Calcola lo stato del corso
     $today = new DateTime();
@@ -155,7 +154,7 @@ foreach($enrolledCourses as &$course) {
         $course['status_class'] = 'primary';
     }
     
-    // Prendi i trainer per questo corso
+    // Trainer del corso
     $stmt = $conn->prepare("
         SELECT u.firstName, u.lastName
         FROM TEACHING t
@@ -234,7 +233,7 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $customerInfo = $stmt->get_result()->fetch_assoc();
 
-// Statistiche semplici
+// Statistiche
 $totalEnrolled = count($enrolledCourses);
 $activeCourses = 0;
 $upcomingCourses = 0;

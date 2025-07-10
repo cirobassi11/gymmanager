@@ -10,7 +10,7 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'cus
 
 $customerID = $_SESSION['userID'];
 
-// Recupera i trainer che seguono questo cliente (attraverso corsi e programmi di allenamento)
+// Recupera i trainer che seguono questo cliente
 $stmt = $conn->prepare("
     SELECT DISTINCT u.userID, u.firstName, u.lastName
     FROM USERS u

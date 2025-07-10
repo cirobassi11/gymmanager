@@ -10,49 +10,21 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'tra
 
 $trainerID = $_SESSION['userID'];
 
-// Recupera i clienti seguiti dal trainer attraverso i corsi
+// Raggruppamento corsi per cliente
 $stmt = $conn->prepare("
     SELECT DISTINCT u.userID, u.firstName, u.lastName, u.email, u.phoneNumber, u.birthDate, u.gender,
-           e.enrollmentDate, c.name as course_name, c.courseID, c.finishDate
+           GROUP_CONCAT(DISTINCT c.name ORDER BY c.name SEPARATOR ', ') as course_names
     FROM USERS u
     JOIN ENROLLMENT e ON u.userID = e.customerID
     JOIN COURSES c ON e.courseID = c.courseID
     JOIN TEACHING t ON c.courseID = t.courseID
     WHERE t.trainerID = ? AND u.role = 'customer'
-    ORDER BY u.firstName, u.lastName, e.enrollmentDate DESC
+    GROUP BY u.userID, u.firstName, u.lastName, u.email, u.phoneNumber, u.birthDate, u.gender
+    ORDER BY u.firstName, u.lastName
 ");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $customers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-// Raggruppa i clienti per evitare duplicati e calcola lo stato in PHP
-$groupedCustomers = [];
-foreach ($customers as $customer) {
-    $customerID = $customer['userID'];
-    if (!isset($groupedCustomers[$customerID])) {
-        $groupedCustomers[$customerID] = [
-            'info' => $customer,
-            'courses' => []
-        ];
-    }
-    
-    // Calcola lo stato del corso in PHP
-    $today = new DateTime();
-    $finishDate = new DateTime($customer['finishDate']);
-    
-    if ($finishDate >= $today) {
-        $status = 'active';
-    } else {
-        $status = 'completed';
-    }
-    
-    $groupedCustomers[$customerID]['courses'][] = [
-        'courseID' => $customer['courseID'],
-        'name' => $customer['course_name'],
-        'enrollmentDate' => $customer['enrollmentDate'],
-        'status' => $status
-    ];
-}
 
 // Se stiamo visualizzando i progressi di un cliente
 $viewCustomerProgress = null;
@@ -87,13 +59,7 @@ if (isset($_GET['view_progress']) && is_numeric($_GET['view_progress'])) {
     }
 }
 
-// Recupera informazioni del trainer
-$stmt = $conn->prepare("SELECT firstName, lastName FROM USERS WHERE userID = ?");
-$stmt->bind_param('i', $trainerID);
-$stmt->execute();
-$trainerInfo = $stmt->get_result()->fetch_assoc();
-
-// Calcola età da data di nascita
+// Calcola età
 function calcAge($birthDate) {
     if (empty($birthDate)) return 'N/A';
     try {
@@ -226,7 +192,7 @@ $stats = getTrainerCustomerStats($conn, $trainerID);
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <h4>I Tuoi Clienti</h4>
-                <?php if (!empty($groupedCustomers)): ?>
+                <?php if (!empty($customers)): ?>
                     <div class="table-responsive">
                         <table class="table table-striped">
                             <thead>
@@ -240,10 +206,7 @@ $stats = getTrainerCustomerStats($conn, $trainerID);
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($groupedCustomers as $customerData): 
-                                    $customer = $customerData['info'];
-                                    $courses = $customerData['courses'];
-                                ?>
+                                <?php foreach ($customers as $customer): ?>
                                 <tr>
                                     <td>
                                         <strong><?= htmlspecialchars($customer['firstName'] . ' ' . $customer['lastName']) ?></strong>
@@ -257,17 +220,9 @@ $stats = getTrainerCustomerStats($conn, $trainerID);
                                     </td>
                                     <td><?= htmlspecialchars($customer['gender']) ?></td>
                                     <td>
-                                        <?php foreach ($courses as $course): ?>
-                                            <div class="mb-1">
-                                                <span class="badge bg-light text-dark me-1">
-                                                    <?= htmlspecialchars($course['name']) ?>
-                                                </span>
-                                                <span class="badge bg-<?= $course['status'] === 'active' ? 'success' : 'secondary' ?> me-1">
-                                                    <?= $course['status'] === 'active' ? 'Attivo' : 'Completato' ?>
-                                                </span>
-                                                <br><small class="text-muted">dal <?= date('d/m/Y', strtotime($course['enrollmentDate'])) ?></small>
-                                            </div>
-                                        <?php endforeach; ?>
+                                        <span class="badge bg-light text-dark">
+                                            <?= htmlspecialchars($customer['course_names']) ?>
+                                        </span>
                                     </td>
                                     <td>
                                         <a href="?view_progress=<?= $customer['userID'] ?>" class="btn btn-sm btn-info">

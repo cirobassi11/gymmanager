@@ -14,7 +14,7 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'tra
 
 $trainerID = $_SESSION['userID'];
 
-// Recupera i corsi assegnati al trainer (senza prezzo)
+// Recupera i corsi assegnati al trainer
 $stmt = $conn->prepare("
     SELECT c.courseID, c.name, c.description, c.maxParticipants, c.startDate, c.finishDate,
            COUNT(e.customerID) as enrolled_count
@@ -47,7 +47,6 @@ foreach ($courses as $index => $course) {
     $courseEnrollments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
     if (!empty($courseEnrollments)) {
-        // Calcola il cumulativo in PHP
         $cumulative = 0;
         $processedData = [];
         foreach ($courseEnrollments as $ENROLLMENT) {
@@ -280,10 +279,8 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
 
 <?php if (!empty($enrollmentData)): ?>
 <script>
-// Debug: mostra i dati ricevuti
 console.log('Dati ENROLLMENT ricevuti:', <?= json_encode($enrollmentData) ?>);
 
-// Prepara i dati per il grafico
 const enrollmentData = <?= json_encode($enrollmentData) ?>;
 let chart;
 let allDatasets = [];
@@ -499,7 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     chart = new Chart(document.getElementById('enrollmentChart'), config);
     
-    // Carica tutti i dati inizialmente
+    // Carica i dati
     filterChart('all');
 });
 </script>

@@ -35,7 +35,6 @@ $success_message = '';
 $validation_errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Validazione comune per add e update
     $dateErrors = validateDates($_POST['startDate'] ?? '', $_POST['finishDate'] ?? '');
     $validation_errors = array_merge($validation_errors, $dateErrors);
     
@@ -53,10 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $validation_errors[] = 'Devi assegnare almeno un trainer al corso.';
     }
     
-    // Se non ci sono errori, si procede con l'operazione
     if (empty($validation_errors)) {
         if (isset($_POST['add'])) {
-            // Inserisci il corso (senza prezzo)
+            // Inserimento corso
             $stmt = $conn->prepare("INSERT INTO COURSES (name, description, maxParticipants, startDate, finishDate) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param(
                 'ssiss',
@@ -68,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             if ($stmt->execute()) {
                 $courseID = $conn->insert_id;
-                // Inserisci le assegnazioni trainer se selezionati
+                // Inserimento dei trainer assegnati
                 if (!empty($_POST['trainers'])) {
                     $stmt = $conn->prepare("INSERT INTO TEACHING (trainerID, courseID) VALUES (?, ?)");
                     foreach ($_POST['trainers'] as $trainerID) {
@@ -82,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error_message = 'Errore durante l\'inserimento del corso.';
             }
         } elseif (isset($_POST['update'])) {
-            // Aggiorna il corso (senza prezzo)
+            // Aggiornamento corso
             $stmt = $conn->prepare("UPDATE COURSES SET name = ?, description = ?, maxParticipants = ?, startDate = ?, finishDate = ? WHERE courseID = ?");
             $stmt->bind_param(
                 'ssissi',
@@ -94,11 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_POST['courseID']
             );
             if ($stmt->execute()) {
-                // Rimuovi le vecchie assegnazioni
+                // Rimozione vecchie assegnazioni trainer
                 $stmt = $conn->prepare("DELETE FROM TEACHING WHERE courseID = ?");
                 $stmt->bind_param('i', $_POST['courseID']);
                 $stmt->execute();
-                // Inserisci le nuove assegnazioni trainer
+                // Inserimento dei nuovi trainer assegnati
                 if (!empty($_POST['trainers'])) {
                     $stmt = $conn->prepare("INSERT INTO TEACHING (trainerID, courseID) VALUES (?, ?)");
                     foreach ($_POST['trainers'] as $trainerID) {
@@ -113,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if (isset($_POST['delete'])) {
-        // Elimina il corso
+        // Eliminazione corso
         $stmt = $conn->prepare("DELETE FROM COURSES WHERE courseID = ?");
         $stmt->bind_param('i', $_POST['delete_id']);
         if ($stmt->execute()) {
@@ -124,12 +122,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Recupera tutti i corsi (senza prezzo)
+// Recupero corsi registrati
 $stmt = $conn->prepare("SELECT courseID, name, description, maxParticipants, startDate, finishDate FROM COURSES ORDER BY startDate DESC");
 $stmt->execute();
 $courses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupera tutti i trainer per il form
+// Recupero trainer
 $stmt = $conn->prepare("SELECT userID, firstName, lastName FROM USERS WHERE role = 'trainer' ORDER BY firstName, lastName");
 $stmt->execute();
 $trainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);

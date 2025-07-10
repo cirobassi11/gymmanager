@@ -108,7 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['add_exercise'])) {
         // Aggiunta esercizio
         if (!empty($_POST['exerciseID']) && !empty($_POST['training_day_id'])) {
-            // Gestione valori NULL per weight e restTime
             $weight = !empty($_POST['weight']) ? (float)$_POST['weight'] : null;
             $restTime = !empty($_POST['restTime']) ? (int)$_POST['restTime'] : null;
             
@@ -134,7 +133,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_message = 'Esercizio e giorno di allenamento sono obbligatori.';
         }
     } elseif (isset($_POST['delete_exercise'])) {
-        // NUOVA FUNZIONALITÀ: Eliminazione esercizio
         $exerciseDetailID = (int)$_POST['exercise_detail_id'];
         $trainingDayID = (int)$_POST['training_day_id'];
         
@@ -165,7 +163,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } elseif (isset($_POST['delete_training_day'])) {
-        // NUOVA FUNZIONALITÀ: Eliminazione giorno di allenamento
         $trainingDayID = (int)$_POST['training_day_id'];
         
         if ($trainingDayID > 0) {
@@ -181,19 +178,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = $stmt->get_result()->fetch_assoc();
             
             if ($result) {
-                // Prima elimina tutti gli esercizi del giorno
+                // Elimina gli esercizi associati al giorno
                 $stmt = $conn->prepare("DELETE FROM EXERCISE_DETAILS WHERE trainingDayID = ?");
                 $stmt->bind_param('i', $trainingDayID);
                 $stmt->execute();
                 
-                // Poi elimina il giorno
+                // Elimina il giorno di allenamento
                 $stmt = $conn->prepare("DELETE FROM TRAINING_DAYS WHERE trainingDayID = ?");
                 $stmt->bind_param('i', $trainingDayID);
                 if ($stmt->execute()) {
                     $success_message = 'Giorno di allenamento eliminato con successo!';
-                    // Redirect per evitare di rimanere sulla pagina del giorno eliminato
                     if (isset($_GET['view_day'])) {
-                        // Recupera l'ID del programma per il redirect
                         $stmt = $conn->prepare("
                             SELECT ts.trainingScheduleID 
                             FROM TRAINING_SCHEDULES ts
@@ -246,8 +241,8 @@ $stmt = $conn->prepare("
 $stmt->execute();
 $customers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupera gli esercizi disponibili al trainer (suoi + condivisi)
-$stmt = $conn->prepare("SELECT * FROM EXERCISES WHERE trainerID = ? OR trainerID IS NULL ORDER BY name");
+// Recupera gli esercizi del trainer
+$stmt = $conn->prepare("SELECT * FROM EXERCISES WHERE trainerID = ? ORDER BY name");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $exercises = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -262,7 +257,6 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $editSchedule = $stmt->get_result()->fetch_assoc();
 }
 
-// Se stiamo visualizzando i dettagli di un programma
 $viewSchedule = null;
 $trainingDays = [];
 if (isset($_GET['view']) && is_numeric($_GET['view'])) {
@@ -280,7 +274,7 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
     $viewSchedule = $stmt->get_result()->fetch_assoc();
     
     if ($viewSchedule) {
-        // Recupera i giorni di allenamento
+        // Giorni di allenamento del programma
         $stmt = $conn->prepare("
             SELECT td.*, 
                    COUNT(ed.exerciseDetailID) as exercise_count
@@ -296,13 +290,12 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
     }
 }
 
-// Se stiamo visualizzando gli esercizi di un giorno
 $viewDay = null;
 $dayExercises = [];
 if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {
     $dayID = (int)$_GET['view_day'];
     
-    // Recupera il giorno di allenamento
+    // Giorno di allenamento
     $stmt = $conn->prepare("
         SELECT td.*, ts.name as schedule_name, ts.trainingScheduleID, u.firstName, u.lastName
         FROM TRAINING_DAYS td
@@ -315,7 +308,7 @@ if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {
     $viewDay = $stmt->get_result()->fetch_assoc();
     
     if ($viewDay) {
-        // Recupera gli esercizi del giorno
+        // Esercizi del giorno
         $stmt = $conn->prepare("
             SELECT ed.*, e.name as exercise_name, e.description as exercise_description
             FROM EXERCISE_DETAILS ed
@@ -329,7 +322,6 @@ if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {
     }
 }
 
-// Gestione messaggi di successo da redirect
 if (isset($_GET['success'])) {
     if ($_GET['success'] == 'day_deleted') {
         $success_message = 'Giorno di allenamento eliminato con successo!';

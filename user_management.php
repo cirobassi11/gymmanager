@@ -14,7 +14,7 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'adm
 
 $currentAdminID = $_SESSION['userID']; // ID dell'admin attualmente loggato
 
-// Calcola età da data di nascita
+// Calcolo età
 function calcAge($bdate) {
     if (empty($bdate)) return 'N/A';
     try {
@@ -26,14 +26,13 @@ function calcAge($bdate) {
     }
 }
 
-// Funzione per contare quanti admin ci sono
+// Conto numero admin
 function countAdmins($conn) {
     $stmt = $conn->prepare("SELECT COUNT(*) as count FROM USERS WHERE role = 'admin'");
     $stmt->execute();
     return $stmt->get_result()->fetch_assoc()['count'];
 }
 
-// Funzione per interpretare errori MySQL di duplicati
 function getMySQLDuplicateError($mysql_error) {
     if (strpos($mysql_error, 'Duplicate entry') !== false) {
         if (strpos($mysql_error, 'email') !== false || strpos($mysql_error, 'UNIQUE') !== false) {
@@ -45,12 +44,10 @@ function getMySQLDuplicateError($mysql_error) {
     return 'Errore database: ' . $mysql_error;
 }
 
-// Funzione per gestire l'eliminazione utente
+// Eliminazione utente
 function processUserDeletion($conn, $deleteID) {
     global $error_message, $success_message;
-    
     try {
-        // Elimina direttamente l'utente - il CASCADE nel database gestirà le dipendenze
         $stmt = $conn->prepare("DELETE FROM USERS WHERE userID = ?");
         $stmt->bind_param('i', $deleteID);
         if ($stmt->execute()) {
@@ -122,12 +119,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $validation_errors = [];
         $userID = (int)$_POST['userID'];
         
-        // SICUREZZA: Impedisci all'admin di modificare se stesso
         if ($userID === $currentAdminID) {
             $validation_errors[] = 'Non puoi modificare il tuo stesso account per motivi di sicurezza. Chiedi a un altro amministratore.';
         }
         
-        // Controllo se l'utente esiste e validazioni di sicurezza
         if (empty($validation_errors)) {
             $stmt = $conn->prepare("SELECT userID, role FROM USERS WHERE userID = ?");
             $stmt->bind_param('i', $userID);
@@ -137,7 +132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$targetUser) {
                 $validation_errors[] = 'Utente non trovato.';
             } else {
-                // SICUREZZA: Se stiamo modificando un admin e ce n'è solo uno, impediscilo
                 if ($targetUser['role'] === 'admin' && $_POST['role'] !== 'admin') {
                     $adminCount = countAdmins($conn);
                     if ($adminCount <= 1) {
@@ -215,7 +209,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $success_message = 'Utente modificato con successo!';
                 }
             } catch (mysqli_sql_exception $e) {
-                // Gestisci errori MySQL (inclusi duplicati)
                 $error_message = getMySQLDuplicateError($e->getMessage());
             }
         } else {
@@ -225,11 +218,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['delete'])) {
         $deleteID = (int)$_POST['delete_id'];
         
-        // SICUREZZA: Impedisci all'admin di eliminare se stesso
         if ($deleteID === $currentAdminID) {
             $error_message = 'Non puoi eliminare il tuo stesso account per motivi di sicurezza!';
         } elseif ($deleteID > 0) {
-            // Controlla se è l'ultimo admin
             $stmt = $conn->prepare("SELECT role FROM USERS WHERE userID = ?");
             $stmt->bind_param('i', $deleteID);
             $stmt->execute();
@@ -240,11 +231,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($adminCount <= 1) {
                     $error_message = 'Non puoi eliminare l\'ultimo amministratore del sistema!';
                 } else {
-                    // Procedi con l'eliminazione dopo aver controllato le dipendenze
                     processUserDeletion($conn, $deleteID);
                 }
             } else {
-                // Non è un admin, procedi normalmente
                 processUserDeletion($conn, $deleteID);
             }
         } else {
@@ -266,7 +255,6 @@ $editUser = null;
 if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $userID = (int)$_GET['edit'];
     
-    // SICUREZZA: Impedisci all'admin di modificare se stesso
     if ($userID === $currentAdminID) {
         $error_message = 'Non puoi modificare il tuo stesso account per motivi di sicurezza. Chiedi a un altro amministratore.';
     } else {
@@ -277,7 +265,7 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     }
 }
 
-// Funzioni per le statistiche
+// Statistiche
 function getCustomerStats($conn) {
     // Età media clienti
     $stmt = $conn->prepare("

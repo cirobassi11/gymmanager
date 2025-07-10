@@ -18,7 +18,7 @@ $validation_errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_feedback'])) {
         // Validazione dati
-        $date = date('Y-m-d'); // Data fissa di oggi
+        $date = date('Y-m-d');
         $rating = !empty($_POST['rating']) ? (int)$_POST['rating'] : null;
         $comment = trim($_POST['comment'] ?? '');
 
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (empty($comment)) {
-            $comment = null; // Commento facoltativo
+            $comment = null;
         } elseif (strlen($comment) > 1000) {
             $validation_errors[] = 'Il commento non può superare i 1000 caratteri.';
         }
@@ -80,7 +80,7 @@ if ($totalFeedbacks > 0) {
     $avgRating = array_sum(array_column($myFeedbacks, 'rating')) / $totalFeedbacks;
 }
 
-// Funzione per generare stelle
+// Generazione stelle
 function generateStars($rating) {
     $stars = '';
     for ($i = 1; $i <= 5; $i++) {

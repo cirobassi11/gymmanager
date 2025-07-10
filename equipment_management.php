@@ -47,8 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($equipment['administratorID'] != $_SESSION['userID']) {
                 $error_message = 'Non hai i permessi per modificare questa attrezzatura. Solo il gestore originale può modificarla.';
             } else {
-                // L'admin è il gestore, procedi con la modifica
-                // AGGIUNTA DOPPIA VERIFICA DI SICUREZZA: controlla anche nella query UPDATE
                 $stmt = $conn->prepare("UPDATE EQUIPMENTS SET name = ?, description = ?, state = ? WHERE equipmentID = ? AND administratorID = ?");
                 $stmt->bind_param(
                     'sssii',
@@ -80,8 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($equipment['administratorID'] != $_SESSION['userID']) {
                 $error_message = 'Non hai i permessi per eliminare questa attrezzatura. Solo il gestore originale può eliminarla.';
             } else {
-                // L'admin è il gestore, procedi con l'eliminazione
-                // AGGIUNTA DOPPIA VERIFICA DI SICUREZZA: controlla anche nella query DELETE
                 $stmt = $conn->prepare("DELETE FROM EQUIPMENTS WHERE equipmentID = ? AND administratorID = ?");
                 $stmt->bind_param('ii', $deleteID, $_SESSION['userID']);
                 if ($stmt->execute() && $stmt->affected_rows > 0) {

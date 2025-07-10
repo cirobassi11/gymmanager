@@ -39,7 +39,7 @@ function getFeedbackStats($conn) {
 
 $stats = getFeedbackStats($conn);
 
-// Funzione per generare stelle
+// Generazione stelle
 function generateStars($rating) {
     $stars = '';
     for ($i = 1; $i <= 5; $i++) {

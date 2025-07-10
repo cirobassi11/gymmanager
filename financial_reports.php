@@ -12,12 +12,12 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'adm
     exit();
 }
 
-// Gestione filtri temporali tramite URL parameter
+// Gestione filtri temporali tramite
 $filter = $_GET['filter'] ?? '1m'; // Default: ultimo mese
 
 // Calcola le date basate sul filtro
 function getDateRangeFromFilter($filter) {
-    $endDate = date('Y-m-d'); // Oggi
+    $endDate = date('Y-m-d');
     
     switch($filter) {
         case '1w':
@@ -30,11 +30,11 @@ function getDateRangeFromFilter($filter) {
             $startDate = date('Y-m-d', strtotime('-365 days'));
             break;
         case '5y':
-            $startDate = date('Y-m-d', strtotime('-1825 days')); // 5 anni = 5 * 365 giorni
+            $startDate = date('Y-m-d', strtotime('-1825 days'));
             break;
         case 'all':
         default:
-            // Trova la data più antica nei dati
+            // Data più vecchia tra pagamenti e manutenzioni
             $stmt = $GLOBALS['conn']->prepare("
                 SELECT LEAST(
                     (SELECT MIN(date) FROM PAYMENTS),
@@ -123,7 +123,7 @@ function getFinancialStats($conn, $startDate, $endDate) {
     $stmt->execute();
     $membershipRevenue = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
-    // Top attrezzature per costi manutenzione
+    // Attrezzature con le spese più alte
     $stmt = $conn->prepare("
         SELECT e.name as equipment_name,
                SUM(m.maintenanceCost) as total_cost,
@@ -139,7 +139,7 @@ function getFinancialStats($conn, $startDate, $endDate) {
     $stmt->execute();
     $topExpenses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
-    // Top 5 clienti che spendono di più
+    // Clienti che spendono di più
     $stmt = $conn->prepare("
         SELECT u.firstName, u.lastName, u.email,
                SUM(p.amount) as total_spent,
@@ -407,7 +407,7 @@ function getPeriodText($filter) {
         </div>
         <?php endif; ?>
 
-        <!-- Top 5 Clienti che Spendono di Più -->
+        <!-- Clienti che Spendono di Più -->
         <?php if (!empty($stats['topCustomers'])): ?>
         <div class="col-lg-4 mb-4">
             <div class="card shadow-sm">
@@ -449,7 +449,7 @@ function getPeriodText($filter) {
         <?php endif; ?>
     </div>
 
-    <!-- Messaggio se nessun dato -->
+    <!-- Nessun dato -->
     <?php if (empty($dailyRevenue) && empty($dailyExpenses)): ?>
     <div class="card shadow-sm">
         <div class="card-body text-center py-5">
@@ -511,7 +511,7 @@ const commonOptions = {
     }
 };
 
-// Grafico Comparativo
+// Grafico
 new Chart(document.getElementById('comparisonChart'), {
     type: 'line',
     data: {

@@ -151,7 +151,7 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $subscriptionHistory = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Elabora lo stato degli abbonamenti in PHP
+// Stato degli abbonamenti
 foreach($subscriptionHistory as &$sub) {
     $today = new DateTime();
     $startDate = new DateTime($sub['startDate']);
