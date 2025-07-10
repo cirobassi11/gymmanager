@@ -120,15 +120,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Recupera l'abbonamento corrente del cliente
 $stmt = $conn->prepare("
-    SELECT s.*, m.name as membership_name, m.price, m.description,
-           p.name as promotion_name, p.discountRate,
-           (SELECT amount FROM PAYMENTS WHERE subscriptionID = s.subscriptionID LIMIT 1) as paid_amount
+    SELECT s.*, m.name as membership_name, m.price, m.description, p.name as promotion_name, p.discountRate, pay.amount as paid_amount
     FROM SUBSCRIPTIONS s
     JOIN MEMBERSHIPS m ON s.membershipID = m.membershipID
     LEFT JOIN PROMOTIONS p ON s.promotionID = p.promotionID
-    WHERE s.customerID = ? AND s.startDate <= CURDATE() AND s.expirationDate >= CURDATE()
+    LEFT JOIN PAYMENTS pay ON s.subscriptionID = pay.subscriptionID
+    WHERE s.customerID = ? AND s.startDate <= CURDATE() 
+    AND s.expirationDate >= CURDATE()
     ORDER BY s.startDate DESC
-    LIMIT 1
+    LIMIT 1;
 ");
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
