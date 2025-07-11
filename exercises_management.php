@@ -213,14 +213,12 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                 <?php endif; ?>
                 <div class="col-md-6">
                     <label class="form-label">Nome Esercizio</label>
-                    <input name="name" required class="form-control" type="text" 
-                           placeholder="es. Panca Piana, Squat, Deadlift"
+                    <input name="name" required class="form-control" type="text"
                            value="<?= $editExercise ? htmlspecialchars($editExercise['name']) : (isset($_POST['name']) ? htmlspecialchars($_POST['name']) : '') ?>" />
                 </div>
                 <div class="col-12">
                     <label class="form-label">Descrizione</label>
-                    <textarea name="description" required class="form-control" rows="4" 
-                              placeholder="Descrizione dettagliata dell'esercizio, tecnica di esecuzione, muscoli coinvolti..."><?= $editExercise ? htmlspecialchars($editExercise['description']) : (isset($_POST['description']) ? htmlspecialchars($_POST['description']) : '') ?></textarea>
+                    <textarea name="description" required class="form-control" rows="4"><?= $editExercise ? htmlspecialchars($editExercise['description']) : (isset($_POST['description']) ? htmlspecialchars($_POST['description']) : '') ?></textarea>
                 </div>
                 <div class="col-12">
                     <button name="<?= $editExercise ? 'update_exercise' : 'add_exercise' ?>" class="btn <?= $editExercise ? 'btn-warning' : 'btn-success' ?>">
