@@ -1,8 +1,10 @@
 Istruzioni per avviare l’applicazione
-	1.	Avviare Apache Web Server (ad esempio tramite XAMPP).
-	2.	Avviare il server MySQL.
-	3.	Aprire MySQL Workbench, importare ed eseguire i file database.sql e test.sql.
-	4.	Aprire un browser a scelta e digitare l’indirizzo: localhost/gymmanager.
+    1.  Installare XAMPP
+    2.  Spostare la cartella del progetto all'interno della cartella C:\xampp\htdocs se si utilizza Windows o su /Applications/XAMPP/xamppfiles/htdocs se si utilizza macOS.
+	3.	Avviare tramite XAMPP Apache Web Server.
+	4.	Avviare il server MySQL.
+	5.	Importare ed eseguire i file database.sql e test.sql su MySQLWorkbench.
+	6.	Aprire un browser a scelta e digitare l’indirizzo: localhost/gymmanager.
 
 Credenziali:
     - Admin:
