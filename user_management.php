@@ -508,7 +508,7 @@ $adminCount = countAdmins($conn);
                                                     Protetto
                                                 </button>
                                             <?php else: ?>
-                                                <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo utente?\n\nATTENZIONE: L\'operazione non può essere annullata.');">
+                                                <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo utente?\n');">
                                                     <input type="hidden" name="delete_id" value="<?= $u['userID'] ?>">
                                                     <button name="delete" class="btn btn-sm btn-danger" title="Elimina utente">
                                                         Elimina

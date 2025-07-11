@@ -188,14 +188,11 @@ CREATE INDEX idx_exercise_details_day_order ON EXERCISE_DETAILS(trainingDayID, o
 CREATE INDEX idx_exercise_details_exercise ON EXERCISE_DETAILS(exerciseID);
 CREATE INDEX idx_progress_customer_date ON PROGRESS_REPORTS(customerID, date);
 CREATE INDEX idx_feedbacks_customer_date ON FEEDBACKS(customerID, date);
-CREATE INDEX idx_feedbacks_rating ON FEEDBACKS(rating);
 CREATE INDEX idx_equipments_admin ON EQUIPMENTS(administratorID);
 CREATE INDEX idx_maintenances_equipment_date ON MAINTENANCES(equipmentID, maintenanceDate);
 CREATE INDEX idx_maintenances_date ON MAINTENANCES(maintenanceDate);
 CREATE INDEX idx_availability_trainer_day ON AVAILABILITY_DAYS(trainerID, dayOfWeek, startTime);
 CREATE INDEX idx_promotions_dates ON PROMOTIONS(startDate, expirationDate);
 CREATE INDEX idx_exercises_trainer ON EXERCISES(trainerID);
-CREATE INDEX idx_availability_conflicts ON AVAILABILITY_DAYS(trainerID, dayOfWeek, startTime, finishTime);
 CREATE INDEX idx_courses_dates ON COURSES(startDate, finishDate);
-CREATE INDEX idx_payments_date_amount ON PAYMENTS(date, amount);
 CREATE INDEX idx_subscriptions_membership ON SUBSCRIPTIONS(membershipID, startDate);

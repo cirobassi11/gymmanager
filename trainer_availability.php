@@ -149,7 +149,6 @@ $stmt->execute();
 $trainerInfo = $stmt->get_result()->fetch_assoc();
 
 // Statistiche
-$totalSlots = count($availabilities);
 $uniqueDays = count(array_unique(array_column($availabilities, 'dayOfWeek')));
 
 // Calcola ore totali disponibili a settimana
@@ -201,15 +200,7 @@ $daysOfWeek = [
         <div class="card-body">
             <h4>Statistiche Disponibilità</h4>
             <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="card text-white h-100" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
-                        <div class="card-body text-center d-flex flex-column justify-content-center">
-                            <h3><?= $totalSlots ?></h3>
-                            <p class="mb-0">Slot Totali</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="card text-white h-100" style="background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <h3><?= $uniqueDays ?></h3>
@@ -217,7 +208,7 @@ $daysOfWeek = [
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="card text-white h-100" style="background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <h3><?= number_format($totalHours, 1) ?>h</h3>
@@ -262,17 +253,15 @@ $daysOfWeek = [
                 <div class="col-md-4">
                     <label class="form-label">Orario Inizio</label>
                     <input name="startTime" required class="form-control" type="text" 
-                           placeholder="HH:MM (es: 14:30)" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+                           placeholder="HH:MM" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
                            value="<?= $editAvailability ? substr($editAvailability['startTime'], 0, 5) : '' ?>" />
-                    <div class="form-text">Formato 24 ore: HH:MM (es: 23:45)</div>
                 </div>
                 
                 <div class="col-md-4">
                     <label class="form-label">Orario Fine</label>
                     <input name="finishTime" required class="form-control" type="text" 
-                           placeholder="HH:MM (es: 18:45)" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+                           placeholder="HH:MM" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
                            value="<?= $editAvailability ? substr($editAvailability['finishTime'], 0, 5) : '' ?>" />
-                    <div class="form-text">Formato 24 ore: HH:MM (es: 23:45)</div>
                 </div>
                 
                 <div class="col-12">

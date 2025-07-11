@@ -275,8 +275,6 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
 
 <?php if (!empty($enrollmentData)): ?>
 <script>
-console.log('Dati ENROLLMENTS ricevuti:', <?= json_encode($enrollmentData) ?>);
-
 const enrollmentData = <?= json_encode($enrollmentData) ?>;
 let chart;
 let allDatasets = [];
@@ -347,9 +345,7 @@ function createDatasets() {
                 dateLabel: point.enroll_date
             };
         });
-        
-        console.log(`Dataset ${course.courseName}:`, data);
-        
+                
         return {
             label: course.courseName,
             data: data,
@@ -366,14 +362,11 @@ function createDatasets() {
 }
 
 // Funzione principale per filtrare il grafico
-function filterChart(period) {
-    console.log('Filtering chart for period:', period);
-    
+function filterChart(period) {    
     updateButtonStyles(period);
     updatePeriodInfo(period);
     
     const dateLimit = getDateLimit(period);
-    console.log('Date limit:', dateLimit);
     
     const filteredDatasets = allDatasets.map(dataset => {
         let filteredData = dataset.originalData;
@@ -384,8 +377,6 @@ function filterChart(period) {
                 return pointDate >= dateLimit;
             });
         }
-        
-        console.log(`Filtered data for ${dataset.label}:`, filteredData);
         
         return {
             ...dataset,
@@ -480,19 +471,12 @@ const config = {
 
 // Inizializza il grafico
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initializing chart...');
-    
     if (enrollmentData.length === 0) {
-        console.log('Nessun dato di ENROLLMENTS disponibile');
         return;
     }
-    
-    allDatasets = createDatasets();
-    console.log('All datasets created:', allDatasets);
-    
+    allDatasets = createDatasets();    
     chart = new Chart(document.getElementById('enrollmentChart'), config);
     
-    // Carica i dati
     filterChart('all');
 });
 </script>

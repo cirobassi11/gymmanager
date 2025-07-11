@@ -35,89 +35,134 @@ $success_message = '';
 $validation_errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $dateErrors = validateDates($_POST['startDate'] ?? '', $_POST['finishDate'] ?? '');
-    $validation_errors = array_merge($validation_errors, $dateErrors);
-    
-    // Controllo campi obbligatori
-    if (empty(trim($_POST['name'] ?? ''))) {
-        $validation_errors[] = 'Il nome del corso è obbligatorio.';
-    }
-    if (empty($_POST['description'] ?? '') || empty(trim($_POST['description']))) {
-        $validation_errors[] = 'La descrizione è obbligatoria.';
-    }
-    if (empty($_POST['maxParticipants']) || $_POST['maxParticipants'] < 1) {
-        $validation_errors[] = 'Il numero massimo di partecipanti deve essere almeno 1.';
-    }
-    if (empty($_POST['trainers'])) {
-        $validation_errors[] = 'Devi assegnare almeno un trainer al corso.';
-    }
-    
-    if (empty($validation_errors)) {
-        if (isset($_POST['add'])) {
-            // Inserimento corso
-            $stmt = $conn->prepare("INSERT INTO COURSES (name, description, maxParticipants, startDate, finishDate) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param(
-                'ssiss',
-                $_POST['name'],
-                $_POST['description'],
-                $_POST['maxParticipants'],
-                $_POST['startDate'],
-                $_POST['finishDate']
-            );
-            if ($stmt->execute()) {
-                $courseID = $conn->insert_id;
-                // Inserimento dei trainer assegnati
-                if (!empty($_POST['trainers'])) {
-                    $stmt = $conn->prepare("INSERT INTO TEACHINGS (trainerID, courseID) VALUES (?, ?)");
-                    foreach ($_POST['trainers'] as $trainerID) {
-                        $stmt->bind_param('ii', $trainerID, $courseID);
-                        $stmt->execute();
-                    }
-                }
-                $success_message = 'Corso aggiunto con successo!';
-                unset($_POST);
-            } else {
-                $error_message = 'Errore durante l\'inserimento del corso.';
-            }
-        } elseif (isset($_POST['update'])) {
-            // Aggiornamento corso
-            $stmt = $conn->prepare("UPDATE COURSES SET name = ?, description = ?, maxParticipants = ?, startDate = ?, finishDate = ? WHERE courseID = ?");
-            $stmt->bind_param(
-                'ssissi',
-                $_POST['name'],
-                $_POST['description'],
-                $_POST['maxParticipants'],
-                $_POST['startDate'],
-                $_POST['finishDate'],
-                $_POST['courseID']
-            );
-            if ($stmt->execute()) {
-                // Rimozione vecchie assegnazioni trainer
-                $stmt = $conn->prepare("DELETE FROM TEACHINGS WHERE courseID = ?");
-                $stmt->bind_param('i', $_POST['courseID']);
+    // GESTIONE ELIMINAZIONE CORSO - SEPARATA DALLA VALIDAZIONE
+    if (isset($_POST['delete'])) {
+        $deleteID = (int)$_POST['delete_id'];
+        if ($deleteID > 0) {
+            try {
+                // Inizia una transazione per garantire coerenza
+                $conn->begin_transaction();
+                
+                // Prima elimina le iscrizioni al corso
+                $stmt = $conn->prepare("DELETE FROM ENROLLMENTS WHERE courseID = ?");
+                $stmt->bind_param('i', $deleteID);
                 $stmt->execute();
-                // Inserimento dei nuovi trainer assegnati
-                if (!empty($_POST['trainers'])) {
-                    $stmt = $conn->prepare("INSERT INTO TEACHINGS (trainerID, courseID) VALUES (?, ?)");
-                    foreach ($_POST['trainers'] as $trainerID) {
-                        $stmt->bind_param('ii', $trainerID, $_POST['courseID']);
-                        $stmt->execute();
-                    }
-                }
-                $success_message = 'Corso modificato con successo!';
-            } else {
-                $error_message = 'Errore durante la modifica del corso.';
+                
+                // Poi elimina le assegnazioni trainer
+                $stmt = $conn->prepare("DELETE FROM TEACHINGS WHERE courseID = ?");
+                $stmt->bind_param('i', $deleteID);
+                $stmt->execute();
+                
+                // Infine elimina il corso
+                $stmt = $conn->prepare("DELETE FROM COURSES WHERE courseID = ?");
+                $stmt->bind_param('i', $deleteID);
+                $stmt->execute();
+                
+                // Conferma la transazione
+                $conn->commit();
+                
+                $success_message = 'Corso eliminato con successo!';
+            } catch (Exception $e) {
+                // Annulla la transazione in caso di errore
+                $conn->rollback();
+                $error_message = 'Errore durante l\'eliminazione del corso: ' . $e->getMessage();
             }
+        } else {
+            $error_message = 'ID corso non valido.';
         }
     }
-    if (isset($_POST['delete'])) {
-        // Eliminazione corso
-        $stmt = $conn->prepare("DELETE FROM COURSES WHERE courseID = ?");
-        $stmt->bind_param('i', $_POST['delete_id']);
-        if ($stmt->execute()) {
-            $success_message = 'Corso eliminato con successo!';
-        } else {
-            $error_message = 'Errore durante l\'eliminazione del corso.';
+    // GESTIONE AGGIUNTA/MODIFICA CORSO - CON VALIDAZIONE
+    else {
+        $dateErrors = validateDates($_POST['startDate'] ?? '', $_POST['finishDate'] ?? '');
+        $validation_errors = array_merge($validation_errors, $dateErrors);
+        
+        // Controllo campi obbligatori
+        if (empty(trim($_POST['name'] ?? ''))) {
+            $validation_errors[] = 'Il nome del corso è obbligatorio.';
+        }
+        if (empty($_POST['description'] ?? '') || empty(trim($_POST['description']))) {
+            $validation_errors[] = 'La descrizione è obbligatoria.';
+        }
+        if (empty($_POST['maxParticipants']) || $_POST['maxParticipants'] < 1) {
+            $validation_errors[] = 'Il numero massimo di partecipanti deve essere almeno 1.';
+        }
+        if (empty($_POST['trainers'])) {
+            $validation_errors[] = 'Devi assegnare almeno un trainer al corso.';
+        }
+        
+        if (empty($validation_errors)) {
+            if (isset($_POST['add'])) {
+                // Inserimento corso
+                try {
+                    $conn->begin_transaction();
+                    
+                    $stmt = $conn->prepare("INSERT INTO COURSES (name, description, maxParticipants, startDate, finishDate) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->bind_param(
+                        'ssiss',
+                        $_POST['name'],
+                        $_POST['description'],
+                        $_POST['maxParticipants'],
+                        $_POST['startDate'],
+                        $_POST['finishDate']
+                    );
+                    $stmt->execute();
+                    
+                    $courseID = $conn->insert_id;
+                    
+                    // Inserimento dei trainer assegnati
+                    if (!empty($_POST['trainers'])) {
+                        $stmt = $conn->prepare("INSERT INTO TEACHINGS (trainerID, courseID) VALUES (?, ?)");
+                        foreach ($_POST['trainers'] as $trainerID) {
+                            $stmt->bind_param('ii', $trainerID, $courseID);
+                            $stmt->execute();
+                        }
+                    }
+                    
+                    $conn->commit();
+                    $success_message = 'Corso aggiunto con successo!';
+                    unset($_POST);
+                } catch (Exception $e) {
+                    $conn->rollback();
+                    $error_message = 'Errore durante l\'inserimento del corso: ' . $e->getMessage();
+                }
+            } elseif (isset($_POST['update'])) {
+                // Aggiornamento corso
+                try {
+                    $conn->begin_transaction();
+                    
+                    $stmt = $conn->prepare("UPDATE COURSES SET name = ?, description = ?, maxParticipants = ?, startDate = ?, finishDate = ? WHERE courseID = ?");
+                    $stmt->bind_param(
+                        'ssissi',
+                        $_POST['name'],
+                        $_POST['description'],
+                        $_POST['maxParticipants'],
+                        $_POST['startDate'],
+                        $_POST['finishDate'],
+                        $_POST['courseID']
+                    );
+                    $stmt->execute();
+                    
+                    // Rimozione vecchie assegnazioni trainer
+                    $stmt = $conn->prepare("DELETE FROM TEACHINGS WHERE courseID = ?");
+                    $stmt->bind_param('i', $_POST['courseID']);
+                    $stmt->execute();
+                    
+                    // Inserimento dei nuovi trainer assegnati
+                    if (!empty($_POST['trainers'])) {
+                        $stmt = $conn->prepare("INSERT INTO TEACHINGS (trainerID, courseID) VALUES (?, ?)");
+                        foreach ($_POST['trainers'] as $trainerID) {
+                            $stmt->bind_param('ii', $trainerID, $_POST['courseID']);
+                            $stmt->execute();
+                        }
+                    }
+                    
+                    $conn->commit();
+                    $success_message = 'Corso modificato con successo!';
+                } catch (Exception $e) {
+                    $conn->rollback();
+                    $error_message = 'Errore durante la modifica del corso: ' . $e->getMessage();
+                }
+            }
         }
     }
 }
@@ -355,7 +400,7 @@ $stats = getCourseStats($conn);
                                     <a href="?edit=<?= $course['courseID'] ?>" class="btn btn-sm btn-warning">
                                         Modifica
                                     </a>
-                                    <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo corso? Questa azione non può essere annullata.');">
+                                    <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo corso?');">
                                         <input type="hidden" name="delete_id" value="<?= $course['courseID'] ?>">
                                         <button name="delete" class="btn btn-sm btn-danger">
                                             Elimina
@@ -373,7 +418,6 @@ $stats = getCourseStats($conn);
         </div>
     </div>
 </div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

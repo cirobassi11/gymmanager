@@ -56,13 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <h3 class="text-primary">Palestra</h3>
                     <p class="text-muted">Accedi al tuo account</p>
                 </div>
-
                 <?php if ($error): ?>
                     <div class="alert alert-danger" role="alert">
                         <?= htmlspecialchars($error) ?>
                     </div>
                 <?php endif; ?>
-
                 <form action="login.php" method="POST" novalidate>
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
@@ -75,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
                         />
                     </div>
-
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
                         <input
@@ -86,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             required
                         />
                     </div>
-
                     <button type="submit" class="btn btn-primary w-100 mb-3">Accedi</button>
                 </form>
             </div>

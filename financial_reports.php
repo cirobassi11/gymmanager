@@ -376,7 +376,7 @@ function getPeriodText($filter) {
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">
-                        Top Spese Manutenzioni
+                        Attrezzature che richiedono più interventi di manutenzione
                     </h5>
                     <div class="table-responsive">
                         <table class="table table-sm">
@@ -409,7 +409,7 @@ function getPeriodText($filter) {
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">
-                        Top 5 Clienti
+                        Clienti più redditizi
                     </h5>
                     <div class="table-responsive">
                         <table class="table table-sm">
