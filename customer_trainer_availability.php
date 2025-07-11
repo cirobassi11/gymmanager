@@ -14,8 +14,8 @@ $customerID = $_SESSION['userID'];
 $stmt = $conn->prepare("
     SELECT DISTINCT u.userID, u.firstName, u.lastName
     FROM USERS u
-    LEFT JOIN TEACHING t ON u.userID = t.trainerID
-    LEFT JOIN ENROLLMENT e ON t.courseID = e.courseID AND e.customerID = ?
+    LEFT JOIN TEACHINGS t ON u.userID = t.trainerID
+    LEFT JOIN ENROLLMENTS e ON t.courseID = e.courseID AND e.customerID = ?
     LEFT JOIN TRAINING_SCHEDULES ts ON u.userID = ts.trainerID AND ts.customerID = ?
     WHERE u.role = 'trainer' 
     AND (e.customerID IS NOT NULL OR ts.customerID IS NOT NULL)
@@ -131,8 +131,8 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                             $stmt = $conn->prepare("
                                 SELECT DISTINCT c.name
                                 FROM COURSES c
-                                JOIN TEACHING t ON c.courseID = t.courseID
-                                JOIN ENROLLMENT e ON c.courseID = e.courseID
+                                JOIN TEACHINGS t ON c.courseID = t.courseID
+                                JOIN ENROLLMENTS e ON c.courseID = e.courseID
                                 WHERE t.trainerID = ? AND e.customerID = ?
                             ");
                             $stmt->bind_param('ii', $trainer['userID'], $customerID);

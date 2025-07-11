@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             // Verifica che il cliente non sia già iscritto
-            $stmt = $conn->prepare("SELECT enrollmentDate FROM ENROLLMENT WHERE customerID = ? AND courseID = ?");
+            $stmt = $conn->prepare("SELECT enrollmentDate FROM ENROLLMENTS WHERE customerID = ? AND courseID = ?");
             $stmt->bind_param('ii', $customerID, $courseID);
             $stmt->execute();
             if ($stmt->get_result()->num_rows > 0) {
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             // Verifica posti disponibili
-            $stmt = $conn->prepare("SELECT COUNT(*) as enrolled FROM ENROLLMENT WHERE courseID = ?");
+            $stmt = $conn->prepare("SELECT COUNT(*) as enrolled FROM ENROLLMENTS WHERE courseID = ?");
             $stmt->bind_param('i', $courseID);
             $stmt->execute();
             $enrolledCount = $stmt->get_result()->fetch_assoc()['enrolled'];
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (empty($validation_errors)) {
             // Iscrizione cliente al corso
-            $stmt = $conn->prepare("INSERT INTO ENROLLMENT (customerID, courseID, enrollmentDate) VALUES (?, ?, CURDATE())");
+            $stmt = $conn->prepare("INSERT INTO ENROLLMENTS (customerID, courseID, enrollmentDate) VALUES (?, ?, CURDATE())");
             $stmt->bind_param('ii', $customerID, $courseID);
             
             if ($stmt->execute()) {
@@ -83,12 +83,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $courseID = (int)$_POST['courseID'];
         
         // Verifica che il cliente sia effettivamente iscritto
-        $stmt = $conn->prepare("SELECT enrollmentDate FROM ENROLLMENT WHERE customerID = ? AND courseID = ?");
+        $stmt = $conn->prepare("SELECT enrollmentDate FROM ENROLLMENTS WHERE customerID = ? AND courseID = ?");
         $stmt->bind_param('ii', $customerID, $courseID);
         $stmt->execute();
-        $ENROLLMENT = $stmt->get_result()->fetch_assoc();
+        $ENROLLMENTS = $stmt->get_result()->fetch_assoc();
         
-        if (!$ENROLLMENT) {
+        if (!$ENROLLMENTS) {
             $error_message = 'Non sei iscritto a questo corso.';
         } else {
             // Verifica che il corso non sia già iniziato
@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error_message = 'Non puoi annullare l\'iscrizione a un corso già iniziato.';
             } else {
                 // Rimozione iscrizione
-                $stmt = $conn->prepare("DELETE FROM ENROLLMENT WHERE customerID = ? AND courseID = ?");
+                $stmt = $conn->prepare("DELETE FROM ENROLLMENTS WHERE customerID = ? AND courseID = ?");
                 $stmt->bind_param('ii', $customerID, $courseID);
                 
                 if ($stmt->execute()) {
@@ -129,7 +129,7 @@ $activeSubscription = $stmt->get_result()->fetch_assoc();
 $stmt = $conn->prepare("
     SELECT c.*, e.enrollmentDate
     FROM COURSES c
-    JOIN ENROLLMENT e ON c.courseID = e.courseID
+    JOIN ENROLLMENTS e ON c.courseID = e.courseID
     WHERE e.customerID = ?
     ORDER BY c.startDate DESC
 ");
@@ -157,7 +157,7 @@ foreach($enrolledCourses as &$course) {
     // Trainer del corso
     $stmt = $conn->prepare("
         SELECT u.firstName, u.lastName
-        FROM TEACHING t
+        FROM TEACHINGS t
         JOIN USERS u ON t.trainerID = u.userID
         WHERE t.courseID = ?
     ");
@@ -195,7 +195,7 @@ foreach($allCourses as $course) {
     }
     
     // Conta gli iscritti
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM ENROLLMENT WHERE courseID = ?");
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM ENROLLMENTS WHERE courseID = ?");
     $stmt->bind_param('i', $course['courseID']);
     $stmt->execute();
     $course['enrolled_count'] = $stmt->get_result()->fetch_assoc()['count'];
@@ -204,7 +204,7 @@ foreach($allCourses as $course) {
     $course['is_full'] = ($course['enrolled_count'] >= $course['maxParticipants']);
     
     // Verifica se il cliente è già iscritto
-    $stmt = $conn->prepare("SELECT 1 FROM ENROLLMENT WHERE customerID = ? AND courseID = ?");
+    $stmt = $conn->prepare("SELECT 1 FROM ENROLLMENTS WHERE customerID = ? AND courseID = ?");
     $stmt->bind_param('ii', $customerID, $course['courseID']);
     $stmt->execute();
     $course['is_enrolled'] = $stmt->get_result()->num_rows > 0;
@@ -212,7 +212,7 @@ foreach($allCourses as $course) {
     // Prendi i trainer
     $stmt = $conn->prepare("
         SELECT u.firstName, u.lastName
-        FROM TEACHING t
+        FROM TEACHINGS t
         JOIN USERS u ON t.trainerID = u.userID
         WHERE t.courseID = ?
     ");

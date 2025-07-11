@@ -19,8 +19,8 @@ $stmt = $conn->prepare("
     SELECT c.courseID, c.name, c.description, c.maxParticipants, c.startDate, c.finishDate,
            COUNT(e.customerID) as enrolled_count
     FROM COURSES c
-    JOIN TEACHING t ON c.courseID = t.courseID
-    LEFT JOIN ENROLLMENT e ON c.courseID = e.courseID
+    JOIN TEACHINGS t ON c.courseID = t.courseID
+    LEFT JOIN ENROLLMENTS e ON c.courseID = e.courseID
     WHERE t.trainerID = ?
     GROUP BY c.courseID, c.name, c.description, c.maxParticipants, c.startDate, c.finishDate
     ORDER BY c.startDate DESC
@@ -37,7 +37,7 @@ foreach ($courses as $index => $course) {
     $stmt = $conn->prepare("
         SELECT DATE(enrollmentDate) as enroll_date,
                COUNT(*) as daily_enrollments
-        FROM ENROLLMENT e
+        FROM ENROLLMENTS e
         WHERE e.courseID = ?
         GROUP BY DATE(enrollmentDate)
         ORDER BY enroll_date ASC
@@ -49,11 +49,11 @@ foreach ($courses as $index => $course) {
     if (!empty($courseEnrollments)) {
         $cumulative = 0;
         $processedData = [];
-        foreach ($courseEnrollments as $ENROLLMENT) {
-            $cumulative += (int)$ENROLLMENT['daily_enrollments'];
+        foreach ($courseEnrollments as $ENROLLMENTS) {
+            $cumulative += (int)$ENROLLMENTS['daily_enrollments'];
             $processedData[] = [
-                'enroll_date' => $ENROLLMENT['enroll_date'],
-                'daily_enrollments' => $ENROLLMENT['daily_enrollments'],
+                'enroll_date' => $ENROLLMENTS['enroll_date'],
+                'daily_enrollments' => $ENROLLMENTS['daily_enrollments'],
                 'cumulative_enrollments' => $cumulative
             ];
         }
@@ -69,7 +69,7 @@ foreach ($courses as $index => $course) {
 }
 
 // Statistiche trainer
-$stmt = $conn->prepare("SELECT COUNT(*) as total FROM TEACHING WHERE trainerID = ?");
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM TEACHINGS WHERE trainerID = ?");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $totalCourses = $stmt->get_result()->fetch_assoc()['total'];
@@ -77,7 +77,7 @@ $totalCourses = $stmt->get_result()->fetch_assoc()['total'];
 $stmt = $conn->prepare("
     SELECT COUNT(*) as active 
     FROM COURSES c
-    JOIN TEACHING t ON c.courseID = t.courseID
+    JOIN TEACHINGS t ON c.courseID = t.courseID
     WHERE t.trainerID = ? AND c.startDate <= CURDATE() AND c.finishDate >= CURDATE()
 ");
 $stmt->bind_param('i', $trainerID);
@@ -86,8 +86,8 @@ $activeCourses = $stmt->get_result()->fetch_assoc()['active'];
 
 $stmt = $conn->prepare("
     SELECT COUNT(DISTINCT e.customerID) as total_students
-    FROM ENROLLMENT e
-    JOIN TEACHING t ON e.courseID = t.courseID
+    FROM ENROLLMENTS e
+    JOIN TEACHINGS t ON e.courseID = t.courseID
     WHERE t.trainerID = ?
 ");
 $stmt->bind_param('i', $trainerID);
@@ -279,7 +279,7 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
 
 <?php if (!empty($enrollmentData)): ?>
 <script>
-console.log('Dati ENROLLMENT ricevuti:', <?= json_encode($enrollmentData) ?>);
+console.log('Dati ENROLLMENTS ricevuti:', <?= json_encode($enrollmentData) ?>);
 
 const enrollmentData = <?= json_encode($enrollmentData) ?>;
 let chart;
@@ -487,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Initializing chart...');
     
     if (enrollmentData.length === 0) {
-        console.log('Nessun dato di ENROLLMENT disponibile');
+        console.log('Nessun dato di ENROLLMENTS disponibile');
         return;
     }
     
