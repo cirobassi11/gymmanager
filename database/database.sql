@@ -1,10 +1,8 @@
 DROP DATABASE IF EXISTS gymdb;
 
--- Creazione del database
 CREATE DATABASE IF NOT EXISTS gymdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE gymdb;
 
--- Tabelle
 CREATE TABLE USERS (
     userID INT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -157,8 +155,6 @@ CREATE TABLE PROGRESS_REPORTS (
     FOREIGN KEY (customerID) REFERENCES USERS(userID) ON DELETE CASCADE
 );
 
--- Tabelle di relazione many-to-many
-
 CREATE TABLE TEACHINGS (
     trainerID INT NOT NULL,
     courseID INT NOT NULL,
@@ -176,17 +172,30 @@ CREATE TABLE ENROLLMENTS (
     FOREIGN KEY (courseID) REFERENCES COURSES(courseID) ON DELETE CASCADE
 );
 
--- Indici
-CREATE INDEX idx_user_role ON USERS(role);
-CREATE INDEX idx_equipment_status ON EQUIPMENTS(status);
-CREATE INDEX idx_maintenance_date ON MAINTENANCES(maintenanceDate);
-CREATE INDEX idx_subscription_dates ON SUBSCRIPTIONS(startDate, expirationDate);
-CREATE INDEX idx_payment_date ON PAYMENTS(date);
-CREATE INDEX idx_feedback_rating ON FEEDBACKS(rating);
-CREATE INDEX idx_training_schedule_customer ON TRAINING_SCHEDULES(customerID);
-CREATE INDEX idx_training_schedule_trainer ON TRAINING_SCHEDULES(trainerID);
-CREATE INDEX idx_exercise_trainer ON EXERCISES(trainerID);
-CREATE INDEX idx_maintenance_equipment ON MAINTENANCES(equipmentID);
-CREATE INDEX idx_exercise_detail_training_day ON EXERCISE_DETAILS(trainingDayID);
-CREATE INDEX idx_progress_report_customer ON PROGRESS_REPORTS(customerID);
-CREATE INDEX idx_subscription_customer ON SUBSCRIPTIONS(customerID);
+CREATE INDEX idx_users_email ON USERS(email);
+CREATE INDEX idx_users_role ON USERS(role);
+CREATE INDEX idx_subscriptions_customer_dates ON SUBSCRIPTIONS(customerID, startDate, expirationDate);
+CREATE INDEX idx_payments_customer_date ON PAYMENTS(customerID, date);
+CREATE INDEX idx_payments_subscription ON PAYMENTS(subscriptionID);
+CREATE INDEX idx_teachings_trainer ON TEACHINGS(trainerID);
+CREATE INDEX idx_teachings_course ON TEACHINGS(courseID);
+CREATE INDEX idx_enrollments_customer ON ENROLLMENTS(customerID);
+CREATE INDEX idx_enrollments_course_date ON ENROLLMENTS(courseID, enrollmentDate);
+CREATE INDEX idx_training_schedules_trainer ON TRAINING_SCHEDULES(trainerID);
+CREATE INDEX idx_training_schedules_customer ON TRAINING_SCHEDULES(customerID);
+CREATE INDEX idx_training_days_schedule ON TRAINING_DAYS(trainingScheduleID, dayOrder);
+CREATE INDEX idx_exercise_details_day_order ON EXERCISE_DETAILS(trainingDayID, orderInWorkout);
+CREATE INDEX idx_exercise_details_exercise ON EXERCISE_DETAILS(exerciseID);
+CREATE INDEX idx_progress_customer_date ON PROGRESS_REPORTS(customerID, date);
+CREATE INDEX idx_feedbacks_customer_date ON FEEDBACKS(customerID, date);
+CREATE INDEX idx_feedbacks_rating ON FEEDBACKS(rating);
+CREATE INDEX idx_equipments_admin ON EQUIPMENTS(administratorID);
+CREATE INDEX idx_maintenances_equipment_date ON MAINTENANCES(equipmentID, maintenanceDate);
+CREATE INDEX idx_maintenances_date ON MAINTENANCES(maintenanceDate);
+CREATE INDEX idx_availability_trainer_day ON AVAILABILITY_DAYS(trainerID, dayOfWeek, startTime);
+CREATE INDEX idx_promotions_dates ON PROMOTIONS(startDate, expirationDate);
+CREATE INDEX idx_exercises_trainer ON EXERCISES(trainerID);
+CREATE INDEX idx_availability_conflicts ON AVAILABILITY_DAYS(trainerID, dayOfWeek, startTime, finishTime);
+CREATE INDEX idx_courses_dates ON COURSES(startDate, finishDate);
+CREATE INDEX idx_payments_date_amount ON PAYMENTS(date, amount);
+CREATE INDEX idx_subscriptions_membership ON SUBSCRIPTIONS(membershipID, startDate);
