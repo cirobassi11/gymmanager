@@ -179,20 +179,6 @@ $daysOfWeek = [
     <title>Gestione Disponibilità</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-    <style>
-        /* Forza il formato 24 ore per i campi time */
-        input[type="time"] {
-            -webkit-appearance: textfield;
-        }
-        input[type="time"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-        }
-        /* Assicura che il browser mostri il formato 24 ore */
-        input[type="time"]::-webkit-datetime-edit-hour-field,
-        input[type="time"]::-webkit-datetime-edit-minute-field {
-            color: #495057;
-        }
-    </style>
 </head>
 <body class="bg-light">
 <div class="container py-5">
