@@ -6,6 +6,8 @@ Istruzioni per avviare l’applicazione
 	5.	Importare ed eseguire i file database.sql e test.sql su MySQLWorkbench.
 	6.	Aprire un browser a scelta e digitare l’indirizzo: localhost/gymmanager.
 
+Nota: per il corretto funzionamento delle pagine web è necessaria una connessione a Internet, poiché i fogli di stile CSS di Bootstrap vengono caricati da rete.
+
 Credenziali:
     - Admin:
         - email: admin@gym.com
