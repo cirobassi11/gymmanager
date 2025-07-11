@@ -1,6 +1,6 @@
 USE gymdb;
 
--- Inserimento utenti (già presenti nel tuo file originale, li ripeto solo per contesto)
+-- USERS
 INSERT INTO USERS (email, password, userName, firstName, lastName, birthDate, gender, phoneNumber, role) VALUES
 ('admin@gym.com', '$2y$10$9v2OOlFuBDzlqaRGBbMKfONJrpPOfk4iiu83tnQB1gdsU1ZdZUY6.', 'adminUser', 'Alice', 'Admin', '1980-01-01', 'F', '1234567890', 'admin'),
 ('trainer1@gym.com', '$2y$10$lMEuQiVE1R5/dQfM9gw/E.QJ/gLdXaqN26.ZjmimfHZ1alOBR0/ym', 'fitTrainer', 'Bob', 'Trainer', '1990-05-15', 'M', '0987654321', 'trainer'),

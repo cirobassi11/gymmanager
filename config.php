@@ -33,14 +33,6 @@ function isLoggedIn() {
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 }
 
-// Funzione per ottenere l'ID dell'utente loggato
-function requireLogin() {
-    if (!isLoggedIn()) {
-        header('Location: login.php');
-        exit();
-    }
-}
-
 function generateStars($rating) {
     $stars = '';
     for ($i = 1; $i <= 5; $i++) {
