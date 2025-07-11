@@ -10,7 +10,7 @@ INSERT INTO USERS (email, password, userName, firstName, lastName, birthDate, ge
 ('customer4@gym.com', '$2y$10$gNt8TTTBT8zb55J8JHCjyOP1bdEw2H92n1PXfYQAs/b6ujLTBAAPu', 'emma_jones', 'Emma', 'Jones', '1990-02-25', 'F', '2223334444', 'customer');
 
 -- EQUIPMENTS
-INSERT INTO EQUIPMENTS (name, description, state, administratorID) VALUES
+INSERT INTO EQUIPMENTS (name, description, status, administratorID) VALUES
 ('Tapis roulant', 'Tapis roulant elettrico con varie velocità', 'available', 1),
 ('Cyclette', 'Bicicletta statica per esercizi cardio', 'maintenance', 1),
 ('Panca Piana', 'Panca per sollevamento pesi', 'available', 1),

@@ -22,7 +22,7 @@ CREATE TABLE EQUIPMENTS (
     equipmentID INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    state ENUM('available', 'maintenance', 'broken') DEFAULT 'available',
+    status ENUM('available', 'maintenance', 'broken') DEFAULT 'available',
     administratorID INT,
     FOREIGN KEY (administratorID) REFERENCES USERS(userID) ON DELETE SET NULL
 );
@@ -178,7 +178,7 @@ CREATE TABLE ENROLLMENT (
 
 -- Indici
 CREATE INDEX idx_user_role ON USERS(role);
-CREATE INDEX idx_equipment_state ON EQUIPMENTS(state);
+CREATE INDEX idx_equipment_status ON EQUIPMENTS(status);
 CREATE INDEX idx_maintenance_date ON MAINTENANCES(maintenanceDate);
 CREATE INDEX idx_subscription_dates ON SUBSCRIPTIONS(startDate, expirationDate);
 CREATE INDEX idx_payment_date ON PAYMENTS(date);

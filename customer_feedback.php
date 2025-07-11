@@ -79,19 +79,6 @@ $avgRating = 0;
 if ($totalFeedbacks > 0) {
     $avgRating = array_sum(array_column($myFeedbacks, 'rating')) / $totalFeedbacks;
 }
-
-// Generazione stelle
-function generateStars($rating) {
-    $stars = '';
-    for ($i = 1; $i <= 5; $i++) {
-        if ($i <= $rating) {
-            $stars .= '★';
-        } else {
-            $stars .= '☆';
-        }
-    }
-    return $stars;
-}
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -162,7 +149,6 @@ function generateStars($rating) {
                             <div class="card-body text-center d-flex flex-column justify-content-center">
                                 <h3><?= number_format($avgRating, 1) ?>/5</h3>
                                 <p class="mb-0">Valutazione Media</p>
-                                <small><?= generateStars(round($avgRating)) ?></small>
                             </div>
                         </div>
                     </div>
@@ -213,8 +199,9 @@ function generateStars($rating) {
                                 <!-- Header con rating e data -->
                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                     <div>
-                                        <span class="badge bg-warning text-dark"><?= $feedback['rating'] ?>/5</span>
-                                        <small class="text-warning ms-2"><?= generateStars($feedback['rating']) ?></small>
+                                        <?php if ($feedback['rating']): ?>
+                                            <?= generateStars($feedback['rating']) ?>
+                                        <?php endif; ?>
                                     </div>
                                     <small class="text-muted"><?= date('d/m/Y', strtotime($feedback['date'])) ?></small>
                                 </div>

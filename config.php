@@ -40,4 +40,16 @@ function requireLogin() {
         exit();
     }
 }
+
+function generateStars($rating) {
+    $stars = '';
+    for ($i = 1; $i <= 5; $i++) {
+        if ($i <= $rating) {
+            $stars .= '<i class="fas fa-star text-warning"></i>';
+        } else {
+            $stars .= '<i class="far fa-star text-muted"></i>';
+        }
+    }
+    return $stars;
+}
 ?>

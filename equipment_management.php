@@ -15,12 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_equipment'])) {
         // Aggiunta attrezzatura
         if (!empty($_POST['name'])) {
-            $stmt = $conn->prepare("INSERT INTO EQUIPMENTSS (name, description, state, administratorID) VALUES (?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO EQUIPMENTS (name, description, status, administratorID) VALUES (?, ?, ?, ?)");
             $stmt->bind_param(
                 'sssi',
                 $_POST['name'],
                 $_POST['description'],
-                $_POST['state'],
+                $_POST['status'],
                 $_SESSION['userID']
             );
             if ($stmt->execute()) {
@@ -47,12 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($equipment['administratorID'] != $_SESSION['userID']) {
                 $error_message = 'Non hai i permessi per modificare questa attrezzatura. Solo il gestore originale può modificarla.';
             } else {
-                $stmt = $conn->prepare("UPDATE EQUIPMENTS SET name = ?, description = ?, state = ? WHERE equipmentID = ? AND administratorID = ?");
+                $stmt = $conn->prepare("UPDATE EQUIPMENTS SET name = ?, description = ?, status = ? WHERE equipmentID = ? AND administratorID = ?");
                 $stmt->bind_param(
                     'sssii',
                     $_POST['name'],
                     $_POST['description'],
-                    $_POST['state'],
+                    $_POST['status'],
                     $equipmentID,
                     $_SESSION['userID']
                 );
@@ -206,10 +206,10 @@ function getEquipmentStats($conn) {
     $totalEquipment = $stmt->get_result()->fetch_assoc()['total'];
     
     // Percentuale in buono stato
-    $stmt = $conn->prepare("SELECT COUNT(*) as available FROM EQUIPMENTS WHERE state = 'available'");
+    $stmt = $conn->prepare("SELECT COUNT(*) as available FROM EQUIPMENTS WHERE status = 'available'");
     $stmt->execute();
     $availableEquipment = $stmt->get_result()->fetch_assoc()['available'];
-    $goodStatePercentage = $totalEquipment > 0 ? round(($availableEquipment / $totalEquipment) * 100, 1) : 0;
+    $goodStatusPercentage = $totalEquipment > 0 ? round(($availableEquipment / $totalEquipment) * 100, 1) : 0;
     
     // Manutenzioni totali
     $stmt = $conn->prepare("SELECT COUNT(*) as total FROM MAINTENANCES");
@@ -244,7 +244,7 @@ function getEquipmentStats($conn) {
     
     return [
         'totalEquipment' => $totalEquipment,
-        'goodStatePercentage' => $goodStatePercentage,
+        'goodStatusPercentage' => $goodStatusPercentage,
         'totalMaintenances' => $totalMaintenances,
         'frequentMaintenance' => $frequentMaintenance,
         'expensiveMaintenance' => $expensiveMaintenance
@@ -290,7 +290,7 @@ $stats = getEquipmentStats($conn);
                 <div class="col-md-4">
                     <div class="card text-white h-100" style="background: linear-gradient(135deg, #a8c8ec 0%, #7fcdcd 100%);">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
-                            <h3><?= $stats['goodStatePercentage'] ?>%</h3>
+                            <h3><?= $stats['goodStatusPercentage'] ?>%</h3>
                             <p class="mb-0">In Buono Stato</p>
                         </div>
                     </div>
@@ -370,10 +370,10 @@ $stats = getEquipmentStats($conn);
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Stato</label>
-                    <select name="state" class="form-select" required>
-                        <option value="available" <?= ($editEquipment && $editEquipment['state'] === 'available') || (isset($_POST['state']) && $_POST['state'] === 'available') ? 'selected' : '' ?>>Disponibile</option>
-                        <option value="maintenance" <?= ($editEquipment && $editEquipment['state'] === 'maintenance') || (isset($_POST['state']) && $_POST['state'] === 'maintenance') ? 'selected' : '' ?>>In Manutenzione</option>
-                        <option value="broken" <?= ($editEquipment && $editEquipment['state'] === 'broken') || (isset($_POST['state']) && $_POST['state'] === 'broken') ? 'selected' : '' ?>>Rotta</option>
+                    <select name="status" class="form-select" required>
+                        <option value="available" <?= ($editEquipment && $editEquipment['status'] === 'available') || (isset($_POST['status']) && $_POST['status'] === 'available') ? 'selected' : '' ?>>Disponibile</option>
+                        <option value="maintenance" <?= ($editEquipment && $editEquipment['status'] === 'maintenance') || (isset($_POST['status']) && $_POST['status'] === 'maintenance') ? 'selected' : '' ?>>In Manutenzione</option>
+                        <option value="broken" <?= ($editEquipment && $editEquipment['status'] === 'broken') || (isset($_POST['status']) && $_POST['status'] === 'broken') ? 'selected' : '' ?>>Rotta</option>
                     </select>
                 </div>
                 <div class="col-12">
@@ -405,15 +405,15 @@ $stats = getEquipmentStats($conn);
                 <tbody>
                     <?php foreach($equipment as $eq): ?>
                         <?php
-                        $stateClass = $eq['state'] === 'available' ? 'success' : ($eq['state'] === 'maintenance' ? 'warning' : 'danger');
-                        $stateText = $eq['state'] === 'available' ? 'Disponibile' : ($eq['state'] === 'maintenance' ? 'Manutenzione' : 'Rotta');
+                        $statusClass = $eq['status'] === 'available' ? 'success' : ($eq['status'] === 'maintenance' ? 'warning' : 'danger');
+                        $statusText = $eq['status'] === 'available' ? 'Disponibile' : ($eq['status'] === 'maintenance' ? 'Manutenzione' : 'Rotta');
                         $isMyEquipment = ($eq['administratorID'] == $_SESSION['userID']);
                         ?>
                         <tr <?= $isMyEquipment ? 'class="table-success"' : '' ?>>
                             <td>
                                 <?= htmlspecialchars($eq['name']) ?>
                             </td>
-                            <td><span class="badge bg-<?= $stateClass ?>"><?= $stateText ?></span></td>
+                            <td><span class="badge bg-<?= $statusClass ?>"><?= $statusText ?></span></td>
                             <td>
                                 <?php if ($eq['admin_firstName'] && $eq['admin_lastName']): ?>
                                     <?= htmlspecialchars($eq['admin_firstName'] . ' ' . $eq['admin_lastName']) ?>
