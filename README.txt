@@ -9,15 +9,12 @@ Istruzioni per avviare l’applicazione
 Nota: per il corretto funzionamento delle pagine web è necessaria una connessione a Internet, poiché i fogli di stile CSS di Bootstrap vengono caricati da rete.
 
 Credenziali:
-    - Admin:
-        - email: admin@gym.com
-        - password: adminpass
-    - Trainer:
+    - Admin 1:
+        - email: admin1@gym.com
+        - password: password
+    - Trainer 1:
         - email: trainer1@gym.com
-        - password: trainerpass
+        - password: password
     - Customer 1:
         - email: customer1@gym.com
-        - password: custpass1
-    - Customer 2:
-        - email: customer2@gym.com
-        - password: custpass2
+        - password: password

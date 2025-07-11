@@ -226,7 +226,6 @@ if (!empty($trainingSchedules)) {
                                     </div>
 
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-secondary"><?= $schedule['total_days'] ?> giorni</span>
                                         <a href="?view=<?= $schedule['trainingScheduleID'] ?>" class="btn btn-primary btn-sm">
                                             Visualizza
                                         </a>

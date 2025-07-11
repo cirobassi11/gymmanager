@@ -198,7 +198,7 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
     <!-- Lista corsi -->
     <div class="card shadow-sm">
         <div class="card-body">
-            <h4>Dettaglio Corsi</h4>
+            <h4>Dettagli Corsi</h4>
             <?php if (!empty($courses)): ?>
                 <div class="table-responsive">
                     <table class="table table-striped">
@@ -229,8 +229,6 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
                                     $statusClass = 'badge bg-primary';
                                 }
                                 
-                                // Percentuale riempimento
-                                $fillPercentage = ($course['enrolled_count'] / $course['maxParticipants']) * 100;
                                 ?>
                                 <tr>
                                     <td>
@@ -246,12 +244,7 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
                                             <span class="<?= $course['enrolled_count'] >= $course['maxParticipants'] ? 'text-danger fw-bold' : 'text-success' ?> me-2">
                                                 <?= $course['enrolled_count'] ?>/<?= $course['maxParticipants'] ?>
                                             </span>
-                                            <div class="progress flex-fill" style="height: 6px; max-width: 60px;">
-                                                <div class="progress-bar <?= $fillPercentage >= 100 ? 'bg-danger' : ($fillPercentage >= 80 ? 'bg-warning' : 'bg-success') ?>" 
-                                                     style="width: <?= min($fillPercentage, 100) ?>%"></div>
-                                            </div>
                                         </div>
-                                        <small class="text-muted"><?= number_format($fillPercentage, 1) ?>% pieno</small>
                                     </td>
                                     <td><?= date('d/m/Y', strtotime($course['startDate'])) ?></td>
                                     <td><?= date('d/m/Y', strtotime($course['finishDate'])) ?></td>

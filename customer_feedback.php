@@ -160,10 +160,10 @@ if ($totalFeedbacks > 0) {
     <!-- Form Nuovo Feedback -->
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
-            <h4>Nuovo Feedback - <?= date('d/m/Y') ?></h4>
+            <h4>Nuovo Feedback</h4>
             <form method="POST" class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Valutazione (1-5)</label>
+                    <label class="form-label">Valutazione</label>
                     <input name="rating" required class="form-control" type="number" 
                            min="1" max="5" placeholder="Inserisci un numero da 1 a 5"
                            value="<?= isset($_POST['rating']) ? $_POST['rating'] : '' ?>" />
@@ -171,8 +171,7 @@ if ($totalFeedbacks > 0) {
 
                 <div class="col-12">
                     <label class="form-label">Commento (facoltativo)</label>
-                    <textarea name="comment" class="form-control" rows="4" 
-                              placeholder="Condividi la tua esperienza, suggerimenti o osservazioni sulla palestra, i servizi, l'attrezzatura, lo staff..."
+                    <textarea name="comment" class="form-control" rows="4"
                               maxlength="1000"><?= isset($_POST['comment']) ? htmlspecialchars($_POST['comment']) : '' ?></textarea>
                     <div class="form-text">Massimo 1000 caratteri</div>
                 </div>
@@ -190,7 +189,7 @@ if ($totalFeedbacks > 0) {
     <?php if (!empty($myFeedbacks)): ?>
         <div class="card shadow-sm mb-4">
             <div class="card-body">
-                <h4>I Tuoi Feedback (<?= $totalFeedbacks ?>)</h4>
+                <h4>I Tuoi Feedback</h4>
                 <div class="row">
                     <?php foreach($myFeedbacks as $feedback): ?>
                     <div class="col-md-6 col-lg-4 mb-3">

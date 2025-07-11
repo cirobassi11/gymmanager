@@ -135,9 +135,9 @@ $stmt = $conn->prepare("
 ");
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
-$enrolledCourses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$tempCourses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-foreach($enrolledCourses as &$course) {
+foreach($tempCourses as $course) {
     // Calcola lo stato del corso
     $today = new DateTime();
     $startDate = new DateTime($course['startDate']);
@@ -168,6 +168,8 @@ foreach($enrolledCourses as &$course) {
     $course['trainers'] = array_map(function($t) {
         return $t['firstName'] . ' ' . $t['lastName'];
     }, $trainers);
+
+    $enrolledCourses[] = $course;
 }
 
 // Recupera tutti i corsi disponibili

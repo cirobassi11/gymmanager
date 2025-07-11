@@ -163,18 +163,12 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                                     <h5 class="card-title text-primary">
                                         <?= htmlspecialchars($trainer['firstName'] . ' ' . $trainer['lastName']) ?>
                                     </h5>
-                                    
                                     <div class="mb-3">
                                         <?php foreach ($relationships as $relationship): ?>
                                             <small class="d-block text-info"><?= htmlspecialchars($relationship) ?></small>
                                         <?php endforeach; ?>
                                     </div>
-
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-<?= $availabilityCount > 0 ? 'success' : 'secondary' ?>">
-                                            <?= $availabilityCount ?> slot disponibili
-                                        </span>
-                                        
                                         <?php if ($availabilityCount > 0): ?>
                                             <a href="?trainer=<?= $trainer['userID'] ?>" class="btn btn-primary btn-sm">
                                                 Vedi Disponibilità
@@ -193,7 +187,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                 <?php else: ?>
                     <div class="text-center py-5">
                         <h5 class="text-muted">Nessun trainer assegnato</h5>
-                        <p class="text-muted">Al momento non hai trainer assegnati. Iscriviti ai corsi o richiedi un programma di allenamento personalizzato.</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -206,14 +199,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                 <div class="row">
                     <div class="col-md-8">
                         <h3><?= htmlspecialchars($selectedTrainer['firstName'] . ' ' . $selectedTrainer['lastName']) ?></h3>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <div class="card bg-light h-100">
-                            <div class="card-body text-center d-flex flex-column justify-content-center">
-                                <h4><?= count($trainerAvailability) ?></h4>
-                                <p class="mb-0">Slot Disponibili</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
