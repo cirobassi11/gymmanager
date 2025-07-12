@@ -209,7 +209,7 @@ $stats = getTrainerCustomerStats($conn, $trainerID);
                                 <?php foreach ($customers as $customer): ?>
                                 <tr>
                                     <td>
-                                        <strong><?= htmlspecialchars($customer['firstName'] . ' ' . $customer['lastName']) ?></strong>
+                                        <?= htmlspecialchars($customer['firstName'] . ' ' . $customer['lastName']) ?>
                                     </td>
                                     <td><?= calcAge($customer['birthDate']) ?> anni</td>
                                     <td>
@@ -220,9 +220,7 @@ $stats = getTrainerCustomerStats($conn, $trainerID);
                                     </td>
                                     <td><?= htmlspecialchars($customer['gender']) ?></td>
                                     <td>
-                                        <span class="badge bg-light text-dark">
-                                            <?= htmlspecialchars($customer['course_names']) ?>
-                                        </span>
+                                        <?= htmlspecialchars($customer['course_names']) ?>
                                     </td>
                                     <td>
                                         <a href="?view_progress=<?= $customer['userID'] ?>" class="btn btn-sm btn-info">
