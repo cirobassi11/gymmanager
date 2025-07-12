@@ -2,6 +2,10 @@
 require_once 'config.php';
 session_start();
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Controllo accesso customer
 if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'customer') {
     header('Location: login.php');
@@ -136,6 +140,8 @@ $stmt = $conn->prepare("
 $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $tempCourses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+$enrolledCourses = [];
 
 foreach($tempCourses as $course) {
     // Calcola lo stato del corso
