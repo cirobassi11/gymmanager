@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Recupera esercizi
+// Esercizi
 $stmt = $conn->prepare("
     SELECT e.exerciseID, e.name, e.description, COUNT(ed.exerciseDetailID) as usage_count
     FROM EXERCISES e
@@ -96,7 +96,7 @@ function getExerciseStats($conn, $trainerID) {
     $stmt->execute();
     $total = $stmt->get_result()->fetch_assoc()['total'];
 
-    // Contare gli esercizi utilizzati
+    // Numero esercizi utilizzati
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT e.exerciseID) as used
         FROM EXERCISES e

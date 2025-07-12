@@ -18,17 +18,17 @@
         die("Connessione al database fallita: " . $conn->connect_error);
     }
 
-    // Funzione per criptare la password
+    // Cripta password
     function hashPassword($password) {
         return password_hash($password, PASSWORD_DEFAULT);
     }
 
-    // Funzione per verificare la password
+    // Verifica password
     function verifyPassword($password, $hash) {
         return password_verify($password, $hash);
     }
 
-    // Funzione per verificare se l'utente è loggato
+    // Verificare se l'utente è loggato
     function isLoggedIn() {
         return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
     }

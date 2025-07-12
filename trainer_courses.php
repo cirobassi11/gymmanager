@@ -10,7 +10,7 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'tra
 
 $trainerID = $_SESSION['userID'];
 
-// Recupera i corsi assegnati al trainer
+// Corsi assegnati al trainer
 $stmt = $conn->prepare("
     SELECT c.courseID, c.name, c.description, c.maxParticipants, c.startDate, c.finishDate,
            COUNT(e.customerID) as enrolled_count
@@ -25,7 +25,7 @@ $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $courses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupera l'andamento delle iscrizioni per ogni corso nel tempo
+// Andamento delle iscrizioni per ogni corso nel tempo
 $enrollmentData = [];
 $courseColors = ['#28a745', '#17a2b8', '#fd7e14', '#e83e8c', '#6f42c1', '#20c997', '#dc3545', '#ffc107'];
 
@@ -271,12 +271,12 @@ const enrollmentData = <?= json_encode($enrollmentData) ?>;
 let chart;
 let allDatasets = [];
 
-// Funzione per convertire stringa data in oggetto Date
+// Conversione stringa data in oggetto Date
 function parseDate(dateString) {
     return new Date(dateString + 'T00:00:00');
 }
 
-// Funzione per calcolare la data limite basata sul filtro
+// Calcolo data limite basata sul filtro
 function getDateLimit(filter) {
     const now = new Date();
     switch(filter) {
@@ -294,7 +294,7 @@ function getDateLimit(filter) {
     }
 }
 
-// Funzione per aggiornare il testo informativo
+// Aggiornamento testo informativo
 function updatePeriodInfo(filter) {
     const periodTexts = {
         '1w': 'Ultima settimana',
@@ -307,7 +307,7 @@ function updatePeriodInfo(filter) {
     document.getElementById('chart-period-info').textContent = 'Periodo: ' + periodTexts[filter];
 }
 
-// Funzione per aggiornare gli stili dei pulsanti
+// Aggiornamento stili dei pulsanti
 function updateButtonStyles(activeFilter) {
     document.querySelectorAll('.btn-group button').forEach(btn => {
         btn.classList.remove('btn-primary');

@@ -8,10 +8,10 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'adm
     exit();
 }
 
-// Gestione filtri temporali tramite
-$filter = $_GET['filter'] ?? '1m'; // Default: ultimo mese
+// Gestione filtri temporali
+$filter = $_GET['filter'] ?? '1m';
 
-// Calcola le date basate sul filtro
+// Calcolo date basate sul filtro
 function getDateRangeFromFilter($filter) {
     $endDate = date('Y-m-d');
     
@@ -48,7 +48,7 @@ function getDateRangeFromFilter($filter) {
 
 list($startDate, $endDate) = getDateRangeFromFilter($filter);
 
-// Funzione per ottenere le entrate giornaliere
+// Entrate giornaliere
 function getDailyRevenue($conn, $startDate, $endDate) {
     $stmt = $conn->prepare("
         SELECT DATE(p.date) as payment_date, 
@@ -64,7 +64,7 @@ function getDailyRevenue($conn, $startDate, $endDate) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-// Funzione per ottenere le spese giornaliere per manutenzioni
+// Spese giornaliere per manutenzioni
 function getDailyExpenses($conn, $startDate, $endDate) {
     $stmt = $conn->prepare("
         SELECT DATE(m.maintenanceDate) as expense_date,
@@ -81,7 +81,7 @@ function getDailyExpenses($conn, $startDate, $endDate) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-// Funzione per statistiche riepilogative
+// Statistiche
 function getFinancialStats($conn, $startDate, $endDate) {
     // Totale entrate
     $stmt = $conn->prepare("
@@ -163,12 +163,11 @@ function getFinancialStats($conn, $startDate, $endDate) {
     ];
 }
 
-// Ottieni i dati
 $dailyRevenue = getDailyRevenue($conn, $startDate, $endDate);
 $dailyExpenses = getDailyExpenses($conn, $startDate, $endDate);
 $stats = getFinancialStats($conn, $startDate, $endDate);
 
-// Prepara dati per i grafici
+// Dati per i grafici
 function prepareDateRange($startDate, $endDate) {
     $dates = [];
     $current = new DateTime($startDate);
@@ -184,19 +183,18 @@ function prepareDateRange($startDate, $endDate) {
 
 $dateRange = prepareDateRange($startDate, $endDate);
 
-// Prepara array per entrate con tutti i giorni
+// Entrate
 $revenueByDate = [];
 foreach ($dailyRevenue as $revenue) {
     $revenueByDate[$revenue['payment_date']] = $revenue['daily_revenue'];
 }
 
-// Prepara array per spese con tutti i giorni
+// Spese
 $expensesByDate = [];
 foreach ($dailyExpenses as $expense) {
     $expensesByDate[$expense['expense_date']] = $expense['daily_expenses'];
 }
 
-// Crea array completi per i grafici
 $chartDates = [];
 $chartRevenue = [];
 $chartExpenses = [];
@@ -207,7 +205,6 @@ foreach ($dateRange as $date) {
     $chartExpenses[] = $expensesByDate[$date] ?? 0;
 }
 
-// Funzione per ottenere il testo del periodo
 function getPeriodText($filter) {
     switch($filter) {
         case '1w': return 'Ultima settimana';
@@ -279,7 +276,7 @@ function getPeriodText($filter) {
         </div>
     </div>
 
-    <!-- Statistiche Riepilogative -->
+    <!-- Statistiche -->
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <h4>Riepilogo periodo da <?= date('d/m/Y', strtotime($startDate)) ?> a <?= date('d/m/Y', strtotime($endDate)) ?></h4>
@@ -324,7 +321,7 @@ function getPeriodText($filter) {
         </div>
     </div>
 
-    <!-- Grafico Comparativo -->
+    <!-- Grafico comparativo -->
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <h5 class="card-title">Entrate e Spese - <?= getPeriodText($filter) ?></h5>
@@ -336,7 +333,7 @@ function getPeriodText($filter) {
 
     <!-- Dettagli -->
     <div class="row">
-        <!-- Entrate per Abbonamento -->
+        <!-- Entrate per abbonamento -->
         <?php if (!empty($stats['membershipRevenue'])): ?>
         <div class="col-lg-4 mb-4">
             <div class="card shadow-sm">
@@ -369,7 +366,7 @@ function getPeriodText($filter) {
         </div>
         <?php endif; ?>
 
-        <!-- Top Spese Attrezzature -->
+        <!-- Top spese attrezzature -->
         <?php if (!empty($stats['topExpenses'])): ?>
         <div class="col-lg-4 mb-4">
             <div class="card shadow-sm">
@@ -402,7 +399,7 @@ function getPeriodText($filter) {
         </div>
         <?php endif; ?>
 
-        <!-- Clienti che Spendono di Più -->
+        <!-- Clienti che spendono di più -->
         <?php if (!empty($stats['topCustomers'])): ?>
         <div class="col-lg-4 mb-4">
             <div class="card shadow-sm">

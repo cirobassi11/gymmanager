@@ -195,7 +195,6 @@ if ($totalFeedbacks > 0) {
                     <div class="col-md-6 col-lg-4 mb-3">
                         <div class="card h-100 border-0 shadow-sm feedback-card">
                             <div class="card-body">
-                                <!-- Header con rating e data -->
                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                     <div>
                                         <?php if ($feedback['rating']): ?>

@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($_POST['startTime'] >= $_POST['finishTime']) {
                 $error_message = 'L\'orario di inizio deve essere precedente a quello di fine.';
             } else {
-                // Verifica se esiste già una disponibilità sovrapposta per quel giorno
+                // Verifica disponibilità sovrapposta per quel giorno
                 $stmt = $conn->prepare("
                     SELECT availabilityDayID FROM AVAILABILITY_DAYS 
                     WHERE trainerID = ? AND dayOfWeek = ? AND 
@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Recupera le disponibilità del trainer
+// Disponibilità del trainer
 $stmt = $conn->prepare("SELECT * FROM AVAILABILITY_DAYS WHERE trainerID = ? ORDER BY 
     CASE dayOfWeek 
         WHEN 'Monday' THEN 1
@@ -151,7 +151,7 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
 // Statistiche
 $uniqueDays = count(array_unique(array_column($availabilities, 'dayOfWeek')));
 
-// Calcola ore totali disponibili a settimana
+// Calcolo ore totali disponibili a settimana
 $totalHours = 0;
 foreach ($availabilities as $availability) {
     $start = new DateTime($availability['startTime']);
@@ -160,7 +160,7 @@ foreach ($availabilities as $availability) {
     $totalHours += $diff->h + ($diff->i / 60);
 }
 
-// Array giorni della settimana
+// Giorni della settimana
 $daysOfWeek = [
     'Monday' => 'Lunedì',
     'Tuesday' => 'Martedì', 

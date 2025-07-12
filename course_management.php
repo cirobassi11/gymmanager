@@ -38,17 +38,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['delete'])) {
         $deleteID = (int)$_POST['delete_id'];
         if ($deleteID > 0) {
-            // Elimina le iscrizioni al corso
+            // Eliminazione le iscrizioni al corso
             $stmt = $conn->prepare("DELETE FROM ENROLLMENTS WHERE courseID = ?");
             $stmt->bind_param('i', $deleteID);
             $stmt->execute();
             
-            // Elimina le assegnazioni trainer
+            // Eliminazione le assegnazioni trainer
             $stmt = $conn->prepare("DELETE FROM TEACHINGS WHERE courseID = ?");
             $stmt->bind_param('i', $deleteID);
             $stmt->execute();
             
-            // Elimina il corso
+            // Eliminazione il corso
             $stmt = $conn->prepare("DELETE FROM COURSES WHERE courseID = ?");
             $stmt->bind_param('i', $deleteID);
             $stmt->execute();
@@ -136,17 +136,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Recupero corsi registrati
+// Corsi registrati
 $stmt = $conn->prepare("SELECT courseID, name, description, maxParticipants, startDate, finishDate FROM COURSES ORDER BY startDate DESC");
 $stmt->execute();
 $courses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupero trainer
+// Trainer
 $stmt = $conn->prepare("SELECT userID, firstName, lastName FROM USERS WHERE role = 'trainer' ORDER BY firstName, lastName");
 $stmt->execute();
 $trainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupera i trainer assegnati al corso
+// Trainer assegnati al corso
 $editCourse = null;
 $assignedTrainers = [];
 if (isset($_GET['edit'])) {
@@ -155,7 +155,7 @@ if (isset($_GET['edit'])) {
     $stmt->execute();
     $editCourse = $stmt->get_result()->fetch_assoc();
     
-    // Recupera i trainer assegnati
+    // Trainer assegnati
     $stmt = $conn->prepare("SELECT trainerID FROM TEACHINGS WHERE courseID = ?");
     $stmt->bind_param('i', $_GET['edit']);
     $stmt->execute();
@@ -335,14 +335,14 @@ $stats = getCourseStats($conn);
                     <tbody>
                         <?php foreach($courses as $course): ?>
                             <?php
-                            // Recupera i trainer per questo corso
+                            // Trainer per questo corso
                             $stmt = $conn->prepare("SELECT u.firstName, u.lastName FROM TEACHINGS t JOIN USERS u ON t.trainerID = u.userID WHERE t.courseID = ?");
                             $stmt->bind_param('i', $course['courseID']);
                             $stmt->execute();
                             $courseTrainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                             $trainerNames = array_map(function($t) { return $t['firstName'] . ' ' . $t['lastName']; }, $courseTrainers);
                             
-                            // Determina lo stato del corso
+                            // Stato del corso
                             $today = new DateTime();
                             $startDate = new DateTime($course['startDate']);
                             $finishDate = new DateTime($course['finishDate']);

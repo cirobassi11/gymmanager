@@ -12,9 +12,7 @@ $customerID = $_SESSION['userID'];
 
 // Recupera tutti i programmi di allenamento assegnati al cliente
 $stmt = $conn->prepare("
-    SELECT ts.*, 
-           u.firstName as trainer_firstName, u.lastName as trainer_lastName,
-           COUNT(td.trainingDayID) as total_days
+    SELECT ts.*, u.firstName as trainer_firstName, u.lastName as trainer_lastName, COUNT(td.trainingDayID) as total_days
     FROM TRAINING_SCHEDULES ts
     JOIN USERS u ON ts.trainerID = u.userID
     LEFT JOIN TRAINING_DAYS td ON ts.trainingScheduleID = td.trainingScheduleID
@@ -34,8 +32,7 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
     
     // Verifica che il programma appartenga al cliente
     $stmt = $conn->prepare("
-        SELECT ts.*, 
-               u.firstName as trainer_firstName, u.lastName as trainer_lastName
+        SELECT ts.*, u.firstName as trainer_firstName, u.lastName as trainer_lastName
         FROM TRAINING_SCHEDULES ts
         JOIN USERS u ON ts.trainerID = u.userID
         WHERE ts.trainingScheduleID = ? AND ts.customerID = ?
@@ -68,8 +65,7 @@ if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {
     
     // Verifica che il giorno appartenga a un programma del cliente
     $stmt = $conn->prepare("
-        SELECT td.*, ts.name as schedule_name,
-               u.firstName as trainer_firstName, u.lastName as trainer_lastName
+        SELECT td.*, ts.name as schedule_name, u.firstName as trainer_firstName, u.lastName as trainer_lastName
         FROM TRAINING_DAYS td
         JOIN TRAINING_SCHEDULES ts ON td.trainingScheduleID = ts.trainingScheduleID
         JOIN USERS u ON ts.trainerID = u.userID
@@ -186,7 +182,6 @@ $totalDays = array_sum(array_column($trainingSchedules, 'total_days'));
                                 <div class="card-body">
                                     <h5 class="card-title text-primary"><?= htmlspecialchars($schedule['name']) ?></h5>
                                     <p class="card-text text-muted"><?= htmlspecialchars($schedule['description']) ?></p>
-                                    
                                     <div class="mb-3">
                                         <div class="row g-2">
                                             <div class="col-6">
@@ -199,7 +194,6 @@ $totalDays = array_sum(array_column($trainingSchedules, 'total_days'));
                                             </div>
                                         </div>
                                     </div>
-
                                     <div class="d-flex justify-content-between align-items-center">
                                         <a href="?view=<?= $schedule['trainingScheduleID'] ?>" class="btn btn-primary btn-sm">
                                             Visualizza
@@ -334,7 +328,7 @@ $totalDays = array_sum(array_column($trainingSchedules, 'total_days'));
         </div>
 
     <?php else: ?>
-        <!-- Messaggio di errore se il programma/giorno non è trovato -->
+        <!-- Programma non trovato -->
         <div class="alert alert-danger">
             <h5>Programma non trovato</h5>
             <p class="mb-0">Il programma o giorno di allenamento richiesto non esiste o non ti appartiene.</p>

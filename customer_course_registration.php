@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $validation_errors[] = 'Sei già iscritto a questo corso.';
             }
             
-            // Verifica posti disponibili
+            // Controllo posti disponibili
             $stmt = $conn->prepare("SELECT COUNT(*) as enrolled FROM ENROLLMENTS WHERE courseID = ?");
             $stmt->bind_param('i', $courseID);
             $stmt->execute();
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $validation_errors[] = 'Il corso ha raggiunto il numero massimo di partecipanti.';
             }
             
-            // Verifica che il cliente abbia un abbonamento attivo
+            // Controllo abbonamento attivo
             $stmt = $conn->prepare("
                 SELECT subscriptionID 
                 FROM SUBSCRIPTIONS 
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$enrollments) {
             $error_message = 'Non sei iscritto a questo corso.';
         } else {
-            // Verifica che il corso non sia già iniziato
+            // Verifica che il corso non sia iniziato
             $stmt = $conn->prepare("SELECT startDate FROM COURSES WHERE courseID = ?");
             $stmt->bind_param('i', $courseID);
             $stmt->execute();
@@ -125,7 +125,7 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $activeSubscription = $stmt->get_result()->fetch_assoc();
 
-// Recupera i corsi a cui il cliente è iscritto
+// Corsi a cui il cliente è iscritto
 $stmt = $conn->prepare("
     SELECT c.*, e.enrollmentDate
     FROM COURSES c
@@ -172,12 +172,11 @@ foreach($tempCourses as $course) {
     $enrolledCourses[] = $course;
 }
 
-// Recupera tutti i corsi disponibili
+// Corsi disponibili
 $stmt = $conn->prepare("SELECT * FROM COURSES ORDER BY startDate ASC");
 $stmt->execute();
 $allCourses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Elabora i corsi disponibili in PHP
 $availableCourses = [];
 foreach($allCourses as $course) {
     // Calcola lo stato del corso
@@ -196,13 +195,13 @@ foreach($allCourses as $course) {
         $course['status_class'] = 'secondary';
     }
     
-    // Conta gli iscritti
+    // Conteggio iscritti
     $stmt = $conn->prepare("SELECT COUNT(*) as count FROM ENROLLMENTS WHERE courseID = ?");
     $stmt->bind_param('i', $course['courseID']);
     $stmt->execute();
     $course['enrolled_count'] = $stmt->get_result()->fetch_assoc()['count'];
     
-    // Verifica se è pieno
+    // Controllo posti disponibili
     $course['is_full'] = ($course['enrolled_count'] >= $course['maxParticipants']);
     
     // Verifica se il cliente è già iscritto
@@ -211,7 +210,6 @@ foreach($allCourses as $course) {
     $stmt->execute();
     $course['is_enrolled'] = $stmt->get_result()->num_rows > 0;
     
-    // Prendi i trainer
     $stmt = $conn->prepare("
         SELECT u.firstName, u.lastName
         FROM TEACHINGS t

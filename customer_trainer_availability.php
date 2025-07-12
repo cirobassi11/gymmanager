@@ -10,7 +10,7 @@ if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'cus
 
 $customerID = $_SESSION['userID'];
 
-// Recupera i trainer che seguono questo cliente
+// Trainer che seguono questo cliente
 $stmt = $conn->prepare("
     SELECT DISTINCT u.userID, u.firstName, u.lastName
     FROM USERS u
@@ -40,7 +40,7 @@ if (isset($_GET['trainer']) && is_numeric($_GET['trainer'])) {
     }
     
     if ($selectedTrainer) {
-        // Recupera le disponibilità del trainer
+        // Disponibilità del trainer
         $stmt = $conn->prepare("
             SELECT * FROM AVAILABILITY_DAYS 
             WHERE trainerID = ? 
@@ -61,7 +61,7 @@ if (isset($_GET['trainer']) && is_numeric($_GET['trainer'])) {
     }
 }
 
-// Array giorni della settimana
+// Giorni della settimana
 $daysOfWeek = [
     'Monday' => 'Lunedì',
     'Tuesday' => 'Martedì', 

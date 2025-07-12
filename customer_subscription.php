@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Recupera l'abbonamento corrente del cliente
+// Abbonamento corrente del cliente
 $stmt = $conn->prepare("
     SELECT s.*, m.name as membership_name, m.price, m.description, p.name as promotion_name, p.discountRate, pay.amount as paid_amount
     FROM SUBSCRIPTIONS s
@@ -134,7 +134,7 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $currentSubscription = $stmt->get_result()->fetch_assoc();
 
-// Recupera lo storico abbonamenti
+// Storico abbonamenti
 $stmt = $conn->prepare("
     SELECT s.*, m.name as membership_name, m.price, m.description,
        p.name as promotion_name, p.discountRate,
@@ -151,12 +151,12 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $subscriptionHistory = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupera tutti gli abbonamenti disponibili
+// Abbonamenti disponibili
 $stmt = $conn->prepare("SELECT * FROM MEMBERSHIPS ORDER BY price ASC");
 $stmt->execute();
 $availableMemberships = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupera le promozioni attive
+// Promozioni attive
 $stmt = $conn->prepare("
     SELECT * FROM PROMOTIONS 
     WHERE startDate <= CURDATE() AND expirationDate >= CURDATE()
@@ -306,7 +306,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                             <div class="card-body">
                                 <h5 class="card-title text-primary"><?= htmlspecialchars($membership['name']) ?></h5>
                                 <p class="card-text"><?= htmlspecialchars($membership['description']) ?></p>
-                                
                                 <div class="mb-3">
                                     <h4 class="text-success">€<?= number_format($membership['price'], 2) ?></h4>
                                     <small class="text-muted"><?= $membership['duration'] ?> giorni</small>
@@ -321,7 +320,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                                         <input name="startDate" required class="form-control" type="date" 
                                                min="<?= date('Y-m-d') ?>" value="<?= date('Y-m-d') ?>" />
                                     </div>
-                                    
                                     <?php if (!empty($activePromotions)): ?>
                                     <div class="mb-3">
                                         <label class="form-label">Promozione (opzionale)</label>
@@ -335,7 +333,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                                         </select>
                                     </div>
                                     <?php endif; ?>
-                                    
                                     <button name="buy_subscription" class="btn btn-success w-100">
                                         Acquista Abbonamento
                                     </button>

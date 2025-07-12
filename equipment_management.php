@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Recupera tutte le attrezzature con info sul gestore
+// Attrezzature con info sul gestore
 $stmt = $conn->prepare("
     SELECT e.*, COUNT(m.maintenanceID) as maintenance_count,
            CASE WHEN SUM(m.maintenanceCost) IS NULL THEN 0 ELSE SUM(m.maintenanceCost) END AS total_cost,
@@ -158,7 +158,7 @@ $stmt = $conn->prepare("
 $stmt->execute();
 $equipment = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupera tutte le manutenzioni
+// Manutenzioni
 $stmt = $conn->prepare("
     SELECT m.*, e.name as equipment_name 
     FROM MAINTENANCES m
