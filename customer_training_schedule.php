@@ -104,22 +104,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
 $totalSchedules = count($trainingSchedules);
 $totalTrainers = count(array_unique(array_column($trainingSchedules, 'trainerID')));
 $totalDays = array_sum(array_column($trainingSchedules, 'total_days'));
-
-// Calcola il numero totale di esercizi
-$totalExercises = 0;
-if (!empty($trainingSchedules)) {
-    $scheduleIDs = array_column($trainingSchedules, 'trainingScheduleID');
-    $placeholders = str_repeat('?,', count($scheduleIDs) - 1) . '?';
-    $stmt = $conn->prepare("
-        SELECT COUNT(ed.exerciseDetailID) as total
-        FROM EXERCISE_DETAILS ed
-        JOIN TRAINING_DAYS td ON ed.trainingDayID = td.trainingDayID
-        WHERE td.trainingScheduleID IN ($placeholders)
-    ");
-    $stmt->bind_param(str_repeat('i', count($scheduleIDs)), ...$scheduleIDs);
-    $stmt->execute();
-    $totalExercises = $stmt->get_result()->fetch_assoc()['total'];
-}
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -162,7 +146,7 @@ if (!empty($trainingSchedules)) {
             <div class="card-body">
                 <h4>Le Tue Statistiche</h4>
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card text-white h-100" style="background: linear-gradient(135deg, #6a85b6 0%, #bac8e0 100%);">
                             <div class="card-body text-center d-flex flex-column justify-content-center">
                                 <h3><?= $totalSchedules ?></h3>
@@ -170,7 +154,7 @@ if (!empty($trainingSchedules)) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card text-white h-100" style="background: linear-gradient(135deg, #a8c8ec 0%, #7fcdcd 100%);">
                             <div class="card-body text-center d-flex flex-column justify-content-center">
                                 <h3><?= $totalTrainers ?></h3>
@@ -178,19 +162,11 @@ if (!empty($trainingSchedules)) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card text-white h-100" style="background: linear-gradient(135deg, #7fcdcd 0%, #c2e9fb 100%);">
                             <div class="card-body text-center d-flex flex-column justify-content-center">
                                 <h3><?= $totalDays ?></h3>
                                 <p class="mb-0">Giorni</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white h-100" style="background: linear-gradient(135deg, #c2e9fb 0%, #a8c8ec 100%);">
-                            <div class="card-body text-center d-flex flex-column justify-content-center">
-                                <h3><?= $totalExercises ?></h3>
-                                <p class="mb-0">Esercizi</p>
                             </div>
                         </div>
                     </div>
@@ -215,11 +191,11 @@ if (!empty($trainingSchedules)) {
                                         <div class="row g-2">
                                             <div class="col-6">
                                                 <small class="text-muted">Trainer:</small><br>
-                                                <strong><?= htmlspecialchars($schedule['trainer_firstName'] . ' ' . $schedule['trainer_lastName']) ?></strong>
+                                                <?= htmlspecialchars($schedule['trainer_firstName'] . ' ' . $schedule['trainer_lastName']) ?>
                                             </div>
                                             <div class="col-6">
                                                 <small class="text-muted">Creato:</small><br>
-                                                <strong><?= date('d/m/Y', strtotime($schedule['creationDate'])) ?></strong>
+                                                <?= date('d/m/Y', strtotime($schedule['creationDate'])) ?>
                                             </div>
                                         </div>
                                     </div>

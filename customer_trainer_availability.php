@@ -127,9 +127,7 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card h-100 border-0 shadow-sm">
                                 <div class="card-body">
-                                    <h5 class="card-title text-primary">
-                                        <?= htmlspecialchars($trainer['firstName'] . ' ' . $trainer['lastName']) ?>
-                                    </h5>
+                                    <?= htmlspecialchars($trainer['firstName'] . ' ' . $trainer['lastName']) ?>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <?php if ($availabilityCount > 0): ?>
                                             <a href="?trainer=<?= $trainer['userID'] ?>" class="btn btn-primary btn-sm">
