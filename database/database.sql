@@ -179,6 +179,5 @@ CREATE INDEX idx_payments_customer_date ON PAYMENTS(customerID, date);
 CREATE INDEX idx_teachings_trainer ON TEACHINGS(trainerID);
 CREATE INDEX idx_enrollments_customer ON ENROLLMENTS(customerID);
 CREATE INDEX idx_training_schedules_trainer ON TRAINING_SCHEDULES(trainerID);
-CREATE INDEX idx_exercise_details_day_order ON EXERCISE_DETAILS(trainingDayID, orderInWorkout);
 CREATE INDEX idx_maintenances_equipment_date ON MAINTENANCES(equipmentID, maintenanceDate);
 CREATE UNIQUE INDEX idx_availability_days ON AVAILABILITY_DAYS(trainerID, dayOfWeek, startTime);
