@@ -54,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card-body p-4">
                 <div class="text-center mb-4">
                     <h3 class="text-primary">Palestra</h3>
-                    <p class="text-muted">Accedi al tuo account</p>
                 </div>
                 <?php if ($error): ?>
                     <div class="alert alert-danger" role="alert">

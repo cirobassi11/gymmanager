@@ -257,7 +257,6 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
             <?php else: ?>
                 <div class="text-center py-5">
                     <h5 class="text-muted">Nessun corso assegnato</h5>
-                    <p class="text-muted">Al momento non hai corsi assegnati. Contatta l'amministratore per richiedere l'assegnazione di corsi.</p>
                 </div>
             <?php endif; ?>
         </div>

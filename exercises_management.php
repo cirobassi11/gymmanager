@@ -318,7 +318,6 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
             <?php else: ?>
                 <div class="text-center py-5">
                     <h5 class="text-muted">Nessun esercizio disponibile</h5>
-                    <p class="text-muted">Aggiungi il primo esercizio alla libreria per iniziare a creare programmi di allenamento.</p>
                 </div>
             <?php endif; ?>
         </div>

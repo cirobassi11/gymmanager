@@ -172,7 +172,7 @@ $stats = getTrainerCustomerStats($conn, $trainerID);
                         <div class="card text-white h-100" style="background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);">
                             <div class="card-body text-center d-flex flex-column justify-content-center">
                                 <h3><?= $stats['activeThisMonth'] ?></h3>
-                                <p class="mb-0">Nuovi Questo Mese</p>
+                                <p class="mb-0">Nuovi iscritti in questo mese</p>
                             </div>
                         </div>
                     </div>
@@ -236,8 +236,7 @@ $stats = getTrainerCustomerStats($conn, $trainerID);
                     </div>
                 <?php else: ?>
                     <div class="text-center py-5">
-                        <h5 class="text-muted">Nessun cliente ancora</h5>
-                        <p class="text-muted">Quando i clienti si iscriveranno ai tuoi corsi, appariranno qui.</p>
+                        <h5 class="text-muted">Nessun cliente iscritto ai tuoi corsi</h5>
                     </div>
                 <?php endif; ?>
             </div>
@@ -295,7 +294,6 @@ $stats = getTrainerCustomerStats($conn, $trainerID);
                 <?php else: ?>
                     <div class="text-center py-5">
                         <h5 class="text-muted">Nessuna misurazione di progresso</h5>
-                        <p class="text-muted">Questo cliente non ha ancora inserito misurazione sui suoi progressi.</p>
                     </div>
                 <?php endif; ?>
             </div>

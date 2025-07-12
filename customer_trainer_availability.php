@@ -229,7 +229,7 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                                     ?>
                                     <tr>
                                         <td>
-                                            <strong><?= $daysOfWeek[$availability['dayOfWeek']] ?></strong>
+                                            <?= $daysOfWeek[$availability['dayOfWeek']] ?>
                                         </td>
                                         <td><?= substr($availability['startTime'], 0, 5) ?></td>
                                         <td><?= substr($availability['finishTime'], 0, 5) ?></td>
@@ -277,10 +277,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
             <div class="card shadow-sm">
                 <div class="card-body text-center py-5">
                     <h5 class="text-muted">Nessuna disponibilità impostata</h5>
-                    <p class="text-muted">
-                        <?= htmlspecialchars($selectedTrainer['firstName']) ?> non ha ancora impostato i suoi orari di disponibilità.
-                        <br>Contatta direttamente il trainer per concordare gli appuntamenti.
-                    </p>
                 </div>
             </div>
         <?php endif; ?>

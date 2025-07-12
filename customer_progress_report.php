@@ -505,7 +505,6 @@ $bmiData = array_map(function($report) {
             <?php else: ?>
                 <div class="text-center py-5">
                     <h5 class="text-muted">Nessun report di progresso</h5>
-                    <p class="text-muted">Inizia a monitorare i tuoi progressi aggiungendo il primo report!</p>
                 </div>
             <?php endif; ?>
         </div>

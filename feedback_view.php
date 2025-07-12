@@ -124,8 +124,7 @@ $stats = getFeedbackStats($conn);
                 </div>
             <?php else: ?>
                 <div class="text-center py-5">
-                    <h5 class="text-muted">Nessun feedback disponibile</h5>
-                    <p class="text-muted">Non sono ancora stati ricevuti feedback dai clienti.</p>
+                    <h5 class="text-muted">Nessun feedback ricevuto</h5>
                 </div>
             <?php endif; ?>
         </div>

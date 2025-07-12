@@ -47,8 +47,7 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
     if ($viewSchedule) {
         // Recupera i giorni di allenamento del programma
         $stmt = $conn->prepare("
-            SELECT td.*,
-                   COUNT(ed.exerciseDetailID) as exercise_count
+            SELECT td.*
             FROM TRAINING_DAYS td
             LEFT JOIN EXERCISE_DETAILS ed ON td.trainingDayID = ed.trainingDayID
             WHERE td.trainingScheduleID = ?
@@ -142,11 +141,11 @@ if (!empty($trainingSchedules)) {
                 <div>
                     <?php if (isset($_GET['view'])): ?>
                         <a href="?" class="btn btn-outline-secondary me-2">
-                            Torna ai Programmi
+                            <i class="fas fa-arrow-left me-2"></i>Torna ai Programmi
                         </a>
                     <?php elseif (isset($_GET['view_day'])): ?>
                         <a href="?view=<?= $viewDay['trainingScheduleID'] ?>" class="btn btn-outline-secondary me-2">
-                            Torna al Programma
+                            <i class="fas fa-arrow-left me-2"></i>Torna al Programma
                         </a>
                     <?php endif; ?>
                     <a href="dashboard.php" class="btn btn-outline-primary">
@@ -238,8 +237,6 @@ if (!empty($trainingSchedules)) {
                 <?php else: ?>
                     <div class="text-center py-5">
                         <h5 class="text-muted">Nessun programma di allenamento</h5>
-                        <p class="text-muted">I tuoi trainer non ti hanno ancora assegnato programmi di allenamento personalizzati.</p>
-                        <p class="text-muted">Contatta il tuo trainer per richiedere un programma su misura per te!</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -260,18 +257,8 @@ if (!empty($trainingSchedules)) {
                                 <span><?= date('d/m/Y', strtotime($viewSchedule['creationDate'])) ?></span>
                             </div>
                             <div class="col-md-6">
-                                <strong>Giorni di Allenamento:</strong><br>
-                                <span class="badge bg-info"><?= count($trainingDays) ?> giorni</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card bg-light h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">Il Tuo Trainer</h6>
-                                <p class="card-text">
-                                    <strong><?= htmlspecialchars($viewSchedule['trainer_firstName'] . ' ' . $viewSchedule['trainer_lastName']) ?></strong>
-                                </p>
+                                <strong>Trainer</strong><br>
+                                <span><?= htmlspecialchars($viewSchedule['trainer_firstName'] . ' ' . $viewSchedule['trainer_lastName']) ?></span>
                             </div>
                         </div>
                     </div>
@@ -294,7 +281,6 @@ if (!empty($trainingSchedules)) {
                                         <p class="card-text text-muted small"><?= htmlspecialchars($day['description']) ?></p>
                                     <?php endif; ?>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-secondary"><?= $day['exercise_count'] ?> esercizi</span>
                                         <a href="?view_day=<?= $day['trainingDayID'] ?>" class="btn btn-sm btn-primary">
                                             Vedi Esercizi
                                         </a>
@@ -307,7 +293,6 @@ if (!empty($trainingSchedules)) {
                 <?php else: ?>
                     <div class="text-center py-4">
                         <h5 class="text-muted">Nessun giorno di allenamento</h5>
-                        <p class="text-muted">Il trainer non ha ancora strutturato i giorni di allenamento per questo programma.</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -347,10 +332,10 @@ if (!empty($trainingSchedules)) {
                                 <?php foreach($dayExercises as $exercise): ?>
                                 <tr>
                                     <td>
-                                        <span class="badge bg-primary"><?= $exercise['orderInWorkout'] ?></span>
+                                        <?= $exercise['orderInWorkout'] ?>
                                     </td>
                                     <td>
-                                        <strong><?= htmlspecialchars($exercise['exercise_name']) ?></strong>
+                                        <?= htmlspecialchars($exercise['exercise_name']) ?>
                                         <?php if ($exercise['exercise_description']): ?>
                                             <br><small class="text-muted"><?= htmlspecialchars($exercise['exercise_description']) ?></small>
                                         <?php endif; ?>
@@ -367,7 +352,6 @@ if (!empty($trainingSchedules)) {
                 <?php else: ?>
                     <div class="text-center py-4">
                         <h5 class="text-muted">Nessun esercizio programmato</h5>
-                        <p class="text-muted">Il trainer non ha ancora aggiunto esercizi per questo giorno di allenamento.</p>
                     </div>
                 <?php endif; ?>
             </div>

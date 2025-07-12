@@ -211,7 +211,7 @@ $daysOfWeek = [
                 <div class="col-md-6">
                     <div class="card text-white h-100" style="background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
-                            <h3><?= number_format($totalHours, 1) ?>h</h3>
+                            <h3><?= number_format($totalHours, 1) ?></h3>
                             <p class="mb-0">Ore Settimanali</p>
                         </div>
                     </div>
@@ -302,7 +302,7 @@ $daysOfWeek = [
                                 ?>
                                 <tr>
                                     <td>
-                                        <strong><?= $daysOfWeek[$availability['dayOfWeek']] ?></strong>
+                                        <?= $daysOfWeek[$availability['dayOfWeek']] ?>
                                     </td>
                                     <td><?= substr($availability['startTime'], 0, 5) ?></td>
                                     <td><?= substr($availability['finishTime'], 0, 5) ?></td>
@@ -324,9 +324,9 @@ $daysOfWeek = [
                     </table>
                 </div>
                 
-                <!-- Riepilogo settimanale -->
+                <!-- Riepilogo -->
                 <div class="mt-4">
-                    <h5>Riepilogo Settimanale</h5>
+                    <h5>Riepilogo</h5>
                     <div class="row g-2">
                         <?php foreach ($daysOfWeek as $value => $label): ?>
                             <?php
@@ -356,7 +356,6 @@ $daysOfWeek = [
             <?php else: ?>
                 <div class="text-center py-5">
                     <h5 class="text-muted">Nessuna disponibilità impostata</h5>
-                    <p class="text-muted">Aggiungi i tuoi orari di disponibilità per permettere ai clienti di prenotare sessioni.</p>
                 </div>
             <?php endif; ?>
         </div>

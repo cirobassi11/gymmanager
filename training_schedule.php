@@ -485,7 +485,7 @@ $stats = getTrainerStats($conn, $trainerID);
                                     <td><?= htmlspecialchars($schedule['name']) ?></td>
                                     <td><?= htmlspecialchars($schedule['firstName'] . ' ' . $schedule['lastName']) ?></td>
                                     <td><?= date('d/m/Y', strtotime($schedule['creationDate'])) ?></td>
-                                    <td><span class="badge bg-info"><?= $schedule['day_count'] ?> giorni</span></td>
+                                    <td><?= $schedule['day_count'] ?> giorni</td>
                                     <td>
                                         <a href="?view=<?= $schedule['trainingScheduleID'] ?>" class="btn btn-sm btn-primary">
                                             Visualizza
@@ -522,14 +522,6 @@ $stats = getTrainerStats($conn, $trainerID);
                         <p><strong>Descrizione:</strong> <?= htmlspecialchars($viewSchedule['description']) ?></p>
                         <p><strong>Data Creazione:</strong> <?= date('d/m/Y', strtotime($viewSchedule['creationDate'])) ?></p>
                     </div>
-                    <div class="col-md-4 text-end">
-                        <div class="card bg-light">
-                            <div class="card-body text-center">
-                                <h4><?= count($trainingDays) ?></h4>
-                                <p class="mb-0">Giorni di Allenamento</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -551,7 +543,7 @@ $stats = getTrainerStats($conn, $trainerID);
                     <input type="hidden" name="schedule_id" value="<?= $viewSchedule['trainingScheduleID'] ?>">
                     <div class="col-md-4">
                         <label class="form-label">Nome Giorno</label>
-                        <input name="day_name" required class="form-control" type="text" placeholder="es. Giorno 1 - Petto e Tricipiti" />
+                        <input name="day_name" required class="form-control" type="text" />
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Ordine</label>
@@ -559,7 +551,7 @@ $stats = getTrainerStats($conn, $trainerID);
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Descrizione</label>
-                        <input name="day_description" class="form-control" type="text" placeholder="Descrizione del giorno di allenamento" />
+                        <input name="day_description" class="form-control" type="text" />
                     </div>
                     <div class="col-12">
                         <button name="add_training_day" class="btn btn-success">
@@ -582,9 +574,6 @@ $stats = getTrainerStats($conn, $trainerID);
                                 <div class="card-body">
                                     <h6 class="card-title"><?= htmlspecialchars($day['name']) ?></h6>
                                     <p class="card-text text-muted small"><?= htmlspecialchars($day['description']) ?></p>
-                                    <div class="mb-3">
-                                        <span class="badge bg-secondary"><?= $day['exercise_count'] ?> esercizi</span>
-                                    </div>
                                     <div class="d-flex gap-2">
                                         <a href="?view_day=<?= $day['trainingDayID'] ?>" class="btn btn-sm btn-primary flex-fill">
                                             Gestisci
@@ -604,7 +593,6 @@ $stats = getTrainerStats($conn, $trainerID);
                 <?php else: ?>
                     <div class="text-center py-4">
                         <h5 class="text-muted">Nessun giorno di allenamento</h5>
-                        <p class="text-muted">Aggiungi il primo giorno di allenamento per questo programma.</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -704,7 +692,7 @@ $stats = getTrainerStats($conn, $trainerID);
                             <tbody>
                                 <?php foreach($dayExercises as $exercise): ?>
                                 <tr>
-                                    <td><span class="badge bg-primary"><?= $exercise['orderInWorkout'] ?></span></td>
+                                    <td><?= $exercise['orderInWorkout'] ?></td>
                                     <td>
                                         <strong><?= htmlspecialchars($exercise['exercise_name']) ?></strong>
                                         <?php if ($exercise['exercise_description']): ?>
@@ -732,7 +720,6 @@ $stats = getTrainerStats($conn, $trainerID);
                 <?php else: ?>
                     <div class="text-center py-4">
                         <h5 class="text-muted">Nessun esercizio</h5>
-                        <p class="text-muted">Aggiungi il primo esercizio per questo giorno di allenamento.</p>
                     </div>
                 <?php endif; ?>
             </div>

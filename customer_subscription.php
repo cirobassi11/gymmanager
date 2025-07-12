@@ -265,7 +265,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
         <div class="card mb-4 shadow-sm">
             <div class="card-body text-center">
                 <h4 class="text-warning mb-3">Nessun Abbonamento Attivo</h4>
-                <p class="text-muted">Scegli uno degli abbonamenti disponibili qui sotto per iniziare ad allenarti!</p>
             </div>
         </div>
     <?php endif; ?>

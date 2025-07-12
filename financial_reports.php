@@ -137,14 +137,13 @@ function getFinancialStats($conn, $startDate, $endDate) {
     
     // Clienti che spendono di più
     $stmt = $conn->prepare("
-        SELECT u.firstName, u.lastName, u.email,
+        SELECT u.firstName, u.lastName,
                SUM(p.amount) as total_spent,
-               COUNT(p.paymentID) as payment_count,
-               AVG(p.amount) as avg_payment
+               COUNT(p.paymentID) as payment_count
         FROM PAYMENTS p
         JOIN USERS u ON p.customerID = u.userID
         WHERE DATE(p.date) BETWEEN ? AND ?
-        GROUP BY p.customerID, u.firstName, u.lastName, u.email
+        GROUP BY p.customerID, u.firstName, u.lastName
         ORDER BY total_spent DESC
         LIMIT 5
     ");
@@ -417,19 +416,17 @@ function getPeriodText($filter) {
                                 <tr>
                                     <th>Cliente</th>
                                     <th>Pagamenti</th>
-                                    <th>Spesa Totale</th>
+                                    <th>Ricavo totale</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach($stats['topCustomers'] as $index => $customer): ?>
                                 <tr>
                                     <td>
-                                        <strong><?= htmlspecialchars($customer['firstName'] . ' ' . $customer['lastName']) ?></strong>
-                                        <br><small class="text-muted"><?= htmlspecialchars($customer['email']) ?></small>
+                                        <?= htmlspecialchars($customer['firstName'] . ' ' . $customer['lastName']) ?>
                                     </td>
                                     <td>
                                         <span class="badge bg-primary"><?= $customer['payment_count'] ?></span>
-                                        <br><small class="text-muted">€<?= number_format($customer['avg_payment'], 2) ?> media</small>
                                     </td>
                                     <td>
                                         <strong class="text-success">€<?= number_format($customer['total_spent'], 2) ?></strong>
@@ -450,8 +447,6 @@ function getPeriodText($filter) {
     <div class="card shadow-sm">
         <div class="card-body text-center py-5">
             <h5 class="text-muted">Nessun dato finanziario</h5>
-            <p class="text-muted">Non ci sono entrate o spese registrate per il periodo selezionato (<?= getPeriodText($filter) ?>).</p>
-            <p class="text-muted">Prova a selezionare un periodo diverso o aggiungi dei dati.</p>
         </div>
     </div>
     <?php endif; ?>

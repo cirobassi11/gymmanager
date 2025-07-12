@@ -468,7 +468,6 @@ foreach($enrolledCourses as $course) {
             <?php else: ?>
                 <div class="text-center py-5">
                     <h5 class="text-muted">Nessun corso disponibile</h5>
-                    <p class="text-muted">Al momento non ci sono corsi disponibili.</p>
                 </div>
             <?php endif; ?>
         </div>

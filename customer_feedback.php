@@ -220,7 +220,6 @@ if ($totalFeedbacks > 0) {
         <div class="card shadow-sm mb-4">
             <div class="card-body text-center py-5">
                 <h5 class="text-muted">Nessun feedback inviato</h5>
-                <p class="text-muted">Non hai ancora lasciato alcun feedback. Condividi la tua esperienza per aiutarci a migliorare!</p>
             </div>
         </div>
     <?php endif; ?>
