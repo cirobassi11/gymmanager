@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $userID = (int)$_POST['userID'];
         
         if ($userID === $currentAdminID) {
-            $validation_errors[] = 'Non puoi modificare il tuo stesso account per motivi di sicurezza. Chiedi a un altro amministratore.';
+            $validation_errors[] = 'Non puoi modificare il tuo stesso account per motivi di sicurezza.';
         }
         
         if (empty($validation_errors)) {
@@ -252,7 +252,7 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $userID = (int)$_GET['edit'];
     
     if ($userID === $currentAdminID) {
-        $error_message = 'Non puoi modificare il tuo stesso account per motivi di sicurezza. Chiedi a un altro amministratore.';
+        $error_message = 'Non puoi modificare il tuo stesso account per motivi di sicurezza.';
     } else {
         $stmt = $conn->prepare("SELECT * FROM USERS WHERE userID = ?");
         $stmt->bind_param('i', $userID);
