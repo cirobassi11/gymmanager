@@ -96,7 +96,7 @@ function getExerciseStats($conn, $trainerID) {
     $stmt->execute();
     $total = $stmt->get_result()->fetch_assoc()['total'];
 
-    // Query corretta per contare gli esercizi utilizzati
+    // Contare gli esercizi utilizzati
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT e.exerciseID) as used
         FROM EXERCISES e

@@ -33,7 +33,7 @@ if (!$user) {
         <div class="card shadow-sm">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="mb-0">Benvenuto, <?= htmlspecialchars($user['firstName'] . ' ' . $user['lastName']) ?>!</h2>
+                    <h2 class="mb-0">Benvenut&#601;, <?= htmlspecialchars($user['firstName'] . ' ' . $user['lastName']) ?>!</h2>
                     <a href="logout.php" class="btn btn-outline-secondary">Logout</a>
                 </div>
 

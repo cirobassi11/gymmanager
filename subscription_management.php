@@ -129,7 +129,7 @@ $stmt = $conn->prepare("SELECT * FROM PROMOTIONS ORDER BY expirationDate DESC");
 $stmt->execute();
 $promotions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Se è una modifica abbonamento, recupera i dati
+// Modifica abbonamento
 $editMembership = null;
 if (isset($_GET['edit_membership']) && is_numeric($_GET['edit_membership'])) {
     $membershipID = (int)$_GET['edit_membership'];
@@ -139,7 +139,7 @@ if (isset($_GET['edit_membership']) && is_numeric($_GET['edit_membership'])) {
     $editMembership = $stmt->get_result()->fetch_assoc();
 }
 
-// Se è una modifica promozione, recupera i dati
+// Modifica promozione
 $editPromotion = null;
 if (isset($_GET['edit_promotion']) && is_numeric($_GET['edit_promotion'])) {
     $promotionID = (int)$_GET['edit_promotion'];

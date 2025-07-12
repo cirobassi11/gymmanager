@@ -25,7 +25,7 @@ $stmt->bind_param('ii', $customerID, $customerID);
 $stmt->execute();
 $myTrainers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Se è stata selezionata la visualizzazione di un trainer specifico
+// Visualizzazione di un trainer specifico
 $selectedTrainer = null;
 $trainerAvailability = [];
 if (isset($_GET['trainer']) && is_numeric($_GET['trainer'])) {

@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($stmt->execute()) {
                     $subscriptionID = $conn->insert_id;
                     
-                    // Inserisci il pagamento (senza specificare il metodo)
+                    // Inserisci il pagamento
                     $stmt = $conn->prepare("
                         INSERT INTO PAYMENTS (date, amount, customerID, subscriptionID) 
                         VALUES (CURDATE(), ?, ?, ?)

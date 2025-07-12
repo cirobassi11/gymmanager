@@ -26,7 +26,7 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $trainingSchedules = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Se stiamo visualizzando i dettagli di un programma
+// Visualizzazione dettagli di un programma
 $viewSchedule = null;
 $trainingDays = [];
 if (isset($_GET['view']) && is_numeric($_GET['view'])) {
@@ -60,7 +60,7 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
     }
 }
 
-// Se stiamo visualizzando gli esercizi di un giorno specifico
+// Visualizzazione esercizi di un giorno specifico
 $viewDay = null;
 $dayExercises = [];
 if (isset($_GET['view_day']) && is_numeric($_GET['view_day'])) {

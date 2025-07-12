@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $validation_errors[] = 'La descrizione è obbligatoria.';
         }
         
-        // Se non ci sono errori, inserisci il programma
+        // Inserimento programma
         if (empty($validation_errors)) {
             $stmt = $conn->prepare("INSERT INTO TRAINING_SCHEDULES (name, description, creationDate, customerID, trainerID) VALUES (?, ?, CURDATE(), ?, ?)");
             $stmt->bind_param(
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = $stmt->get_result()->fetch_assoc();
             
             if ($result) {
-                // Elimina l'esercizio
+                // Eliminazione esercizio
                 $stmt = $conn->prepare("DELETE FROM EXERCISE_DETAILS WHERE exerciseDetailID = ?");
                 $stmt->bind_param('i', $exerciseDetailID);
                 if ($stmt->execute()) {
@@ -178,12 +178,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = $stmt->get_result()->fetch_assoc();
             
             if ($result) {
-                // Elimina gli esercizi associati al giorno
+                // Eliminazione esercizi associati al giorno
                 $stmt = $conn->prepare("DELETE FROM EXERCISE_DETAILS WHERE trainingDayID = ?");
                 $stmt->bind_param('i', $trainingDayID);
                 $stmt->execute();
                 
-                // Elimina il giorno di allenamento
+                // Eliminazione giorno di allenamento
                 $stmt = $conn->prepare("DELETE FROM TRAINING_DAYS WHERE trainingDayID = ?");
                 $stmt->bind_param('i', $trainingDayID);
                 if ($stmt->execute()) {
@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Recupera tutti i programmi del trainer
+// Programmi del trainer
 $stmt = $conn->prepare("
     SELECT ts.*, u.firstName, u.lastName, 
            COUNT(td.trainingDayID) as day_count
@@ -231,7 +231,7 @@ $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $schedules = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupera tutti i clienti del trainer (dai corsi e dagli allenamenti esistenti)
+// Clienti del trainer
 $stmt = $conn->prepare("
     SELECT DISTINCT u.userID, u.firstName, u.lastName 
     FROM USERS u 
@@ -241,13 +241,13 @@ $stmt = $conn->prepare("
 $stmt->execute();
 $customers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Recupera gli esercizi del trainer
+// Esercizi del trainer
 $stmt = $conn->prepare("SELECT * FROM EXERCISES WHERE trainerID = ? ORDER BY name");
 $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $exercises = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Se è una modifica, recupera i dati del programma
+// Modifica
 $editSchedule = null;
 if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $scheduleID = (int)$_GET['edit'];
@@ -262,7 +262,7 @@ $trainingDays = [];
 if (isset($_GET['view']) && is_numeric($_GET['view'])) {
     $scheduleID = (int)$_GET['view'];
     
-    // Recupera il programma
+    // Programma di allenamento
     $stmt = $conn->prepare("
         SELECT ts.*, u.firstName, u.lastName 
         FROM TRAINING_SCHEDULES ts

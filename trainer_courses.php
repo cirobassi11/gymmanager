@@ -321,10 +321,10 @@ function updateButtonStyles(activeFilter) {
     }
 }
 
-// Crea i dataset per ogni corso
+// Dataset per ogni corso
 function createDatasets() {
     return enrollmentData.map(course => {
-        // Ordina i dati per data
+        // Ordinamento dati per data
         const sortedData = course.data.sort((a, b) => 
             parseDate(a.enroll_date).getTime() - parseDate(b.enroll_date).getTime()
         );
@@ -353,7 +353,7 @@ function createDatasets() {
     });
 }
 
-// Funzione principale per filtrare il grafico
+// Filtro grafico
 function filterChart(period) {    
     updateButtonStyles(period);
     updatePeriodInfo(period);
@@ -461,7 +461,7 @@ const config = {
     }
 };
 
-// Inizializza il grafico
+// Grafico
 document.addEventListener('DOMContentLoaded', function() {
     if (enrollmentData.length === 0) {
         return;

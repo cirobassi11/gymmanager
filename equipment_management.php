@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_message = 'Il nome dell\'attrezzatura è obbligatorio.';
         }
     } elseif (isset($_POST['update_equipment'])) {
-        // Modifica attrezzatura - CONTROLLO PERMESSI
+        // Modifica attrezzatura
         $equipmentID = (int)$_POST['equipmentID'];
         if ($equipmentID > 0) {
             // Verifica che l'admin corrente sia il gestore dell'attrezzatura
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } elseif (isset($_POST['delete_equipment'])) {
-        // Eliminazione attrezzatura - CONTROLLO PERMESSI
+        // Eliminazione attrezzatura
         $deleteID = (int)$_POST['delete_id'];
         if ($deleteID > 0) {
             // Verifica che l'admin corrente sia il gestore dell'attrezzatura
@@ -168,7 +168,7 @@ $stmt = $conn->prepare("
 $stmt->execute();
 $maintenances = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Se è una modifica attrezzatura, recupera i dati E verifica i permessi
+// Modifica attrezzatura
 $editEquipment = null;
 if (isset($_GET['edit_equipment']) && is_numeric($_GET['edit_equipment'])) {
     $equipmentID = (int)$_GET['edit_equipment'];
@@ -187,7 +187,7 @@ if (isset($_GET['edit_equipment']) && is_numeric($_GET['edit_equipment'])) {
     }
 }
 
-// Se è una modifica manutenzione, recupera i dati
+// Modifica manutenzione
 $editMaintenance = null;
 if (isset($_GET['edit_maintenance']) && is_numeric($_GET['edit_maintenance'])) {
     $maintenanceID = (int)$_GET['edit_maintenance'];

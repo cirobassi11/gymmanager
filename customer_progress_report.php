@@ -99,7 +99,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $bmi = !empty($_POST['bmi']) ? (float)$_POST['bmi'] : null;
         $description = trim($_POST['description'] ?? '');
 
-        // Validazioni simili a quelle per l'inserimento
         if (empty($date)) {
             $validation_errors[] = 'La data è obbligatoria.';
         }
@@ -177,7 +176,7 @@ $stmt->bind_param('i', $customerID);
 $stmt->execute();
 $progressReports = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Se è una modifica, recupera i dati del report
+// Modifica report
 $editReport = null;
 if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $reportID = (int)$_GET['edit'];
@@ -219,7 +218,7 @@ if ($totalReports >= 2) {
     }
 }
 
-// Prepara dati per i grafici (ultimi 12 report)
+// Prepara dati per i grafici
 $chartData = array_slice(array_reverse($progressReports), 0, 12);
 $chartLabels = array_map(function($report) {
     return date('d/m/Y', strtotime($report['date']));

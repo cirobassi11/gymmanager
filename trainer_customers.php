@@ -26,7 +26,7 @@ $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $customers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Se stiamo visualizzando i progressi di un cliente
+// Visualizzazione dei progressi di un cliente
 $viewCustomerProgress = null;
 $customerProgressData = [];
 if (isset($_GET['view_progress']) && is_numeric($_GET['view_progress'])) {
@@ -46,7 +46,7 @@ if (isset($_GET['view_progress']) && is_numeric($_GET['view_progress'])) {
     $viewCustomerProgress = $stmt->get_result()->fetch_assoc();
     
     if ($viewCustomerProgress) {
-        // Recupera i progress report del cliente
+        // Progress report del cliente
         $stmt = $conn->prepare("
             SELECT * FROM PROGRESS_REPORTS 
             WHERE customerID = ? 

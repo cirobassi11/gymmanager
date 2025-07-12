@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add'])) {
         $validation_errors = [];
         
-        // Validazioni base (lato server)
+        // Validazione
         if ($_POST['password'] !== $_POST['confirm_password']) {
             $validation_errors[] = 'Le password non corrispondono!';
         }
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $validation_errors[] = 'Il cognome è obbligatorio!';
         }
         
-        // Se non ci sono errori di validazione, procedi con l'inserimento
+        // Inserimento
         if (empty($validation_errors)) {
             try {
                 $hashedPassword = hashPassword($_POST['password']);
@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        // Validazioni base
+        // Validazione
         if (empty($validation_errors)) {
             if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
                 $validation_errors[] = 'Email non valida!';
@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $validation_errors[] = 'Il cognome è obbligatorio!';
             }
             
-            // Controllo password se inserita
+            // Controllo password
             if (!empty($_POST['password']) || !empty($_POST['confirm_password'])) {
                 if ($_POST['password'] !== $_POST['confirm_password']) {
                     $validation_errors[] = 'Le password non corrispondono!';
@@ -164,12 +164,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (empty($validation_errors)) {
             try {
-                // Decidi se aggiornare la password o meno
                 if (!empty($_POST['password'])) {
-                    // Cripta la nuova password
+                    // Hash password
                     $hashedPassword = hashPassword($_POST['password']);
                     
-                    // Aggiorna con nuova password criptata
+                    // Aggiorna password
                     $stmt = $conn->prepare("UPDATE USERS SET email = ?, password = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
                     $stmt->bind_param(
                         'sssssssssi',
@@ -185,7 +184,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $userID
                     );
                 } else {
-                    // Aggiorna senza cambiare password
                     $stmt = $conn->prepare("UPDATE USERS SET email = ?, userName = ?, firstName = ?, lastName = ?, birthDate = ?, gender = ?, phoneNumber = ?, role = ? WHERE userID = ?");
                     $stmt->bind_param(
                         'ssssssssi',
@@ -238,7 +236,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Recupera utenti per ruolo
 function getUsersByRole($conn, $role) {
     $stmt = $conn->prepare("SELECT userID, email, userName, firstName, lastName, birthDate, gender, phoneNumber, role FROM USERS WHERE role = ?");
     $stmt->bind_param('s', $role);
@@ -246,7 +243,7 @@ function getUsersByRole($conn, $role) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-// Se è una modifica, recupera i dati dell'utente
+// Utenti per modifica
 $editUser = null;
 if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $userID = (int)$_GET['edit'];
@@ -530,7 +527,7 @@ $adminCount = countAdmins($conn);
     <?php endforeach; ?>
 </div>
 
-<!-- Script per validazione lato client -->
+<!-- Script per validazione -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('userForm');
@@ -538,7 +535,7 @@ $adminCount = countAdmins($conn);
         const confirmPasswordField = document.querySelector('input[name="confirm_password"]');
         const roleField = document.querySelector('select[name="role"]');
         
-        // Validazione password in tempo reale
+        // Validazione password
         function validatePasswords() {
             const password = passwordField.value;
             const confirmPassword = confirmPasswordField.value;
@@ -572,7 +569,7 @@ $adminCount = countAdmins($conn);
             }
         });
         
-        // Protezione cambio ruolo admin
+        // Controllo cambio ruolo admin
         const isEditingAdmin = <?= $editUser && $editUser['role'] === 'admin' ? 'true' : 'false' ?>;
         const adminCount = <?= $adminCount ?>;
         

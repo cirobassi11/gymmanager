@@ -132,7 +132,7 @@ $stmt->bind_param('i', $trainerID);
 $stmt->execute();
 $availabilities = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Se è una modifica, recupera i dati
+// Modifica
 $editAvailability = null;
 if (isset($_GET['edit'])) {
     $availabilityID = (int)$_GET['edit'];
