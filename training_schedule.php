@@ -578,7 +578,7 @@ $stats = getTrainerStats($conn, $trainerID);
                                         <a href="?view_day=<?= $day['trainingDayID'] ?>" class="btn btn-sm btn-primary flex-fill">
                                             Gestisci
                                         </a>
-                                        <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo giorno di allenamento? Verranno eliminati anche tutti gli esercizi associati.');">
+                                        <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo giorno di allenamento?');">
                                             <input type="hidden" name="training_day_id" value="<?= $day['trainingDayID'] ?>">
                                             <button name="delete_training_day" class="btn btn-sm btn-outline-danger" title="Elimina giorno">
                                                 Elimina
@@ -611,7 +611,7 @@ $stats = getTrainerStats($conn, $trainerID);
                     </div>
                     <div>
                         <!-- Pulsante per eliminare il giorno -->
-                        <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo giorno di allenamento? Verranno eliminati anche tutti gli esercizi associati.');">
+                        <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo giorno di allenamento?');">
                             <input type="hidden" name="training_day_id" value="<?= $viewDay['trainingDayID'] ?>">
                             <button name="delete_training_day" class="btn btn-outline-danger">
                                 Elimina Giorno

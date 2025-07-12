@@ -122,52 +122,14 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
                             $stmt = $conn->prepare("SELECT COUNT(*) as count FROM AVAILABILITY_DAYS WHERE trainerID = ?");
                             $stmt->bind_param('i', $trainer['userID']);
                             $stmt->execute();
-                            $availabilityCount = $stmt->get_result()->fetch_assoc()['count'];
-                            
-                            // Recupera la relazione con il trainer
-                            $relationships = [];
-                            
-                            // Controlla se è trainer di corsi
-                            $stmt = $conn->prepare("
-                                SELECT DISTINCT c.name
-                                FROM COURSES c
-                                JOIN TEACHINGS t ON c.courseID = t.courseID
-                                JOIN ENROLLMENTS e ON c.courseID = e.courseID
-                                WHERE t.trainerID = ? AND e.customerID = ?
-                            ");
-                            $stmt->bind_param('ii', $trainer['userID'], $customerID);
-                            $stmt->execute();
-                            $courses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-                            
-                            if (!empty($courses)) {
-                                $relationships[] = 'Corsi: ' . implode(', ', array_column($courses, 'name'));
-                            }
-                            
-                            // Controlla se ha programmi di allenamento
-                            $stmt = $conn->prepare("
-                                SELECT COUNT(*) as count
-                                FROM TRAINING_SCHEDULES ts
-                                WHERE ts.trainerID = ? AND ts.customerID = ?
-                            ");
-                            $stmt->bind_param('ii', $trainer['userID'], $customerID);
-                            $stmt->execute();
-                            $scheduleCount = $stmt->get_result()->fetch_assoc()['count'];
-                            
-                            if ($scheduleCount > 0) {
-                                $relationships[] = 'Programmi di allenamento: ' . $scheduleCount;
-                            }
-                            ?>
+                            $availabilityCount = $stmt->get_result()->fetch_assoc()['count'];                            
+                        ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card h-100 border-0 shadow-sm">
                                 <div class="card-body">
                                     <h5 class="card-title text-primary">
                                         <?= htmlspecialchars($trainer['firstName'] . ' ' . $trainer['lastName']) ?>
                                     </h5>
-                                    <div class="mb-3">
-                                        <?php foreach ($relationships as $relationship): ?>
-                                            <small class="d-block text-info"><?= htmlspecialchars($relationship) ?></small>
-                                        <?php endforeach; ?>
-                                    </div>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <?php if ($availabilityCount > 0): ?>
                                             <a href="?trainer=<?= $trainer['userID'] ?>" class="btn btn-primary btn-sm">

@@ -2,6 +2,10 @@
 require_once 'config.php';
 session_start();
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Controllo accesso customer
 if (!isset($_SESSION['userID'], $_SESSION['role']) || $_SESSION['role'] !== 'customer') {
     header('Location: login.php');
@@ -132,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 WHERE progressReportID = ? AND customerID = ?
             ");
             $stmt->bind_param(
-                'ssddddi',
+                'ssddddii',
                 $date,
                 $description,
                 $weight,
@@ -407,35 +411,30 @@ $bmiData = array_map(function($report) {
                 <div class="col-md-6">
                     <label class="form-label">Peso (kg)</label>
                     <input name="weight" class="form-control" type="number" step="0.1" min="1" max="500"
-                           placeholder="es. 70.5"
                            value="<?= $editReport ? $editReport['weight'] : (isset($_POST['weight']) ? $_POST['weight'] : '') ?>" />
                 </div>
                 
                 <div class="col-md-4">
                     <label class="form-label">Grasso Corporeo (%)</label>
                     <input name="bodyFatPercent" class="form-control" type="number" step="0.1" min="0" max="100"
-                           placeholder="es. 15.2"
                            value="<?= $editReport ? $editReport['bodyFatPercent'] : (isset($_POST['bodyFatPercent']) ? $_POST['bodyFatPercent'] : '') ?>" />
                 </div>
                 
                 <div class="col-md-4">
                     <label class="form-label">Massa Muscolare (kg)</label>
                     <input name="muscleMass" class="form-control" type="number" step="0.1" min="1" max="200"
-                           placeholder="es. 45.8"
                            value="<?= $editReport ? $editReport['muscleMass'] : (isset($_POST['muscleMass']) ? $_POST['muscleMass'] : '') ?>" />
                 </div>
                 
                 <div class="col-md-4">
                     <label class="form-label">BMI</label>
                     <input name="bmi" class="form-control" type="number" step="0.1" min="10" max="60"
-                           placeholder="es. 22.1"
                            value="<?= $editReport ? $editReport['bmi'] : (isset($_POST['bmi']) ? $_POST['bmi'] : '') ?>" />
                 </div>
                 
                 <div class="col-12">
                     <label class="form-label">Note (opzionale)</label>
-                    <textarea name="description" class="form-control" rows="3"
-                              placeholder="Aggiungi note sui tuoi progressi, sensazioni, obiettivi..."><?= $editReport ? htmlspecialchars($editReport['description']) : (isset($_POST['description']) ? htmlspecialchars($_POST['description']) : '') ?></textarea>
+                    <textarea name="description" class="form-control" rows="3"><?= $editReport ? htmlspecialchars($editReport['description']) : (isset($_POST['description']) ? htmlspecialchars($_POST['description']) : '') ?></textarea>
                 </div>
                 
                 <div class="col-12">
@@ -453,7 +452,7 @@ $bmiData = array_map(function($report) {
     <!-- Storico Report -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <h4>Storico Progressi (<?= $totalReports ?> report)</h4>
+            <h4>Storico Progressi</h4>
             <?php if (!empty($progressReports)): ?>
                 <div class="table-responsive">
                     <table class="table table-striped">
