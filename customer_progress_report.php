@@ -355,16 +355,6 @@ $bmiData = array_map(function($report) {
                     </div>
                     <?php endif; ?>
                 </div>
-                
-                <?php if ($totalReports >= 2): ?>
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <small class="text-muted">
-                                Confronto con la prima misurazione del <?= date('d/m/Y', strtotime($firstReport['date'])) ?>
-                            </small>
-                        </div>
-                    </div>
-                <?php endif; ?>
             </div>
         </div>
     <?php endif; ?>

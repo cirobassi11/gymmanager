@@ -86,9 +86,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $conn->prepare("SELECT enrollmentDate FROM ENROLLMENTS WHERE customerID = ? AND courseID = ?");
         $stmt->bind_param('ii', $customerID, $courseID);
         $stmt->execute();
-        $ENROLLMENTS = $stmt->get_result()->fetch_assoc();
+        $enrollments = $stmt->get_result()->fetch_assoc();
         
-        if (!$ENROLLMENTS) {
+        if (!$enrollments) {
             $error_message = 'Non sei iscritto a questo corso.';
         } else {
             // Verifica che il corso non sia già iniziato

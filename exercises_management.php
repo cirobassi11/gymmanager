@@ -76,8 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Recupera esercizi
 $stmt = $conn->prepare("
-    SELECT e.exerciseID, e.name, e.description,
-           COUNT(ed.exerciseDetailID) as usage_count
+    SELECT e.exerciseID, e.name, e.description, COUNT(ed.exerciseDetailID) as usage_count
     FROM EXERCISES e
     LEFT JOIN EXERCISE_DETAILS ed ON e.exerciseID = ed.exerciseID
     LEFT JOIN TRAINING_DAYS td ON ed.trainingDayID = td.trainingDayID

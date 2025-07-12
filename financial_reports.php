@@ -31,7 +31,7 @@ function getDateRangeFromFilter($filter) {
         case 'all':
         default:
             // Data più vecchia tra pagamenti e manutenzioni
-            $stmt = $GLOBALS['conn']->prepare("
+            $stmt = $conn->prepare("
                 SELECT LEAST(
                     (SELECT MIN(date) FROM PAYMENTS),
                     (SELECT MIN(maintenanceDate) FROM MAINTENANCES)
