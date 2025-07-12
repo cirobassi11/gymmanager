@@ -286,7 +286,5 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
         </div>
     </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
