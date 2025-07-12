@@ -145,8 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Recupera tutte le attrezzature con info sul gestore
 $stmt = $conn->prepare("
-    SELECT e.*, 
-           COUNT(m.maintenanceID) as maintenance_count,
+    SELECT e.*, COUNT(m.maintenanceID) as maintenance_count,
            CASE WHEN SUM(m.maintenanceCost) IS NULL THEN 0 ELSE SUM(m.maintenanceCost) END AS total_cost,
            MAX(m.maintenanceDate) as last_maintenance,
            u.firstName as admin_firstName, u.lastName as admin_lastName
@@ -216,7 +215,7 @@ function getEquipmentStats($conn) {
     $stmt->execute();
     $totalMaintenances = $stmt->get_result()->fetch_assoc()['total'];
     
-    // Attrezzature che richiedono manutenzione più frequente (top 5)
+    // 5 Attrezzature che richiedono manutenzione più frequente
     $stmt = $conn->prepare("
         SELECT e.name, COUNT(m.maintenanceID) as maintenance_count
         FROM EQUIPMENTS e
@@ -229,7 +228,7 @@ function getEquipmentStats($conn) {
     $stmt->execute();
     $frequentMaintenance = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
-    // Macchinari con costi di manutenzione più elevati (top 5)
+    // 5 Macchinari con costi di manutenzione più elevati
     $stmt = $conn->prepare("
         SELECT e.name, SUM(m.maintenanceCost) as total_cost
         FROM EQUIPMENTS e

@@ -62,27 +62,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->get_result()->num_rows === 0) {
                 $error_message = "Puoi eliminare solo i tuoi esercizi.";
             } else {
-                $stmt = $conn->prepare("
-                    SELECT COUNT(*) as count 
-                    FROM EXERCISE_DETAILS ed
-                    JOIN TRAINING_DAYS td ON ed.trainingDayID = td.trainingDayID
-                    JOIN TRAINING_SCHEDULES ts ON td.trainingScheduleID = ts.trainingScheduleID
-                    WHERE ed.exerciseID = ? AND ts.trainerID = ?
-                ");
+                $stmt = $conn->prepare("DELETE FROM EXERCISES WHERE exerciseID = ? AND trainerID = ?");
                 $stmt->bind_param('ii', $deleteID, $trainerID);
-                $stmt->execute();
-                $usageCount = $stmt->get_result()->fetch_assoc()['count'];
-
-                if ($usageCount > 0) {
-                    $error_message = "Impossibile eliminare l'esercizio: è utilizzato in $usageCount tuoi programmi.";
+                if ($stmt->execute()) {
+                    $success_message = "Esercizio eliminato con successo!";
                 } else {
-                    $stmt = $conn->prepare("DELETE FROM EXERCISES WHERE exerciseID = ? AND trainerID = ?");
-                    $stmt->bind_param('ii', $deleteID, $trainerID);
-                    if ($stmt->execute()) {
-                        $success_message = "Esercizio eliminato con successo!";
-                    } else {
-                        $error_message = "Errore durante l'eliminazione dell'esercizio.";
-                    }
+                    $error_message = "Errore durante l'eliminazione dell'esercizio.";
                 }
             }
         }
@@ -112,6 +97,7 @@ function getExerciseStats($conn, $trainerID) {
     $stmt->execute();
     $total = $stmt->get_result()->fetch_assoc()['total'];
 
+    // Query corretta per contare gli esercizi utilizzati
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT e.exerciseID) as used
         FROM EXERCISES e
@@ -249,25 +235,9 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                         </thead>
                         <tbody>
                             <?php foreach($exercises as $exercise): ?>
-                                <?php
-                                $popularityClass = 'secondary';
-                                $popularityText = 'Non utilizzato';
-                                if ($exercise['usage_count'] > 0) {
-                                    if ($exercise['usage_count'] >= 10) {
-                                        $popularityClass = 'success';
-                                        $popularityText = 'Molto popolare';
-                                    } elseif ($exercise['usage_count'] >= 5) {
-                                        $popularityClass = 'info';
-                                        $popularityText = 'Popolare';
-                                    } else {
-                                        $popularityClass = 'warning';
-                                        $popularityText = 'Poco utilizzato';
-                                    }
-                                }
-                                ?>
                                 <tr>
                                     <td>
-                                        <strong><?= htmlspecialchars($exercise['name']) ?></strong>
+                                        <?= htmlspecialchars($exercise['name']) ?>
                                     </td>
                                     <td>
                                         <span class="text-muted">
@@ -276,11 +246,11 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge bg-primary"><?= $exercise['usage_count'] ?></span>
+                                        <?= $exercise['usage_count'] ?>
                                     </td>
                                     <td>
                                         <?php 
-                                        // Verifica se l'esercizio è del trainer (può essere modificato/eliminato)
+                                        // Verifica se l'esercizio è del trainer
                                         $stmt = $conn->prepare("SELECT trainerID FROM EXERCISES WHERE exerciseID = ?");
                                         $stmt->bind_param('i', $exercise['exerciseID']);
                                         $stmt->execute();
@@ -292,18 +262,12 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                                             <a href="?edit=<?= $exercise['exerciseID'] ?>" class="btn btn-sm btn-warning">
                                                 Modifica
                                             </a>
-                                            <?php if ($exercise['usage_count'] == 0): ?>
-                                                <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo esercizio?');">
-                                                    <input type="hidden" name="delete_id" value="<?= $exercise['exerciseID'] ?>">
-                                                    <button name="delete_exercise" class="btn btn-sm btn-danger">
-                                                        Elimina
-                                                    </button>
-                                                </form>
-                                            <?php else: ?>
-                                                <button class="btn btn-sm btn-secondary" disabled title="Impossibile eliminare: esercizio in uso">
-                                                    In uso
+                                            <form method="POST" style="display:inline" onsubmit="return confirm('Sei sicuro di eliminare questo esercizio?');">
+                                                <input type="hidden" name="delete_id" value="<?= $exercise['exerciseID'] ?>">
+                                                <button name="delete_exercise" class="btn btn-sm btn-danger">
+                                                    Elimina
                                                 </button>
-                                            <?php endif; ?>
+                                            </form>
                                         <?php else: ?>
                                             <span class="badge bg-light text-dark">
                                                 Condiviso
