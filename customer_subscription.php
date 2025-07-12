@@ -393,42 +393,6 @@ $customerInfo = $stmt->get_result()->fetch_assoc();
         </div>
     <?php endif; ?>
 </div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<script>
-// Calcolo prezzo dinamico con promozione
-document.addEventListener('DOMContentLoaded', function() {
-    const forms = document.querySelectorAll('form');
-    
-    forms.forEach(form => {
-        const promotionSelect = form.querySelector('select[name="promotionID"]');
-        const membershipID = form.querySelector('input[name="membershipID"]');
-        
-        if (promotionSelect && membershipID) {
-            const originalPrice = <?= json_encode(array_column($availableMemberships, 'price', 'membershipID')) ?>;
-            const promotions = <?= json_encode(array_column($activePromotions, 'discountRate', 'promotionID')) ?>;
-            
-            promotionSelect.addEventListener('change', function() {
-                const price = originalPrice[membershipID.value];
-                const promotionID = this.value;
-                
-                let finalPrice = price;
-                let priceText = '€' + price.toFixed(2);
-                
-                if (promotionID && promotions[promotionID]) {
-                    const discount = (price * promotions[promotionID]) / 100;
-                    finalPrice = price - discount;
-                    priceText = '€' + finalPrice.toFixed(2) + ' <small class="text-muted"><s>€' + price.toFixed(2) + '</s></small>';
-                }
-                
-                const priceDisplay = form.closest('.card-body').querySelector('h4.text-success');
-                if (priceDisplay) {
-                    priceDisplay.innerHTML = priceText;
-                }
-            });
-        }
-    });
-});
-</script>
 </body>
 </html>
