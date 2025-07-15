@@ -29,8 +29,8 @@ CREATE TABLE COURSES (
     courseID INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    maxParticipants INT DEFAULT 20 CHECK (maxParticipants > 0),
-    currentParticipants INT DEFAULT 0 CHECK (currentParticipants >= 0 AND currentParticipants <= maxParticipants),
+    maxParticipants INT DEFAULT 20,
+    currentParticipants INT DEFAULT 0,
     startDate DATE,
     finishDate DATE
 );

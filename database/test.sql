@@ -94,8 +94,8 @@ INSERT INTO AVAILABILITY_DAYS (trainerID, dayOfWeek, startTime, finishTime) VALU
 (4, 'Friday', '07:00:00', '15:00:00');
 
 INSERT INTO TRAINING_SCHEDULES (name, description, creationDate, customerID, trainerID) VALUES
-('Piano base John', 'Programma per principianti', '2025-06-01', 5, 3),
-('Piano avanzato Jane', 'Programma intensivo avanzato', '2025-06-10', 6, 4),
+('Piano base Giovanni', 'Programma per principianti', '2025-06-01', 5, 3),
+('Piano avanzato Giulia', 'Programma intensivo avanzato', '2025-06-10', 6, 4),
 ('Piano massa Luca', 'Programma ipertrofia', '2025-06-15', 7, 3),
 ('Piano definizione Anna', 'Programma cutting', '2025-06-20', 8, 4),
 ('Piano forza Paolo', 'Powerlifting base', '2025-06-25', 9, 3),
@@ -155,16 +155,16 @@ INSERT INTO SUBSCRIPTIONS (startDate, expirationDate, customerID, promotionID, m
 ('2025-07-01', '2026-06-30', 8, NULL, 2),
 ('2025-07-01', '2025-09-30', 9, 2, 3),
 ('2025-07-16', '2026-08-16', 10, NULL, 2),
-('2025-07-05', '2025-08-04', 11, 3, 1),
+('2025-07-05', '2025-08-04', 11, 6, 1),
 ('2025-07-10', '2025-10-08', 12, 1, 3),
 ('2025-07-15', '2026-07-14', 13, NULL, 2),
-('2025-07-20', '2025-08-19', 14, 4, 4),
+('2025-07-20', '2025-07-26', 14, NULL, 4),
 ('2025-08-01', '2025-10-30', 15, 2, 3),
 ('2025-08-05', '2026-08-04', 16, NULL, 2),
 ('2025-08-10', '2025-09-09', 17, 1, 1),
-('2025-08-15', '2025-11-13', 18, 3, 3),
+('2025-08-15', '2025-11-13', 18, NULL, 3),
 ('2025-08-20', '2026-08-19', 19, NULL, 2),
-('2025-09-01', '2025-10-01', 20, 4, 4),
+('2025-09-01', '2025-09-07', 20, NULL, 4),
 ('2025-09-05', '2025-12-04', 21, 2, 3),
 ('2025-09-10', '2026-09-09', 22, NULL, 2);
 
@@ -175,16 +175,16 @@ INSERT INTO PAYMENTS (date, amount, customerID, subscriptionID) VALUES
 ('2025-07-01', 300.00, 8, 4),
 ('2025-07-01', 68.00, 9, 5),
 ('2025-07-16', 300.00, 10, 6),
-('2025-07-05', 7.00, 11, 7),
+('2025-07-05', 18.00, 11, 7),
 ('2025-07-10', 64.00, 12, 8),
 ('2025-07-15', 300.00, 13, 9),
-('2025-07-20', 15.00, 14, 10),
+('2025-07-20', 10.00, 14, 10),
 ('2025-08-01', 68.00, 15, 11),
 ('2025-08-05', 300.00, 16, 12),
-('2025-08-10', 8.00, 17, 13),
-('2025-08-15', 56.00, 18, 14),
+('2025-08-10', 24.00, 17, 13),
+('2025-08-15', 80.00, 18, 14),
 ('2025-08-20', 300.00, 19, 15),
-('2025-09-01', 15.00, 20, 16),
+('2025-09-01', 10.00, 20, 16),
 ('2025-09-05', 68.00, 21, 17),
 ('2025-09-10', 300.00, 22, 18);
 
@@ -228,26 +228,42 @@ INSERT INTO TEACHINGS (trainerID, courseID) VALUES
 (3, 15);
 
 INSERT INTO ENROLLMENTS (customerID, courseID, enrollmentDate) VALUES
-(5, 1, '2025-06-15'),
-(6, 2, '2025-06-20'),
-(7, 3, '2025-07-01'),
-(8, 4, '2025-07-05'),
-(9, 5, '2025-07-10'),
-(10, 6, '2025-07-15'),
-(11, 7, '2025-07-20'),
+(5, 1, '2025-07-01'),
+(6, 2, '2025-07-15'),
+(7, 3, '2025-08-01'),
+(8, 4, '2025-07-20'),
+(9, 5, '2025-08-10'),
+(10, 6, '2025-07-05'),
+(11, 7, '2025-08-15'),
 (12, 8, '2025-07-25'),
-(13, 9, '2025-08-01'),
-(14, 10, '2025-08-05'),
-(15, 11, '2025-08-10'),
-(16, 12, '2025-08-15'),
+(13, 9, '2025-08-05'),
+(14, 10, '2025-07-30'),
+(15, 11, '2025-08-20'),
+(16, 12, '2025-07-10'),
 (17, 13, '2024-10-15'),
 (18, 14, '2025-01-10'),
 (19, 15, '2024-05-20'),
 (12, 4, '2025-07-25'),
-(13, 7, '2025-08-01'),
-(14, 8, '2025-08-05'),
-(15, 5, '2025-08-10'),
-(16, 6, '2025-08-15'),
-(17, 15, '2024-10-15'),
-(18, 13, '2025-01-10'),
-(19, 14, '2024-05-20');
+(13, 7, '2025-08-15'),
+(14, 8, '2025-07-30'),
+(15, 5, '2025-08-15'),
+(16, 6, '2025-07-10'),
+(17, 1, '2025-07-05'),
+(18, 2, '2025-07-20'),
+(19, 3, '2025-08-05');
+
+UPDATE COURSES SET currentParticipants = 2 WHERE courseID = 1;
+UPDATE COURSES SET currentParticipants = 2 WHERE courseID = 2;
+UPDATE COURSES SET currentParticipants = 2 WHERE courseID = 3;
+UPDATE COURSES SET currentParticipants = 2 WHERE courseID = 4;
+UPDATE COURSES SET currentParticipants = 2 WHERE courseID = 5;
+UPDATE COURSES SET currentParticipants = 2 WHERE courseID = 6;
+UPDATE COURSES SET currentParticipants = 2 WHERE courseID = 7;
+UPDATE COURSES SET currentParticipants = 2 WHERE courseID = 8;
+UPDATE COURSES SET currentParticipants = 1 WHERE courseID = 9;
+UPDATE COURSES SET currentParticipants = 1 WHERE courseID = 10;
+UPDATE COURSES SET currentParticipants = 1 WHERE courseID = 11;
+UPDATE COURSES SET currentParticipants = 1 WHERE courseID = 12;
+UPDATE COURSES SET currentParticipants = 1 WHERE courseID = 13;
+UPDATE COURSES SET currentParticipants = 1 WHERE courseID = 14;
+UPDATE COURSES SET currentParticipants = 1 WHERE courseID = 15;
