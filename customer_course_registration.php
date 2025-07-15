@@ -49,13 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $validation_errors[] = 'Sei già iscritto a questo corso.';
             }
             
-            // Controllo posti disponibili
-            $stmt = $conn->prepare("SELECT COUNT(*) as enrolled FROM ENROLLMENTS WHERE courseID = ?");
-            $stmt->bind_param('i', $courseID);
-            $stmt->execute();
-            $enrolledCount = $stmt->get_result()->fetch_assoc()['enrolled'];
-            
-            if ($enrolledCount >= $course['maxParticipants']) {
+            if ($course['currentParticipants'] >= $course['maxParticipants']) {
                 $validation_errors[] = 'Il corso ha raggiunto il numero massimo di partecipanti.';
             }
             
@@ -78,6 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param('ii', $customerID, $courseID);
             
             if ($stmt->execute()) {
+                $updateStmt = $conn->prepare("UPDATE COURSES SET currentParticipants = currentParticipants + 1 WHERE courseID = ?");
+                $updateStmt->bind_param('i', $courseID);
+                $updateStmt->execute();
+                
                 $success_message = 'Iscrizione al corso "' . htmlspecialchars($course['name']) . '" completata con successo!';
             } else {
                 $error_message = 'Errore durante l\'iscrizione al corso.';
@@ -109,6 +107,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param('ii', $customerID, $courseID);
                 
                 if ($stmt->execute()) {
+                    $updateStmt = $conn->prepare("UPDATE COURSES SET currentParticipants = currentParticipants - 1 WHERE courseID = ? AND currentParticipants > 0");
+                    $updateStmt->bind_param('i', $courseID);
+                    $updateStmt->execute();
+                    
                     $success_message = 'Iscrizione al corso annullata con successo.';
                 } else {
                     $error_message = 'Errore durante l\'annullamento dell\'iscrizione.';
@@ -179,7 +181,11 @@ foreach($tempCourses as $course) {
 }
 
 // Corsi disponibili
-$stmt = $conn->prepare("SELECT * FROM COURSES ORDER BY startDate ASC");
+$stmt = $conn->prepare("
+    SELECT * FROM COURSES 
+    WHERE finishDate >= CURDATE() 
+    ORDER BY startDate ASC
+");
 $stmt->execute();
 $allCourses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -201,14 +207,8 @@ foreach($allCourses as $course) {
         $course['status_class'] = 'secondary';
     }
     
-    // Conteggio iscritti
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM ENROLLMENTS WHERE courseID = ?");
-    $stmt->bind_param('i', $course['courseID']);
-    $stmt->execute();
-    $course['enrolled_count'] = $stmt->get_result()->fetch_assoc()['count'];
-    
     // Controllo posti disponibili
-    $course['is_full'] = ($course['enrolled_count'] >= $course['maxParticipants']);
+    $course['is_full'] = ($course['currentParticipants'] >= $course['maxParticipants']);
     
     // Verifica se il cliente è già iscritto
     $stmt = $conn->prepare("SELECT 1 FROM ENROLLMENTS WHERE customerID = ? AND courseID = ?");
@@ -435,7 +435,7 @@ foreach($enrolledCourses as $course) {
                                     </td>
                                     <td>
                                         <span class="<?= $course['is_full'] ? 'text-danger fw-bold' : 'text-success' ?>">
-                                            <?= $course['enrolled_count'] ?>/<?= $course['maxParticipants'] ?>
+                                            <?= $course['currentParticipants'] ?>/<?= $course['maxParticipants'] ?>
                                         </span>
                                         <?php if ($course['is_full']): ?>
                                             <br><small class="text-danger">Completo</small>

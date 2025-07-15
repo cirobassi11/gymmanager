@@ -29,7 +29,8 @@ CREATE TABLE COURSES (
     courseID INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    maxParticipants INT DEFAULT 20,
+    maxParticipants INT DEFAULT 20 CHECK (maxParticipants > 0),
+    currentParticipants INT DEFAULT 0 CHECK (currentParticipants >= 0 AND currentParticipants <= maxParticipants),
     startDate DATE,
     finishDate DATE
 );
@@ -177,7 +178,5 @@ CREATE INDEX idx_users_role ON USERS(role);
 CREATE INDEX idx_subscriptions_customer_dates ON SUBSCRIPTIONS(customerID, startDate, expirationDate);
 CREATE INDEX idx_payments_customer_date ON PAYMENTS(customerID, date);
 CREATE INDEX idx_teachings_trainer ON TEACHINGS(trainerID);
-CREATE INDEX idx_enrollments_customer ON ENROLLMENTS(customerID);
 CREATE INDEX idx_training_schedules_trainer ON TRAINING_SCHEDULES(trainerID);
 CREATE INDEX idx_maintenances_equipment_date ON MAINTENANCES(equipmentID, maintenanceDate);
-CREATE UNIQUE INDEX idx_availability_days ON AVAILABILITY_DAYS(trainerID, dayOfWeek, startTime);

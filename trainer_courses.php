@@ -12,13 +12,10 @@ $trainerID = $_SESSION['userID'];
 
 // Corsi assegnati al trainer
 $stmt = $conn->prepare("
-    SELECT c.courseID, c.name, c.description, c.maxParticipants, c.startDate, c.finishDate,
-           COUNT(e.customerID) as enrolled_count
+    SELECT c.courseID, c.name, c.description, c.maxParticipants, c.currentParticipants, c.startDate, c.finishDate
     FROM COURSES c
     JOIN TEACHINGS t ON c.courseID = t.courseID
-    LEFT JOIN ENROLLMENTS e ON c.courseID = e.courseID
     WHERE t.trainerID = ?
-    GROUP BY c.courseID, c.name, c.description, c.maxParticipants, c.startDate, c.finishDate
     ORDER BY c.startDate DESC
 ");
 $stmt->bind_param('i', $trainerID);
@@ -241,8 +238,8 @@ $trainerInfo = $stmt->get_result()->fetch_assoc();
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <span class="<?= $course['enrolled_count'] >= $course['maxParticipants'] ? 'text-danger fw-bold' : 'text-success' ?> me-2">
-                                                <?= $course['enrolled_count'] ?>/<?= $course['maxParticipants'] ?>
+                                            <span class="<?= $course['currentParticipants'] >= $course['maxParticipants'] ? 'text-danger fw-bold' : 'text-success' ?> me-2">
+                                                <?= $course['currentParticipants'] ?>/<?= $course['maxParticipants'] ?>
                                             </span>
                                         </div>
                                     </td>

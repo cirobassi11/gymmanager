@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Corsi registrati
-$stmt = $conn->prepare("SELECT courseID, name, description, maxParticipants, startDate, finishDate FROM COURSES ORDER BY startDate DESC");
+$stmt = $conn->prepare("SELECT courseID, name, description, maxParticipants, currentParticipants, startDate, finishDate FROM COURSES ORDER BY startDate DESC");
 $stmt->execute();
 $courses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -278,7 +278,7 @@ $stats = getCourseStats($conn);
                            value="<?= $editCourse ? htmlspecialchars($editCourse['name']) : (isset($_POST['name']) ? htmlspecialchars($_POST['name']) : '') ?>" />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Max Partecipanti</label>
+                    <label class="form-label">Massimo Partecipanti</label>
                     <input name="maxParticipants" required class="form-control" type="number" min="1"
                            value="<?= $editCourse ? $editCourse['maxParticipants'] : (isset($_POST['maxParticipants']) ? $_POST['maxParticipants'] : '20') ?>" />
                 </div>
@@ -328,7 +328,7 @@ $stats = getCourseStats($conn);
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Nome</th><th>Max Partecipanti</th>
+                            <th>Nome</th><th>Partecipanti</th>
                             <th>Data Inizio</th><th>Data Fine</th><th>Stato</th><th>Trainer</th><th>Azioni</th>
                         </tr>
                     </thead>
@@ -360,7 +360,14 @@ $stats = getCourseStats($conn);
                             ?>
                             <tr>
                                 <td><?= htmlspecialchars($course['name']) ?></td>
-                                <td><?= $course['maxParticipants'] ?></td>
+                                <td>
+                                    <span class="<?= $course['currentParticipants'] >= $course['maxParticipants'] ? 'text-danger fw-bold' : 'text-success' ?>">
+                                        <?= $course['currentParticipants'] ?>/<?= $course['maxParticipants'] ?>
+                                    </span>
+                                    <?php if ($course['currentParticipants'] >= $course['maxParticipants']): ?>
+                                        <br><small class="text-danger">Completo</small>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?= $course['startDate'] ? date('d/m/Y', strtotime($course['startDate'])) : '-' ?></td>
                                 <td><?= $course['finishDate'] ? date('d/m/Y', strtotime($course['finishDate'])) : '-' ?></td>
                                 <td><span class="<?= $statusClass ?>"><?= $status ?></span></td>
